@@ -71,6 +71,13 @@
       "when": 1749374429363,
       "tag": "0009_modified_states_carburants_tables_constraint",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1750539984097,
+      "tag": "0010_add_listings_table",
+      "breakpoints": true
     }
   ]
 }

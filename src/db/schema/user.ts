@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import { boolean, date, integer, pgTable, varchar } from "drizzle-orm/pg-core";
 import { emailVerificationTokensTable } from "./email_verification_tokens";
 import { carTable } from "./car";
+import { listingTable } from "./listing";
 
 export const usersTable = pgTable("users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -25,4 +26,5 @@ export const usersTable = pgTable("users", {
 export const userRelations = relations(usersTable, ({ one, many }) => ({
   emailVerificationTokens: one(emailVerificationTokensTable),
   cars: many(carTable),
+  listings: many(listingTable),
 }));

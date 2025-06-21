@@ -6,6 +6,7 @@ import { carModelTable } from "./car_model";
 import { carCarburantTable } from "./carburant";
 import { carOriginTable } from "./car_origin";
 import { carStateTable } from "./state";
+import { listingTable } from "./listing";
 
 export const carTable = pgTable(
   "cars",
@@ -19,6 +20,9 @@ export const carTable = pgTable(
     carburantId: integer("carburant_id").references(() => carCarburantTable.id),
     originId: integer("origin_id").references(() => carOriginTable.id),
     stateId: integer("state_id").references(() => carStateTable.id),
+    listingId: integer("listing_id")
+      .references(() => listingTable.id)
+      .unique(),
     price: integer().notNull(),
     year: integer().notNull(),
     ownersCount: integer("owners_count").notNull(),
@@ -61,6 +65,11 @@ export const carTable = pgTable(
       columns: [table.stateId],
       foreignColumns: [carStateTable.id],
     }),
+    foreignKey({
+      name: "listing_fk",
+      columns: [table.listingId],
+      foreignColumns: [listingTable.id],
+    }),
   ]
 );
 
@@ -88,5 +97,9 @@ export const carRelations = relations(carTable, ({ one }) => ({
   state: one(carStateTable, {
     fields: [carTable.stateId],
     references: [carStateTable.id],
+  }),
+  listing: one(listingTable, {
+    fields: [carTable.listingId],
+    references: [listingTable.id],
   }),
 }));
