@@ -1,4 +1,4 @@
-import { string, z } from "zod";
+import { z } from "zod";
 
 export const registerSchema = z.object({
   firstName: z
@@ -99,7 +99,7 @@ export const forgotPasswordSchema = z.object({
 });
 
 export const updatePasswordSchema = z.object({
-  token: string({
+  token: z.string({
     required_error: "Token is required",
     invalid_type_error: "Token must be a text",
   }),
