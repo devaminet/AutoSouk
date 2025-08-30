@@ -4,6 +4,7 @@ import path from "path";
 import ejs from "ejs";
 import nodemailer from "nodemailer";
 import Mail, { Attachment } from "nodemailer/lib/mailer";
+import { minioClient } from "../file_storage/minio";
 
 export const generateToken = (size = 32) => {
   return crypto.randomBytes(size).toString("hex");
@@ -71,4 +72,36 @@ export const readSeedFile = async (fileName: string) => {
     }
   );
   return data;
+};
+
+export const createBucket = async (bucketName: string) => {
+  const exist = await minioClient.bucketExists(bucketName);
+  if (!exist) {
+    await minioClient.makeBucket(bucketName);
+  }
+};
+
+export const generatePresignedUrl = async (
+  bucketName: string,
+  filename: string,
+  expires?: number
+) => {
+  return minioClient.presignedPutObject(bucketName, filename, expires);
+};
+
+export const generatePresignedUrls = async (
+  bucketName: string,
+  filenames: string[]
+) => {
+  const promises = filenames.map((filename) =>
+    generatePresignedUrl(bucketName, filename)
+  );
+  const results = await Promise.allSettled(promises);
+
+  return results.reduce<Map<string, string>>((prev, curr, index) => {
+    if (curr.status === "fulfilled") {
+      prev.set(filenames[index], curr.value);
+    }
+    return prev;
+  }, new Map());
 };
