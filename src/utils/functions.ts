@@ -6,6 +6,10 @@ import nodemailer from "nodemailer";
 import Mail, { Attachment } from "nodemailer/lib/mailer";
 import { minioClient } from "../file_storage/minio";
 
+const imageTypes = ["jpg", "jpeg", "png", "webp"];
+const videoTypes = ["mp4"];
+export const allowedFileTypes = [...imageTypes, ...videoTypes].join(", ");
+
 export const generateToken = (size = 32) => {
   return crypto.randomBytes(size).toString("hex");
 };
@@ -104,4 +108,15 @@ export const generatePresignedUrls = async (
     }
     return prev;
   }, new Map());
+};
+
+export const getFileType = (file: string) => {
+  const extenstion = file.substring(file.lastIndexOf(".") + 1);
+  if (imageTypes.includes(extenstion)) {
+    return "image";
+  }
+  if (videoTypes.includes(extenstion)) {
+    return "video";
+  }
+  return null;
 };

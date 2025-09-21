@@ -7,6 +7,7 @@ import { carCarburantTable } from "./carburant";
 import { carOriginTable } from "./car_origin";
 import { carStateTable } from "./state";
 import { listingTable } from "./listing";
+import { carMediaTable } from "./car_media";
 
 export const carTable = pgTable(
   "cars",
@@ -73,7 +74,7 @@ export const carTable = pgTable(
   ]
 );
 
-export const carRelations = relations(carTable, ({ one }) => ({
+export const carRelations = relations(carTable, ({ one, many }) => ({
   user: one(usersTable, {
     fields: [carTable.userId],
     references: [usersTable.id],
@@ -102,4 +103,5 @@ export const carRelations = relations(carTable, ({ one }) => ({
     fields: [carTable.listingId],
     references: [listingTable.id],
   }),
+  carMedias: many(carMediaTable),
 }));
