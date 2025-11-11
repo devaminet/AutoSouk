@@ -1,6 +1,6 @@
 {
-  "id": "6074ef3b-a3d9-4e9c-bfa3-fcceb37c4212",
-  "prevId": "70f60b2b-4e20-462a-9caa-83d990eb03de",
+  "id": "069965ec-4b9d-4f7a-844b-f5aa70852683",
+  "prevId": "21b1f355-1fde-4daa-947d-e1673928fdf5",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -89,8 +89,12 @@
           "name": "car_media_car_id_cars_id_fk",
           "tableFrom": "car_media",
           "tableTo": "cars",
-          "columnsFrom": ["car_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "car_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -144,8 +148,12 @@
           "name": "models_make_id_makes_id_fk",
           "tableFrom": "models",
           "tableTo": "makes",
-          "columnsFrom": ["make_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "make_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -153,8 +161,12 @@
           "name": "make_fk",
           "tableFrom": "models",
           "tableTo": "makes",
-          "columnsFrom": ["make_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "make_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -200,7 +212,9 @@
         "car_origins_origin_unique": {
           "name": "car_origins_origin_unique",
           "nullsNotDistinct": false,
-          "columns": ["origin"]
+          "columns": [
+            "origin"
+          ]
         }
       },
       "policies": {},
@@ -325,8 +339,12 @@
           "name": "cars_user_id_users_id_fk",
           "tableFrom": "cars",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -334,8 +352,12 @@
           "name": "cars_make_id_makes_id_fk",
           "tableFrom": "cars",
           "tableTo": "makes",
-          "columnsFrom": ["make_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "make_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -343,8 +365,12 @@
           "name": "cars_model_id_models_id_fk",
           "tableFrom": "cars",
           "tableTo": "models",
-          "columnsFrom": ["model_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "model_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -352,8 +378,12 @@
           "name": "cars_carburant_id_carburants_id_fk",
           "tableFrom": "cars",
           "tableTo": "carburants",
-          "columnsFrom": ["carburant_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "carburant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -361,8 +391,12 @@
           "name": "cars_origin_id_car_origins_id_fk",
           "tableFrom": "cars",
           "tableTo": "car_origins",
-          "columnsFrom": ["origin_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "origin_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -370,8 +404,12 @@
           "name": "cars_state_id_car_states_id_fk",
           "tableFrom": "cars",
           "tableTo": "car_states",
-          "columnsFrom": ["state_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "state_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -379,8 +417,12 @@
           "name": "cars_listing_id_listings_id_fk",
           "tableFrom": "cars",
           "tableTo": "listings",
-          "columnsFrom": ["listing_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "listing_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -388,8 +430,12 @@
           "name": "user_fk",
           "tableFrom": "cars",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -397,8 +443,12 @@
           "name": "make_fk",
           "tableFrom": "cars",
           "tableTo": "makes",
-          "columnsFrom": ["make_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "make_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -406,8 +456,12 @@
           "name": "model_fk",
           "tableFrom": "cars",
           "tableTo": "models",
-          "columnsFrom": ["model_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "model_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -415,8 +469,12 @@
           "name": "carburant_fk",
           "tableFrom": "cars",
           "tableTo": "carburants",
-          "columnsFrom": ["carburant_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "carburant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -424,8 +482,12 @@
           "name": "origin_fk",
           "tableFrom": "cars",
           "tableTo": "car_origins",
-          "columnsFrom": ["origin_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "origin_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -433,8 +495,12 @@
           "name": "state_fk",
           "tableFrom": "cars",
           "tableTo": "car_states",
-          "columnsFrom": ["state_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "state_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -442,8 +508,12 @@
           "name": "listing_fk",
           "tableFrom": "cars",
           "tableTo": "listings",
-          "columnsFrom": ["listing_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "listing_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -453,7 +523,9 @@
         "cars_listing_id_unique": {
           "name": "cars_listing_id_unique",
           "nullsNotDistinct": false,
-          "columns": ["listing_id"]
+          "columns": [
+            "listing_id"
+          ]
         }
       },
       "policies": {},
@@ -495,7 +567,9 @@
         "carburants_carburant_unique": {
           "name": "carburants_carburant_unique",
           "nullsNotDistinct": false,
-          "columns": ["carburant"]
+          "columns": [
+            "carburant"
+          ]
         }
       },
       "policies": {},
@@ -548,8 +622,12 @@
           "name": "email_verification_tokens_user_id_users_id_fk",
           "tableFrom": "email_verification_tokens",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -557,8 +635,12 @@
           "name": "user_fk",
           "tableFrom": "email_verification_tokens",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -568,7 +650,9 @@
         "email_verification_tokens_token_unique": {
           "name": "email_verification_tokens_token_unique",
           "nullsNotDistinct": false,
-          "columns": ["token"]
+          "columns": [
+            "token"
+          ]
         }
       },
       "policies": {},
@@ -621,8 +705,12 @@
           "name": "forgot_password_tokens_user_id_users_id_fk",
           "tableFrom": "forgot_password_tokens",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -630,8 +718,12 @@
           "name": "user_fk",
           "tableFrom": "forgot_password_tokens",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -641,9 +733,101 @@
         "forgot_password_tokens_token_unique": {
           "name": "forgot_password_tokens_token_unique",
           "nullsNotDistinct": false,
-          "columns": ["token"]
+          "columns": [
+            "token"
+          ]
         }
       },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.listings": {
+      "name": "listings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "listings_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "listing_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'draft'"
+        },
+        "approved_at": {
+          "name": "approved_at",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "listings_user_id_users_id_fk": {
+          "name": "listings_user_id_users_id_fk",
+          "tableFrom": "listings",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -694,8 +878,12 @@
           "name": "refresh_tokens_user_id_users_id_fk",
           "tableFrom": "refresh_tokens",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -703,8 +891,12 @@
           "name": "user_fk",
           "tableFrom": "refresh_tokens",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -750,7 +942,9 @@
         "car_states_state_unique": {
           "name": "car_states_state_unique",
           "nullsNotDistinct": false,
-          "columns": ["state"]
+          "columns": [
+            "state"
+          ]
         }
       },
       "policies": {},
@@ -861,7 +1055,9 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": ["email"]
+          "columns": [
+            "email"
+          ]
         }
       },
       "policies": {},
@@ -869,7 +1065,20 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.listing_status": {
+      "name": "listing_status",
+      "schema": "public",
+      "values": [
+        "draft",
+        "pending",
+        "approved",
+        "withdrawn",
+        "rejected",
+        "sold"
+      ]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},

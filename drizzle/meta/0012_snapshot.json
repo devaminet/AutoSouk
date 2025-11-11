@@ -1,6 +1,6 @@
 {
-  "id": "70f60b2b-4e20-462a-9caa-83d990eb03de",
-  "prevId": "72c1b5a2-d4af-41bd-96c8-8bef02c4fc29",
+  "id": "21b1f355-1fde-4daa-947d-e1673928fdf5",
+  "prevId": "6074ef3b-a3d9-4e9c-bfa3-fcceb37c4212",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -37,6 +37,68 @@
       },
       "indexes": {},
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.car_media": {
+      "name": "car_media",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "car_media_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "car_id": {
+          "name": "car_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "link": {
+          "name": "link",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "car_media_car_id_cars_id_fk": {
+          "name": "car_media_car_id_cars_id_fk",
+          "tableFrom": "car_media",
+          "tableTo": "cars",
+          "columnsFrom": [
+            "car_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -721,9 +783,30 @@
         },
         "status": {
           "name": "status",
-          "type": "varchar",
+          "type": "listing_status",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
+        },
+        "approved_at": {
+          "name": "approved_at",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
@@ -981,7 +1064,20 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.listing_status": {
+      "name": "listing_status",
+      "schema": "public",
+      "values": [
+        "draft",
+        "pending",
+        "approved",
+        "withdrawn",
+        "rejected",
+        "sold"
+      ]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},

@@ -1,15 +1,16 @@
 import { Router, Request, Response } from "express";
+import { and, eq } from "drizzle-orm";
 import { createListingSchema } from "./request-schema";
 import { RequestValidationError } from "../../errors/request-validation-error";
 import { db } from "../../db";
 import { listingTable } from "../../db/schema/listing";
 import isAuthenticated from "../../middlewares/is-authenticated";
 import { createCarSchema } from "../cars/request-schema";
-import { and, eq } from "drizzle-orm";
 import { NotFoundError } from "../../errors/not-found-error";
 import { carTable } from "../../db/schema/car";
 import { carMediaTable } from "../../db/schema/car_media";
-import { getFileType } from "../../utils/functions";
+import { generatePresignedUrls, getFileType } from "../../utils/functions";
+import { carBucketName } from "../../utils/constants";
 
 const listingRouter = Router();
 
@@ -59,6 +60,7 @@ listingRouter.post(
     }
 
     const { filenames, ...carDetails } = validateResult.data;
+    const urlsMap = await generatePresignedUrls(carBucketName, filenames);
 
     const car = await db.transaction(async (tx) => {
       const car = await tx
@@ -77,10 +79,88 @@ listingRouter.post(
       }));
 
       await tx.insert(carMediaTable).values(carMediaValues);
-      return { ...car[0], filenames };
+      return { ...car[0], filenames, urls: Object.fromEntries(urlsMap) };
     });
 
     res.status(201).json({ car });
+  }
+);
+
+listingRouter.get(
+  "/:id",
+  isAuthenticated,
+  async (req: Request, res: Response) => {
+    const listing = await db.query.listingTable.findFirst({
+      where: eq(listingTable.id, +req.params.id),
+      columns: {
+        createdAt: false,
+        updatedAt: false,
+        userId: false,
+      },
+      with: {
+        car: {
+          columns: {
+            id: true,
+            price: true,
+            city: true,
+            year: true,
+            distance: true,
+            doorsNumber: true,
+            fiscalPower: true,
+            transmission: true,
+            ownersCount: true,
+          },
+          with: {
+            carburant: {
+              columns: {
+                carburant: true,
+              },
+            },
+            carMedias: {
+              columns: {
+                link: true,
+                type: true,
+              },
+            },
+            make: {
+              columns: {
+                name: true,
+              },
+            },
+            model: {
+              columns: {
+                name: true,
+              },
+            },
+            origin: {
+              columns: {
+                origin: true,
+              },
+            },
+            state: {
+              columns: {
+                state: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!listing) {
+      throw new NotFoundError("Listing was not found!");
+    }
+
+    const carMedias = listing.car?.carMedias;
+    if (carMedias) {
+      const filenames = carMedias.map((media) => media.link);
+      const urlsMap = await generatePresignedUrls(carBucketName, filenames);
+      for (const media of carMedias) {
+        media.link = urlsMap.get(media.link) || "";
+      }
+    }
+
+    res.status(200).json({ listing });
   }
 );
 
