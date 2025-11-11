@@ -98,6 +98,15 @@ listingRouter.get(
         userId: false,
       },
       with: {
+        user: {
+          columns: {
+            firstName: true,
+            lastName: true,
+            city: true,
+            imageUrl: true,
+            isVerified: true,
+          },
+        },
         car: {
           columns: {
             id: true,
