@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { verifyJWT } from "../api/auth/services";
+import { verifyJWT } from "../utils/functions";
 
 export default async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers["authorization"];

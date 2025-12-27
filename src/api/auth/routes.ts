@@ -3,9 +3,14 @@ import { and, eq, ne } from "drizzle-orm";
 import { db } from "../../db";
 import { usersTable } from "../../db/schema/user";
 import {
+  generateJWT,
   generateToken,
+  hashPassword,
   readTemplateFile,
+  sanitizeUser,
   sendMail,
+  verifyJWT,
+  verifyPassword,
 } from "../../utils/functions";
 import {
   forgotPasswordSchema,
@@ -21,13 +26,6 @@ import { BadRequestError } from "../../errors/bad-request-error";
 import { emailVerificationTokensTable } from "../../db/schema/email_verification_tokens";
 import { NotFoundError } from "../../errors/not-found-error";
 import { refreshTokensTable } from "../../db/schema/refresh_tokens";
-import {
-  generateJWT,
-  hashPassword,
-  sanitizeUser,
-  verifyJWT,
-  verifyPassword,
-} from "./services";
 import { forgotPasswordTokensTable } from "../../db/schema/forget_password_tokens";
 import { NotAuthorizedError } from "../../errors/not-authorized-error";
 import isAuthenticated from "../../middlewares/is-authenticated";
