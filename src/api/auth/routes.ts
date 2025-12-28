@@ -204,11 +204,21 @@ authRouter.post("/login", async (req, res) => {
   }
 
   const accessToken = await generateJWT(
-    { id: user.id, email: user.email, issuedAt: new Date().getTime() },
+    {
+      id: user.id,
+      email: user.email,
+      issuedAt: new Date().getTime(),
+      role: user.role,
+    },
     Number(process.env.JWT_ACCESS_TOKEN_EXPIRATION_SECONDS!)
   );
   const refreshToken = await generateJWT(
-    { id: user.id, email: user.email, issuedAt: new Date().getTime() },
+    {
+      id: user.id,
+      email: user.email,
+      issuedAt: new Date().getTime(),
+      role: user.role,
+    },
     Number(process.env.JWT_REFRESH_TOKEN_EXPIRATION_SECONDS!)
   );
   await db
@@ -227,7 +237,9 @@ authRouter.post("/refresh-token", async (req, res) => {
     throw new RequestValidationError(validateResult.error.errors);
   }
   const token = validateResult.data.refreshToken;
-  const decoded = await verifyJWT<{ id: number; email: string }>(token);
+  const decoded = await verifyJWT<{ id: number; email: string; role: string }>(
+    token
+  );
 
   // re-use detection
   const usedToken = await db
@@ -265,11 +277,21 @@ authRouter.post("/refresh-token", async (req, res) => {
   }
   if (userToken.length > 0) {
     const accessToken = await generateJWT(
-      { id: decoded.id, email: decoded.email, issuedAt: new Date().getTime() },
+      {
+        id: decoded.id,
+        email: decoded.email,
+        issuedAt: new Date().getTime(),
+        role: decoded.role,
+      },
       Number(process.env.JWT_ACCESS_TOKEN_EXPIRATION_SECONDS!)
     );
     const refreshToken = await generateJWT(
-      { id: decoded.id, email: decoded.email, issuedAt: new Date().getTime() },
+      {
+        id: decoded.id,
+        email: decoded.email,
+        issuedAt: new Date().getTime(),
+        role: decoded.role,
+      },
       Number(process.env.JWT_REFRESH_TOKEN_EXPIRATION_SECONDS!)
     );
     await db

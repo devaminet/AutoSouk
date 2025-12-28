@@ -12,6 +12,7 @@ declare global {
       currentUser?: {
         id: number;
         email: string;
+        role: string;
       };
     }
   }

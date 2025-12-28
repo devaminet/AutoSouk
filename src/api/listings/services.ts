@@ -6,6 +6,8 @@ import { carTable } from "../../db/schema/car";
 import { getFileType } from "../../utils/functions";
 import { carMediaTable } from "../../db/schema/car_media";
 import { createCarSchema } from "../cars/request-schema";
+import { BadRequestError } from "../../errors/bad-request-error";
+import { NotFoundError } from "../../errors/not-found-error";
 
 export const saveListing = async (
   title: string,
@@ -138,4 +140,25 @@ export const getListingDetails = async (listingId: number) => {
   });
 
   return listing;
+};
+
+export const approveListing = async (listingId: number) => {
+  const listing = await db
+    .select()
+    .from(listingTable)
+    .where(eq(listingTable.id, listingId));
+
+  if (listing.length === 0) {
+    throw new NotFoundError("Listing not found");
+  }
+
+  if (listing[0].status === "approved") {
+    throw new BadRequestError("Listing is already approved");
+  }
+
+  const result = await db
+    .update(listingTable)
+    .set({ status: "approved", approvedAt: new Date().toISOString() })
+    .where(eq(listingTable.id, listingId));
+  return result.rowCount;
 };

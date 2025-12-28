@@ -7,11 +7,13 @@ import { NotFoundError } from "../../errors/not-found-error";
 import { generatePresignedUrls } from "../../utils/functions";
 import { carBucketName } from "../../utils/constants";
 import {
+  approveListing,
   getListingDetails,
   getUserListing,
   saveCarAndMedia,
   saveListing,
 } from "./services";
+import { isAdmin } from "../../middlewares/is-admin";
 
 const listingRouter = Router();
 
@@ -76,6 +78,17 @@ listingRouter.get(
     }
 
     res.status(200).json({ listing });
+  }
+);
+
+listingRouter.patch(
+  "/:id/approve",
+  isAuthenticated,
+  isAdmin,
+  async (req: Request, res: Response) => {
+    const listingId = +req.params.id;
+    const result = await approveListing(listingId);
+    res.status(200).json({ updatedRows: result });
   }
 );
 

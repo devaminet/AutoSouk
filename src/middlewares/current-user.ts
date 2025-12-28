@@ -12,10 +12,15 @@ export default async (req: Request, res: Response, next: NextFunction) => {
     if (!token) {
       return next();
     }
-    const decoded = await verifyJWT<{ id: number; email: string }>(token);
+    const decoded = await verifyJWT<{
+      id: number;
+      email: string;
+      role: string;
+    }>(token);
     req.currentUser = {
       id: decoded.id,
       email: decoded.email,
+      role: decoded.role,
     };
   } catch (error) {
     console.log("Error in current user middleware", error);
