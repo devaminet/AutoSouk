@@ -1,6 +1,10 @@
 import request from "supertest";
 import { app } from "../../../app";
-import { signinUser, signupUserWithVerification } from "../../../test/helpers";
+import {
+  signinUser,
+  signupUserWithVerification,
+  testUserCredentials,
+} from "../../../test/helpers";
 
 it("should fail is user is not authenticated", async () => {
   await request(app).put("/api/auth/reset-password").send({}).expect(401);
@@ -44,7 +48,7 @@ it("should validate password format", async () => {
       password: "new_pa55%%",
       confirmPassword: "new_pa55%%",
       oldPassword: "old_pa55%%",
-      email: "user@example.com",
+      email: testUserCredentials.email,
     });
   expect(response.statusCode).toBe(400);
   expect(response.body.errors).toHaveLength(3);
@@ -60,7 +64,7 @@ it("should fail if password and confirm password are not the same", async () => 
       password: "New_pa55%%",
       confirmPassword: "New_pa55%%",
       oldPassword: "Old_pa55%%",
-      email: "user@example.com",
+      email: testUserCredentials.email,
     });
   expect(response.statusCode).toBe(400);
 });

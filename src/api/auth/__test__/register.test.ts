@@ -2,7 +2,7 @@ import url from "url";
 import request from "supertest";
 import { app } from "../../../app";
 import { readTemplateFile, sendMail } from "../../../utils/functions";
-import { signupUser } from "../../../test/helpers";
+import { signupUser, testUserCredentials } from "../../../test/helpers";
 
 it("should return 201 on successful signup", async () => {
   const { statusCode } = await signupUser();
@@ -37,7 +37,7 @@ it("should properly provide data to register template on signup", async () => {
   expect(firstName).toBe(formData.firstName);
   expect(expiration).toBe("5 minutes");
   expect(`${parsedUrl.protocol}//${parsedUrl.host}`).toBe(
-    process.env.BACKEND_URL
+    process.env.BACKEND_URL,
   );
   expect(parsedUrl.pathname).toBe("/api/auth/verify");
   expect(parsedUrl.query.token).toBeDefined();
@@ -78,7 +78,7 @@ it("should return 400 when inappropriate password was provided", async () => {
     .send({
       firstName: "John",
       lastName: "Doe",
-      email: "user@example.com",
+      email: testUserCredentials.email,
       password: "USEr_@@",
       phone: "+212685412593",
       userType: "buyer",
