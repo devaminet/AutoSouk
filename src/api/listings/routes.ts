@@ -13,13 +13,16 @@ import {
   saveCarAndMedia,
   saveListing,
 } from "./services";
+import { isBuyer } from "../../middlewares/is-buyer";
 import { isAdmin } from "../../middlewares/is-admin";
 
 const listingRouter = Router();
 
+// Create a listing
 listingRouter.post(
   "/",
   isAuthenticated,
+  isBuyer,
   async (req: Request, res: Response) => {
     const validationResult = createListingSchema.safeParse(req.body);
     if (!validationResult.success) {
@@ -28,9 +31,10 @@ listingRouter.post(
     const { title, description } = validationResult.data;
     const result = await saveListing(title, description, req.currentUser?.id!);
     res.status(201).json({ listing: result });
-  }
+  },
 );
 
+// Attach car to a listing
 listingRouter.post(
   "/:id/cars",
   isAuthenticated,
@@ -56,9 +60,10 @@ listingRouter.post(
     });
 
     res.status(201).json({ car });
-  }
+  },
 );
 
+// Get listing data by id
 listingRouter.get(
   "/:id",
   isAuthenticated,
@@ -78,9 +83,10 @@ listingRouter.get(
     }
 
     res.status(200).json({ listing });
-  }
+  },
 );
 
+// Approve a listing
 listingRouter.patch(
   "/:id/approve",
   isAuthenticated,
@@ -89,7 +95,7 @@ listingRouter.patch(
     const listingId = +req.params.id;
     const result = await approveListing(listingId);
     res.status(200).json({ updatedRows: result });
-  }
+  },
 );
 
 export default listingRouter;
