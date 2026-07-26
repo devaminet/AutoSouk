@@ -30,5 +30,8 @@ export const listingRelations = relations(listingTable, ({ one }) => ({
     fields: [listingTable.userId],
     references: [usersTable.id],
   }),
-  car: one(carTable),
+  car: one(carTable, {
+    fields: [listingTable.id],
+    references: [carTable.listingId],
+  }),
 }));

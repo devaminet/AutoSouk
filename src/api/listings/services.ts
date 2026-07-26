@@ -12,7 +12,7 @@ import { NotFoundError } from "../../errors/not-found-error";
 export const saveListing = async (
   title: string,
   description: string,
-  userId: number
+  userId: number,
 ) => {
   const result = await db
     .insert(listingTable)
@@ -29,13 +29,13 @@ export const saveListing = async (
 
 export const getUserListing = async (
   listingId: number,
-  userId: number
+  userId: number,
 ): Promise<Pick<typeof listingTable.$inferSelect, "id" | "userId"> | null> => {
   const listing = await db
     .select({ id: listingTable.id, userId: listingTable.userId })
     .from(listingTable)
     .where(
-      and(eq(listingTable.id, listingId), eq(listingTable.userId, userId))
+      and(eq(listingTable.id, listingId), eq(listingTable.userId, userId)),
     );
 
   return listing.length > 0 ? listing[0] : null;
@@ -48,9 +48,10 @@ export const saveCarAndMedia = async (args: {
   listingId: number;
   userId: number;
 }) => {
+  console.log("args", args);
   const { carDetails, filenames, urlsMap, listingId, userId } = args;
   const car = await db.transaction(async (tx) => {
-    const car = await tx
+    const newCar = await tx
       .insert(carTable)
       .values({
         ...carDetails,
@@ -60,13 +61,13 @@ export const saveCarAndMedia = async (args: {
       .returning();
 
     const carMediaValues = filenames.map((filename) => ({
-      carId: car[0].id,
+      carId: newCar[0].id,
       link: filename,
       type: getFileType(filename) as "image" | "video",
     }));
 
     await tx.insert(carMediaTable).values(carMediaValues);
-    return { ...car[0], filenames, urls: Object.fromEntries(urlsMap) };
+    return { ...newCar[0], filenames, urls: Object.fromEntries(urlsMap) };
   });
 
   return car;

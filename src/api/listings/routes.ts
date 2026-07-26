@@ -1,8 +1,7 @@
 import { Router, Request, Response } from "express";
-import { createListingSchema } from "./request-schema";
+import { createCarSchema, createListingSchema } from "./request-schema";
 import { RequestValidationError } from "../../errors/request-validation-error";
 import isAuthenticated from "../../middlewares/is-authenticated";
-import { createCarSchema } from "../cars/request-schema";
 import { NotFoundError } from "../../errors/not-found-error";
 import { generatePresignedUrls } from "../../utils/functions";
 import { carBucketName } from "../../utils/constants";
@@ -13,8 +12,8 @@ import {
   saveCarAndMedia,
   saveListing,
 } from "./services";
-import { isBuyer } from "../../middlewares/is-buyer";
 import { isAdmin } from "../../middlewares/is-admin";
+import { isSeller } from "../../middlewares/is-seller";
 
 const listingRouter = Router();
 
@@ -22,7 +21,7 @@ const listingRouter = Router();
 listingRouter.post(
   "/",
   isAuthenticated,
-  isBuyer,
+  isSeller,
   async (req: Request, res: Response) => {
     const validationResult = createListingSchema.safeParse(req.body);
     if (!validationResult.success) {
@@ -36,7 +35,7 @@ listingRouter.post(
 
 // Attach car to a listing
 listingRouter.post(
-  "/:id/cars",
+  "/:id/car",
   isAuthenticated,
   async (req: Request, res: Response) => {
     const validateResult = createCarSchema.safeParse(req.body);
