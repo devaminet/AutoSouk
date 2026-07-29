@@ -1,5 +1,9 @@
 import { Router, Request, Response } from "express";
-import { createCarSchema, createListingSchema } from "./request-schema";
+import {
+  createCarSchema,
+  createListingSchema,
+  getListingsQuerySchema,
+} from "./request-schema";
 import { RequestValidationError } from "../../errors/request-validation-error";
 import isAuthenticated from "../../middlewares/is-authenticated";
 import { NotFoundError } from "../../errors/not-found-error";
@@ -11,11 +15,23 @@ import {
   getUserListing,
   saveCarAndMedia,
   saveListing,
+  getListings,
 } from "./services";
 import { isAdmin } from "../../middlewares/is-admin";
 import { isSeller } from "../../middlewares/is-seller";
 
 const listingRouter = Router();
+
+// Get public listings (paginated, filtered)
+listingRouter.get("/", async (req: Request, res: Response) => {
+  const validationResult = getListingsQuerySchema.safeParse(req.query);
+  if (!validationResult.success) {
+    throw new RequestValidationError(validationResult.error.errors);
+  }
+
+  const result = await getListings(validationResult.data);
+  res.status(200).json(result);
+});
 
 // Create a listing
 listingRouter.post(
@@ -65,7 +81,7 @@ listingRouter.post(
 // Get listing data by id
 listingRouter.get(
   "/:id",
-  isAuthenticated,
+  // isAuthenticated,
   async (req: Request, res: Response) => {
     const listing = await getListingDetails(+req.params.id);
     if (!listing) {

@@ -86,3 +86,16 @@ export const createCarSchema = z.object(
     required_error: "Car details are required",
   },
 );
+
+export const getListingsQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(10),
+  makeId: z.coerce.number().int().positive().optional(),
+  modelId: z.coerce.number().int().positive().optional(),
+  city: z.string().optional(),
+  minPrice: z.coerce.number().nonnegative().optional(),
+  maxPrice: z.coerce.number().nonnegative().optional(),
+  sort: z
+    .enum(["price_asc", "price_desc", "newest", "oldest"])
+    .default("newest"),
+});

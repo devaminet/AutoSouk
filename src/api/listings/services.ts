@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { and, eq } from "drizzle-orm";
+import { and, eq, desc, asc, gte, lte, ilike, count } from "drizzle-orm";
 import { db } from "../../db";
 import { listingTable } from "../../db/schema/listing";
 import { carTable } from "../../db/schema/car";
 import { getFileType } from "../../utils/functions";
 import { carMediaTable } from "../../db/schema/car_media";
-import { createCarSchema } from "../cars/request-schema";
+import { createCarSchema, getListingsQuerySchema } from "./request-schema";
 import { BadRequestError } from "../../errors/bad-request-error";
 import { NotFoundError } from "../../errors/not-found-error";
 
@@ -48,7 +48,6 @@ export const saveCarAndMedia = async (args: {
   listingId: number;
   userId: number;
 }) => {
-  console.log("args", args);
   const { carDetails, filenames, urlsMap, listingId, userId } = args;
   const car = await db.transaction(async (tx) => {
     const newCar = await tx
@@ -162,4 +161,71 @@ export const approveListing = async (listingId: number) => {
     .set({ status: "approved", approvedAt: new Date().toISOString() })
     .where(eq(listingTable.id, listingId));
   return result.rowCount;
+};
+
+export const getListings = async (
+  query: z.infer<typeof getListingsQuerySchema>,
+) => {
+  const { page, limit, makeId, modelId, city, minPrice, maxPrice, sort } = query;
+
+  const conditions = [eq(listingTable.status, "approved")];
+
+  if (makeId) conditions.push(eq(carTable.makeId, makeId));
+  if (modelId) conditions.push(eq(carTable.modelId, modelId));
+  if (city) conditions.push(ilike(carTable.city, `%${city}%`));
+  if (minPrice !== undefined) conditions.push(gte(carTable.price, minPrice));
+  if (maxPrice !== undefined) conditions.push(lte(carTable.price, maxPrice));
+
+  const baseQuery = db
+    .select({
+      id: listingTable.id,
+      title: listingTable.title,
+      createdAt: listingTable.createdAt,
+      car: {
+        id: carTable.id,
+        price: carTable.price,
+        city: carTable.city,
+        year: carTable.year,
+        distance: carTable.distance,
+        makeId: carTable.makeId,
+        modelId: carTable.modelId,
+      },
+    })
+    .from(listingTable)
+    .innerJoin(carTable, eq(listingTable.id, carTable.listingId))
+    .where(and(...conditions));
+
+  let orderByClause;
+  if (sort === "price_asc") {
+    orderByClause = asc(carTable.price);
+  } else if (sort === "price_desc") {
+    orderByClause = desc(carTable.price);
+  } else if (sort === "oldest") {
+    orderByClause = asc(listingTable.createdAt);
+  } else {
+    orderByClause = desc(listingTable.createdAt);
+  }
+
+  const totalCountResult = await db
+    .select({ count: count() })
+    .from(listingTable)
+    .innerJoin(carTable, eq(listingTable.id, carTable.listingId))
+    .where(and(...conditions));
+    
+  const totalCount = totalCountResult[0].count;
+
+  const data = await baseQuery
+    .orderBy(orderByClause)
+    .limit(limit)
+    .offset((page - 1) * limit);
+
+  return {
+    data,
+    meta: {
+      total: totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit),
+    },
+  };
 };
