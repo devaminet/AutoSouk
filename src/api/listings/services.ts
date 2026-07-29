@@ -49,6 +49,16 @@ export const saveCarAndMedia = async (args: {
   userId: number;
 }) => {
   const { carDetails, filenames, urlsMap, listingId, userId } = args;
+
+  const existingCar = await db
+    .select({ id: carTable.id })
+    .from(carTable)
+    .where(eq(carTable.listingId, listingId));
+
+  if (existingCar.length > 0) {
+    throw new BadRequestError("A car is already attached to this listing");
+  }
+
   const car = await db.transaction(async (tx) => {
     const newCar = await tx
       .insert(carTable)
