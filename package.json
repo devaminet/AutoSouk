@@ -33,7 +33,7 @@
   "dependencies": {
     "cookie-session": "^2.1.0",
     "dotenv": "^16.5.0",
-    "drizzle-orm": "^0.43.1",
+    "drizzle-orm": "^0.45.2",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",

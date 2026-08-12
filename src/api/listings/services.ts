@@ -176,7 +176,8 @@ export const approveListing = async (listingId: number) => {
 export const getListings = async (
   query: z.infer<typeof getListingsQuerySchema>,
 ) => {
-  const { page, limit, makeId, modelId, city, minPrice, maxPrice, sort } = query;
+  const { page, limit, makeId, modelId, city, minPrice, maxPrice, sort } =
+    query;
 
   const conditions = [eq(listingTable.status, "approved")];
 
@@ -221,8 +222,9 @@ export const getListings = async (
     .from(listingTable)
     .innerJoin(carTable, eq(listingTable.id, carTable.listingId))
     .where(and(...conditions));
-    
-  const totalCount = totalCountResult[0].count;
+
+  const totalCount =
+    totalCountResult.length > 0 ? totalCountResult[0]?.count : 0;
 
   const data = await baseQuery
     .orderBy(orderByClause)
