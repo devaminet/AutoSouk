@@ -5,7 +5,7 @@ import {
   signinUser,
   signupUserWithVerification,
 } from "../../../test/helpers";
-import { generateJWT } from "../services";
+import { generateJWT } from "../../../utils/functions";
 
 it("should fail if the user is not logged in", async () => {
   return request(app).post("/api/auth/refresh-token").send().expect(400);

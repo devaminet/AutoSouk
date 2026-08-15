@@ -1,0 +1,17 @@
+[
+  {
+    "carburant": "diesel"
+  },
+  {
+    "carburant": "electric"
+  },
+  {
+    "carburant": "petrol"
+  },
+  {
+    "carburant": "hybrid"
+  },
+  {
+    "carburant": "lpg"
+  }
+]

@@ -1,7 +1,11 @@
 import request from "supertest";
 import url from "url";
 import { app } from "../../../app";
-import { signupUser, signupUserWithVerification } from "../../../test/helpers";
+import {
+  signupUser,
+  signupUserWithVerification,
+  testUserCredentials,
+} from "../../../test/helpers";
 import { readTemplateFile, sendMail } from "../../../utils/functions";
 
 it("should fail when not providing a token", () => {
@@ -56,7 +60,7 @@ it("should validate user email format when trying to re-verify the account", asy
 it("should return 404 if user with the provided email was not found", async () => {
   return request(app)
     .post("/api/auth/re-verify")
-    .send({ email: "user@example.com" })
+    .send({ email: testUserCredentials.email })
     .expect(404);
 });
 
@@ -100,7 +104,7 @@ it("should properly provide data to register template on re-verify", async () =>
   expect(firstName).toBe(formData.firstName);
   expect(expiration).toBe("5 minutes");
   expect(`${parsedUrl.protocol}//${parsedUrl.host}`).toBe(
-    process.env.BACKEND_URL
+    process.env.BACKEND_URL,
   );
   expect(parsedUrl.pathname).toBe("/api/auth/verify");
   expect(parsedUrl.query.token).toBeDefined();

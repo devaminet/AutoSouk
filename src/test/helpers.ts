@@ -3,16 +3,22 @@ import request from "supertest";
 import { app } from "../app";
 import { readTemplateFile } from "../utils/functions";
 
+export const testUserCredentials = {
+  email: "user@example.com",
+  password: "USEr_@@852852",
+};
+
 export const signupUser = async (options?: {
   userType?: "buyer" | "seller" | "mechanic" | "admin";
   email?: string;
 }) => {
-  const { email = "user@example.com", userType = "buyer" } = options || {};
+  const { email = testUserCredentials.email, userType = "buyer" } =
+    options || {};
   const formData = {
     firstName: "John",
     lastName: "Doe",
     email,
-    password: "USEr_@@852852",
+    password: testUserCredentials.password,
     phone: "+212685412593",
     userType,
     city: "Tangier",
@@ -30,12 +36,13 @@ export const signupUserWithVerification = async (options?: {
   userType?: "buyer" | "seller" | "mechanic" | "admin";
   email?: string;
 }) => {
-  const { email = "user@example.com", userType = "buyer" } = options || {};
+  const { email = testUserCredentials.email, userType = "buyer" } =
+    options || {};
   const formData = {
     firstName: "John",
     lastName: "Doe",
     email,
-    password: "USEr_@@852852",
+    password: testUserCredentials.password,
     phone: "+212685412593",
     userType,
     city: "Tangier",
@@ -63,14 +70,16 @@ export const signinUser = async (options?: {
   email: string;
   password: string;
 }) => {
-  const { email = "user@example.com", password = "USEr_@@852852" } =
-    options || {};
+  const {
+    email = testUserCredentials.email,
+    password = testUserCredentials.password,
+  } = options || {};
   const response = await request(app)
     .post("/api/auth/login")
     .send({ email, password });
 
   const refreshToken = extractRefreshTokenFromCookie(
-    response.get("Set-Cookie")?.[0]!
+    response.get("Set-Cookie")?.[0]!,
   );
 
   return {

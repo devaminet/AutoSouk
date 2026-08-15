@@ -1,5 +1,9 @@
 import request from "supertest";
-import { signupUser, signupUserWithVerification } from "../../../test/helpers";
+import {
+  signupUser,
+  signupUserWithVerification,
+  testUserCredentials,
+} from "../../../test/helpers";
 import { app } from "../../../app";
 
 it("should return status code of 200 and response body on valid login", async () => {
@@ -58,7 +62,7 @@ it("should fail when sending invalid email", async () => {
 it("should fail when sending invalid password", async () => {
   const { body, statusCode } = await request(app)
     .post("/api/auth/login")
-    .send({ email: "user@example.com", password: "User@" });
+    .send({ email: testUserCredentials.email, password: "User@" });
   expect(statusCode).toBe(400);
   expect(body.errors).toHaveLength(1);
   expect(body.errors[0].field).toBe("password");

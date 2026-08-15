@@ -1,0 +1,20 @@
+[
+  {
+    "state": "excellent"
+  },
+  {
+    "state": "very_good"
+  },
+  {
+    "state": "good"
+  },
+  {
+    "state": "fine"
+  },
+  {
+    "state": "damaged"
+  },
+  {
+    "state": "new"
+  }
+]

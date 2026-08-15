@@ -1,0 +1,14 @@
+[
+  {
+    "origin": "customs_clearance"
+  },
+  {
+    "origin": "imported_new"
+  },
+  {
+    "origin": "customs_clearance_pending"
+  },
+  {
+    "origin": "ww"
+  }
+]

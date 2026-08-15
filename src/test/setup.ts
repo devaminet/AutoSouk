@@ -1,9 +1,11 @@
+const readTemplateFileMock = jest.fn().mockResolvedValue("<html></html>");
+
 import path from "path";
 import "dotenv/config";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { db, pool } from "../db";
-
-const readTemplateFileMock = jest.fn().mockResolvedValue("<html></html>");
+import { usersTable } from "../db/schema/user";
+import { hashPassword } from "../utils/functions";
 
 jest.mock("../utils/functions", () => {
   const originalModule = jest.requireActual("../utils/functions");
@@ -21,24 +23,37 @@ beforeAll(async () => {
   });
 });
 
+beforeEach(async () => {
+  try {
+    const { hashedPassword, salt } = await hashPassword("Admin_@@789");
+    await db.insert(usersTable).values({
+      email: "admin@autosouk.com",
+      password: hashedPassword,
+      salt,
+      firstName: "autosouk",
+      lastName: "admin",
+      role: "admin",
+      isVerified: true,
+      city: "Rabat",
+      phone: "212600000000",
+    });
+  } catch (error) {
+    console.log("Error in test setup", error);
+  }
+});
+
 afterEach(async () => {
   jest.resetAllMocks();
   readTemplateFileMock.mockResolvedValue("<html></html>");
 
-  // clear all data from tables in public schema
-  await db.execute(`
-        DO $$ DECLARE
-          r RECORD;
-        BEGIN
-          FOR r IN (
-            SELECT tablename
-            FROM pg_tables
-            WHERE schemaname = 'public'
-          ) LOOP
-            EXECUTE 'DELETE FROM ' || quote_ident(r.tablename);
-          END LOOP;
-        END $$;
-      `);
+  await db.execute("DELETE FROM cars");
+  await Promise.all([
+    db.execute("DELETE FROM listings"),
+    db.execute("DELETE FROM email_verification_tokens"),
+    db.execute("DELETE FROM forgot_password_tokens"),
+    db.execute("DELETE FROM refresh_tokens"),
+    db.execute("DELETE FROM users"),
+  ]);
 });
 
 afterAll(async () => {

@@ -1,0 +1,1 @@
+ALTER TABLE "car_origins" ADD CONSTRAINT "car_origins_origin_unique" UNIQUE("origin");
