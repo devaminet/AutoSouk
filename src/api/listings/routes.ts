@@ -16,6 +16,7 @@ import {
   saveCarAndMedia,
   saveListing,
   getListings,
+  deleteListing,
 } from "./services";
 import { isAdmin } from "../../middlewares/is-admin";
 import { isSeller } from "../../middlewares/is-seller";
@@ -110,6 +111,18 @@ listingRouter.patch(
     const listingId = +req.params.id;
     const result = await approveListing(listingId);
     res.status(200).json({ updatedRows: result });
+  },
+);
+
+// Delete a listing
+listingRouter.delete(
+  "/:id",
+  isAuthenticated,
+  isSeller,
+  async (req: Request, res: Response) => {
+    const listingId = +req.params.id;
+    const result = await deleteListing(listingId, req.currentUser?.id!);
+    res.status(200).json(result);
   },
 );
 

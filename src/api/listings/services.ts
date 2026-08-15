@@ -241,3 +241,34 @@ export const getListings = async (
     },
   };
 };
+
+export const deleteListing = async (listingId: number, userId: number) => {
+  const listing = await db
+    .select({
+      id: listingTable.id,
+      userId: listingTable.userId,
+      car: {
+        id: carTable.id,
+      },
+    })
+    .from(listingTable)
+    .where(and(eq(listingTable.id, listingId), eq(listingTable.userId, userId)))
+    .innerJoin(carTable, eq(listingTable.id, carTable.listingId));
+
+  if (listing.length === 0) {
+    throw new NotFoundError("Listing not found");
+  }
+
+  const carId = listing[0].car?.id;
+
+  await db.transaction(async (tx) => {
+    if (carId) {
+      await tx.delete(carMediaTable).where(eq(carMediaTable.carId, carId));
+      await tx.delete(carTable).where(eq(carTable.id, carId));
+    }
+
+    await tx.delete(listingTable).where(eq(listingTable.id, listingId));
+  });
+
+  return { deleted: true, listingId };
+};
