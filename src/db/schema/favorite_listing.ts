@@ -9,7 +9,7 @@ import {
 import { usersTable } from "./user";
 import { listingTable } from "./listing";
 
-export const favoriteListings = pgTable(
+export const favoriteListingsTable = pgTable(
   "favorite_listings",
   {
     buyerId: integer("user_id")
@@ -25,14 +25,14 @@ export const favoriteListings = pgTable(
 );
 
 export const favoriteListingRelations = relations(
-  favoriteListings,
+  favoriteListingsTable,
   ({ one }) => ({
     user: one(usersTable, {
-      fields: [favoriteListings.buyerId],
+      fields: [favoriteListingsTable.buyerId],
       references: [usersTable.id],
     }),
     listing: one(listingTable, {
-      fields: [favoriteListings.listingId],
+      fields: [favoriteListingsTable.listingId],
       references: [listingTable.id],
     }),
   }),
@@ -40,12 +40,12 @@ export const favoriteListingRelations = relations(
 
 export const userRelations = relations(usersTable, ({ many }) => {
   return {
-    favorites: many(favoriteListings),
+    favorites: many(favoriteListingsTable),
   };
 });
 
 export const listingRelations = relations(listingTable, ({ many }) => {
   return {
-    favorites: many(favoriteListings),
+    favorites: many(favoriteListingsTable),
   };
 });

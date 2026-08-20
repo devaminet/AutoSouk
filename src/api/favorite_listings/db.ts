@@ -1,6 +1,13 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "../../db";
-import { favoriteListings } from "../../db/schema/favorite_listing";
+import { favoriteListingsTable } from "../../db/schema/favorite_listing";
+import { listingTable } from "../../db/schema/listing";
+import { carTable } from "../../db/schema/car";
+import { usersTable } from "../../db/schema/user";
+import { carMediaTable } from "../../db/schema/car_media";
+import { QueryParams } from "./request-schema";
+import { generatePresignedUrl } from "../../utils/functions";
+import { carBucketName } from "../../utils/constants";
 
 export const createFavoriteListing = async ({
   userId,
@@ -10,7 +17,7 @@ export const createFavoriteListing = async ({
   listingId: number;
 }) => {
   const result = await db
-    .insert(favoriteListings)
+    .insert(favoriteListingsTable)
     .values({
       buyerId: userId,
       listingId,
@@ -28,13 +35,57 @@ export const removeFavoriteListing = async ({
   listingId: number;
 }) => {
   const result = await db
-    .delete(favoriteListings)
+    .delete(favoriteListingsTable)
     .where(
       and(
-        eq(favoriteListings.listingId, listingId),
-        eq(favoriteListings.buyerId, userId),
+        eq(favoriteListingsTable.listingId, listingId),
+        eq(favoriteListingsTable.buyerId, userId),
       ),
     );
 
   return result.rowCount || 0;
+};
+
+export const userFavoriteListings = async (
+  userId: number,
+  { limit, offset }: QueryParams,
+) => {
+  const listings = await db
+    .select({
+      listingId: listingTable.id,
+      listingTitle: listingTable.title,
+      listingDescription: listingTable.description,
+      images: sql<Array<{ link: string; type: string }>>`
+      json_agg(
+        json_build_object(
+          'link', ${carMediaTable.link},
+          'type', ${carMediaTable.type}
+        )
+      )
+    `.as("images"),
+    })
+    .from(listingTable)
+    .innerJoin(carTable, eq(carTable.listingId, listingTable.id))
+    .innerJoin(carMediaTable, eq(carMediaTable.carId, carTable.id))
+    .innerJoin(usersTable, eq(usersTable.id, listingTable.userId))
+    .innerJoin(
+      favoriteListingsTable,
+      eq(favoriteListingsTable.listingId, listingTable.id),
+    )
+    .where(eq(favoriteListingsTable.buyerId, userId))
+    .groupBy(listingTable.id, listingTable.title, listingTable.description)
+    .limit(limit)
+    .offset((offset - 1) * limit);
+
+  for (const listing of listings) {
+    for (let image of listing.images) {
+      const presignedUrl = await generatePresignedUrl(
+        carBucketName,
+        image.link,
+      );
+      image.link = presignedUrl;
+    }
+  }
+
+  return listings;
 };

@@ -1,6 +1,12 @@
+import { z } from "zod";
 import { BadRequestError } from "../../errors/bad-request-error";
 import { InternalServerError } from "../../errors/internal-server-error";
-import { createFavoriteListing, removeFavoriteListing } from "./db";
+import {
+  createFavoriteListing,
+  removeFavoriteListing,
+  userFavoriteListings,
+} from "./db";
+import { QueryParams } from "./request-schema";
 
 export const favorListing = async (data: {
   userId: number;
@@ -32,4 +38,11 @@ export const removeFavorite = async (data: {
     throw new BadRequestError("This listing is not in your favorites list");
   }
   return { count };
+};
+
+export const getUserFavoriteListings = async (
+  userId: number,
+  options: QueryParams,
+) => {
+  return await userFavoriteListings(userId, options);
 };

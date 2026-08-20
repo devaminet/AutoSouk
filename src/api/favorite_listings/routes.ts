@@ -1,16 +1,33 @@
 import { Router } from "express";
 import isAuthenticated from "../../middlewares/is-authenticated";
 import { isBuyer } from "../../middlewares/is-buyer";
-import { createOrRemoveFavoriteListingSchema } from "./request-schema";
+import {
+  createFavoriteListingSchema,
+  getFavoriteListingSchema,
+  removeFavoriteListingSchema,
+} from "./request-schema";
 import { RequestValidationError } from "../../errors/request-validation-error";
-import { favorListing, removeFavorite } from "./services";
+import {
+  favorListing,
+  getUserFavoriteListings,
+  removeFavorite,
+} from "./services";
 
 const favoriteListingRouter = Router();
 
+favoriteListingRouter.get("/", isAuthenticated, isBuyer, async (req, res) => {
+  const validationResult = getFavoriteListingSchema.safeParse(req.query);
+  let limit = validationResult.success ? validationResult.data.limit : 10;
+  let offset = validationResult.success ? validationResult.data.offset : 1;
+  const listings = await getUserFavoriteListings(req.currentUser?.id!, {
+    limit,
+    offset,
+  });
+  res.status(200).json({ listings });
+});
+
 favoriteListingRouter.post("/", isAuthenticated, isBuyer, async (req, res) => {
-  const validationResult = createOrRemoveFavoriteListingSchema.safeParse(
-    req.body,
-  );
+  const validationResult = createFavoriteListingSchema.safeParse(req.body);
   if (!validationResult.success) {
     throw new RequestValidationError(validationResult.error.errors);
   }
@@ -23,13 +40,11 @@ favoriteListingRouter.post("/", isAuthenticated, isBuyer, async (req, res) => {
 });
 
 favoriteListingRouter.delete(
-  "/",
+  "/:listingId",
   isAuthenticated,
   isBuyer,
   async (req, res) => {
-    const validationResult = createOrRemoveFavoriteListingSchema.safeParse(
-      req.body,
-    );
+    const validationResult = removeFavoriteListingSchema.safeParse(req.params);
     if (!validationResult.success) {
       throw new RequestValidationError(validationResult.error.errors);
     }
