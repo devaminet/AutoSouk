@@ -1,5 +1,6 @@
+import { BadRequestError } from "../../errors/bad-request-error";
 import { InternalServerError } from "../../errors/internal-server-error";
-import { createFavoriteListing } from "./db";
+import { createFavoriteListing, removeFavoriteListing } from "./db";
 
 export const favorListing = async (data: {
   userId: number;
@@ -8,9 +9,27 @@ export const favorListing = async (data: {
   try {
     return await createFavoriteListing(data);
   } catch (error) {
-    console.log(error);
     throw new InternalServerError(
       "Could not add this listing to your favorites",
     );
   }
+};
+
+export const removeFavorite = async (data: {
+  userId: number;
+  listingId: number;
+}) => {
+  let count: number;
+  try {
+    count = await removeFavoriteListing(data);
+  } catch (error) {
+    throw new InternalServerError(
+      "Could not remove this listing from your favorites",
+    );
+  }
+
+  if (count === 0) {
+    throw new BadRequestError("This listing is not in your favorites list");
+  }
+  return { count };
 };
