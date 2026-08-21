@@ -12,7 +12,5 @@ export default (
     res.status(err.statusCode).json({ errors: err.serializeError() });
     return;
   }
-  return res
-    .status(500)
-    .json({ errors: [{ message: "Something went wrong" }] });
+  res.status(500).json({ errors: [{ message: "Something went wrong" }] });
 };

@@ -13,6 +13,6 @@ router.use("/api/makes", makeRouter);
 router.use("/api/models", carModelRouter);
 router.use("/api/cars", carsRouter);
 router.use("/api/listings", listingRouter);
-router.use("/api/favorite_lisings", favoriteListingRouter);
+router.use("/api/favorite_listings", favoriteListingRouter);
 
 export default router;
