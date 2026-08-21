@@ -68,11 +68,11 @@ export const extractRefreshTokenFromCookie = (cookie: string) => {
 
 export const signinUser = async (options?: {
   email: string;
-  password: string;
+  password?: string;
 }) => {
   const {
-    email = testUserCredentials.email,
-    password = testUserCredentials.password,
+    email = options?.email || testUserCredentials.email,
+    password = options?.password || testUserCredentials.password,
   } = options || {};
   const response = await request(app)
     .post("/api/auth/login")

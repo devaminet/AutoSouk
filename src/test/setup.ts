@@ -53,6 +53,7 @@ afterEach(async () => {
     db.execute("DELETE FROM forgot_password_tokens"),
     db.execute("DELETE FROM refresh_tokens"),
     db.execute("DELETE FROM users"),
+    db.execute("DELETE FROM favorite_listings"),
   ]);
 });
 
