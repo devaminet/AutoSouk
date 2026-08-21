@@ -42,13 +42,12 @@ export const getUserListing = async (
 };
 
 export const saveCarAndMedia = async (args: {
-  carDetails: Omit<z.infer<typeof createCarSchema>, "filenames">;
-  filenames: string[];
-  urlsMap: Map<string, string>;
+  carDetails: Omit<z.infer<typeof createCarSchema>, "files">;
+  carMedia: { signedUrl: string; isPrimary: boolean; filename: string }[];
   listingId: number;
   userId: number;
 }) => {
-  const { carDetails, filenames, urlsMap, listingId, userId } = args;
+  const { carDetails, carMedia, listingId, userId } = args;
 
   const existingCar = await db
     .select({ id: carTable.id })
@@ -69,14 +68,15 @@ export const saveCarAndMedia = async (args: {
       })
       .returning();
 
-    const carMediaValues = filenames.map((filename) => ({
+    const carMediaValues = carMedia.map((media) => ({
       carId: newCar[0].id,
-      link: filename,
-      type: getFileType(filename) as "image" | "video",
+      link: media.filename,
+      type: getFileType(media.filename) as "image" | "video",
+      isPrimary: media.isPrimary,
     }));
 
     await tx.insert(carMediaTable).values(carMediaValues);
-    return { ...newCar[0], filenames, urls: Object.fromEntries(urlsMap) };
+    return { ...newCar[0] };
   });
 
   return car;

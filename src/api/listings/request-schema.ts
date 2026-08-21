@@ -68,19 +68,27 @@ export const createCarSchema = z.object(
       required_error: "Doors number is required",
       invalid_type_error: "Doors number must be a number",
     }),
-    filenames: z.array(
-      z.string().refine(
-        (name) => {
-          const isValid = getFileType(name);
-          return !!isValid;
+    files: z
+      .array(
+        z.object({
+          name: z.string().refine(
+            (name) => !!getFileType(name),
+            (filename) => ({
+              message: `${filename} has an invalid file type, allowed type: ${allowedFileTypes}`,
+            }),
+          ),
+          isPrimary: z.boolean(),
+        }),
+        {
+          required_error: "At least one file is required.",
+          invalid_type_error:
+            "Files must be a list of objects in the format: { name: string, isPrimary: boolean }.",
         },
-        (filename) => {
-          return {
-            message: `${filename} has an invalid file type, allowed type: ${allowedFileTypes}`,
-          };
-        },
-      ),
-    ),
+      )
+      .refine((files) => files.filter((file) => file.isPrimary).length === 1, {
+        message: "Exactly one file must be designated as primary.",
+        path: [],
+      }),
   },
   {
     required_error: "Car details are required",

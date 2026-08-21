@@ -7,7 +7,11 @@ import {
 import { RequestValidationError } from "../../errors/request-validation-error";
 import isAuthenticated from "../../middlewares/is-authenticated";
 import { NotFoundError } from "../../errors/not-found-error";
-import { generatePresignedUrls } from "../../utils/functions";
+import {
+  generatePresignedUrl,
+  generatePresignedUrls,
+  getFileType,
+} from "../../utils/functions";
 import { carBucketName } from "../../utils/constants";
 import {
   approveListing,
@@ -20,6 +24,7 @@ import {
 } from "./services";
 import { isAdmin } from "../../middlewares/is-admin";
 import { isSeller } from "../../middlewares/is-seller";
+import { InternalServerError } from "../../errors/internal-server-error";
 
 const listingRouter = Router();
 
@@ -65,17 +70,46 @@ listingRouter.post(
       throw new NotFoundError("Listing was not found");
     }
 
-    const { filenames, ...carDetails } = validateResult.data;
-    const urlsMap = await generatePresignedUrls(carBucketName, filenames);
+    const { files, ...carDetails } = validateResult.data;
+    const filenamesPromises = files.map((file) => {
+      return new Promise<{
+        signedUrl: string;
+        isPrimary: boolean;
+        filename: string;
+      }>((resolve, reject) => {
+        generatePresignedUrl(carBucketName, file.name)
+          .then((value) =>
+            resolve({
+              signedUrl: value,
+              isPrimary: file.isPrimary,
+              filename: file.name,
+            }),
+          )
+          .catch(() =>
+            reject(
+              new InternalServerError(
+                `Could not generate url for this image: ${file.name}`,
+              ),
+            ),
+          );
+      });
+    });
+
+    let carMedia: Awaited<(typeof filenamesPromises)[number]>[] = [];
+    try {
+      carMedia = await Promise.all(filenamesPromises);
+    } catch (error) {
+      throw new InternalServerError("Could not generate urls for images");
+    }
+
     const car = await saveCarAndMedia({
       carDetails,
-      filenames,
-      urlsMap,
+      carMedia,
       listingId,
       userId: req.currentUser?.id!,
     });
 
-    res.status(201).json({ car });
+    res.status(201).json({ ...car, carMedia });
   },
 );
 
