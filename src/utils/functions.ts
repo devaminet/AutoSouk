@@ -67,11 +67,11 @@ export const sendMail = async (options: {
 
 export const readTemplateFile = async (
   fileName: string,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
 ): Promise<string> => {
   const template = await fs.readFile(
     path.resolve(__dirname, `../templates/${fileName}`),
-    { encoding: "utf8" }
+    { encoding: "utf8" },
   );
   const html = ejs.render(template, data);
   return html;
@@ -82,7 +82,7 @@ export const readSeedFile = async (fileName: string) => {
     path.join(__dirname, `../db/seeds/data/${fileName}.json`),
     {
       encoding: "utf8",
-    }
+    },
   );
   return data;
 };
@@ -97,17 +97,40 @@ export const createBucket = async (bucketName: string) => {
 export const generatePresignedUrl = async (
   bucketName: string,
   filename: string,
-  expires?: number
+  expires?: number,
 ) => {
   return minioClient.presignedPutObject(bucketName, filename, expires);
 };
 
-export const generatePresignedUrls = async (
+export const generateGetPresignedUrl = async (
   bucketName: string,
-  filenames: string[]
+  filename: string,
+  expires?: number,
+) => {
+  return minioClient.presignedGetObject(bucketName, filename, expires);
+};
+
+export const generateGetPresignedUrls = async (
+  bucketName: string,
+  filenames: string[],
 ) => {
   const promises = filenames.map((filename) =>
-    generatePresignedUrl(bucketName, filename)
+    generateGetPresignedUrl(bucketName, filename),
+  );
+  const results = await Promise.all(promises);
+
+  return results.reduce<Map<string, string>>((prev, curr, index) => {
+    prev.set(filenames[index], curr);
+    return prev;
+  }, new Map());
+};
+
+export const generatePresignedUrls = async (
+  bucketName: string,
+  filenames: string[],
+) => {
+  const promises = filenames.map((filename) =>
+    generatePresignedUrl(bucketName, filename),
   );
   const results = await Promise.allSettled(promises);
 
@@ -144,7 +167,7 @@ export const hashPassword = async (password: string) => {
 export const verifyPassword = async (
   plainPassword: string,
   hashedPassword: string,
-  salt: string
+  salt: string,
 ) => {
   const hash = await generatePassword(plainPassword, salt);
   return hash === hashedPassword;
@@ -152,7 +175,7 @@ export const verifyPassword = async (
 
 export const generateJWT = async (
   payload: string | Buffer | object,
-  expiresIn: number
+  expiresIn: number,
 ) => {
   return new Promise<string | undefined>((resolve, reject) => {
     sign(payload, process.env.JWT_SECRET!, { expiresIn }, (err, encoded) => {
@@ -176,7 +199,7 @@ export const verifyJWT = <T>(token: string): Promise<JwtPayload & T> => {
 };
 
 export const sanitizeUser = (
-  user: typeof usersTable.$inferSelect
+  user: typeof usersTable.$inferSelect,
 ): Omit<typeof user, "password" | "salt" | "updatedAt" | "createdAt"> => {
   return {
     id: user.id,

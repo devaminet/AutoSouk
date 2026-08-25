@@ -1,4 +1,4 @@
-import { integer, pgTable, varchar } from "drizzle-orm/pg-core";
+import { integer, pgTable, varchar, boolean } from "drizzle-orm/pg-core";
 import { carTable } from "./car";
 import { relations } from "drizzle-orm";
 
@@ -11,6 +11,7 @@ export const carMediaTable = pgTable("car_media", {
   type: varchar({
     enum: ["image", "video"],
   }).notNull(),
+  isPrimary: boolean().notNull(),
 });
 
 export const carMediaRelations = relations(carMediaTable, ({ one }) => ({

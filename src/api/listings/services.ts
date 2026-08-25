@@ -3,11 +3,16 @@ import { and, eq, desc, asc, gte, lte, ilike, count } from "drizzle-orm";
 import { db } from "../../db";
 import { listingTable } from "../../db/schema/listing";
 import { carTable } from "../../db/schema/car";
-import { getFileType } from "../../utils/functions";
+import {
+  generateGetPresignedUrl,
+  generateGetPresignedUrls,
+  getFileType,
+} from "../../utils/functions";
 import { carMediaTable } from "../../db/schema/car_media";
 import { createCarSchema, getListingsQuerySchema } from "./request-schema";
 import { BadRequestError } from "../../errors/bad-request-error";
 import { NotFoundError } from "../../errors/not-found-error";
+import { carBucketName } from "../../utils/constants";
 
 export const saveListing = async (
   title: string,
@@ -42,13 +47,12 @@ export const getUserListing = async (
 };
 
 export const saveCarAndMedia = async (args: {
-  carDetails: Omit<z.infer<typeof createCarSchema>, "filenames">;
-  filenames: string[];
-  urlsMap: Map<string, string>;
+  carDetails: Omit<z.infer<typeof createCarSchema>, "files">;
+  carMedia: { signedUrl: string; isPrimary: boolean; filename: string }[];
   listingId: number;
   userId: number;
 }) => {
-  const { carDetails, filenames, urlsMap, listingId, userId } = args;
+  const { carDetails, carMedia, listingId, userId } = args;
 
   const existingCar = await db
     .select({ id: carTable.id })
@@ -69,14 +73,15 @@ export const saveCarAndMedia = async (args: {
       })
       .returning();
 
-    const carMediaValues = filenames.map((filename) => ({
+    const carMediaValues = carMedia.map((media) => ({
       carId: newCar[0].id,
-      link: filename,
-      type: getFileType(filename) as "image" | "video",
+      link: media.filename,
+      type: getFileType(media.filename) as "image" | "video",
+      isPrimary: media.isPrimary,
     }));
 
     await tx.insert(carMediaTable).values(carMediaValues);
-    return { ...newCar[0], filenames, urls: Object.fromEntries(urlsMap) };
+    return { ...newCar[0] };
   });
 
   return car;
@@ -122,6 +127,7 @@ export const getListingDetails = async (listingId: number) => {
             columns: {
               link: true,
               type: true,
+              isPrimary: true,
             },
           },
           make: {
@@ -187,25 +193,6 @@ export const getListings = async (
   if (minPrice !== undefined) conditions.push(gte(carTable.price, minPrice));
   if (maxPrice !== undefined) conditions.push(lte(carTable.price, maxPrice));
 
-  const baseQuery = db
-    .select({
-      id: listingTable.id,
-      title: listingTable.title,
-      createdAt: listingTable.createdAt,
-      car: {
-        id: carTable.id,
-        price: carTable.price,
-        city: carTable.city,
-        year: carTable.year,
-        distance: carTable.distance,
-        makeId: carTable.makeId,
-        modelId: carTable.modelId,
-      },
-    })
-    .from(listingTable)
-    .innerJoin(carTable, eq(listingTable.id, carTable.listingId))
-    .where(and(...conditions));
-
   let orderByClause;
   if (sort === "price_asc") {
     orderByClause = asc(carTable.price);
@@ -217,6 +204,62 @@ export const getListings = async (
     orderByClause = desc(listingTable.createdAt);
   }
 
+  const listings = await db.query.listingTable.findMany({
+    columns: {
+      id: true,
+      title: true,
+      description: true,
+      createdAt: true,
+    },
+    with: {
+      user: {
+        columns: {
+          firstName: true,
+          lastName: true,
+          imageUrl: true,
+          phone: true,
+        },
+      },
+      car: {
+        columns: {},
+        with: {
+          carMedias: {
+            columns: {
+              type: true,
+              link: true,
+              isPrimary: true,
+            },
+            orderBy(fields, operators) {
+              return operators.desc(fields.isPrimary);
+            },
+          },
+        },
+      },
+    },
+    where: and(...conditions),
+    orderBy: orderByClause,
+    limit,
+    offset: (page - 1) * limit,
+  });
+
+  for (const listing of listings) {
+    if (listing.user && listing.user.imageUrl) {
+      const imageUrl = await generateGetPresignedUrl(
+        carBucketName,
+        listing.user.imageUrl,
+      );
+      listing.user.imageUrl = imageUrl;
+    }
+    const carMedias = listing.car?.carMedias;
+    if (carMedias) {
+      const filenames = carMedias.map((media) => media.link);
+      const urlsMap = await generateGetPresignedUrls(carBucketName, filenames);
+      for (const media of carMedias) {
+        media.link = urlsMap.get(media.link) || "";
+      }
+    }
+  }
+
   const totalCountResult = await db
     .select({ count: count() })
     .from(listingTable)
@@ -226,13 +269,8 @@ export const getListings = async (
   const totalCount =
     totalCountResult.length > 0 ? totalCountResult[0]?.count : 0;
 
-  const data = await baseQuery
-    .orderBy(orderByClause)
-    .limit(limit)
-    .offset((page - 1) * limit);
-
   return {
-    data,
+    listings,
     meta: {
       total: totalCount,
       page,

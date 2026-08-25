@@ -1,0 +1,1 @@
+ALTER TABLE "car_media" ADD COLUMN "isPrimary" boolean NOT NULL;
