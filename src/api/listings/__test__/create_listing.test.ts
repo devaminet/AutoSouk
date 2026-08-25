@@ -6,8 +6,8 @@ it("should fail if the user who want to create a listing is not logged in", () =
   return request(app).post("/api/listings").expect(401);
 });
 
-it("should fail if user is not of type buyer", async () => {
-  await signupUserWithVerification({ userType: "seller" });
+it("should fail if user is not of type seller", async () => {
+  await signupUserWithVerification({ userType: "buyer" });
   const authUser = await signinUser();
   const response = await request(app)
     .post("/api/listings")
@@ -16,7 +16,7 @@ it("should fail if user is not of type buyer", async () => {
 });
 
 it("should validate create listing request", async () => {
-  await signupUserWithVerification();
+  await signupUserWithVerification({ userType: "seller" });
   const authUser = await signinUser();
   const response = await request(app)
     .post("/api/listings")
@@ -25,7 +25,7 @@ it("should validate create listing request", async () => {
 });
 
 it("should create listing and return data", async () => {
-  await signupUserWithVerification();
+  await signupUserWithVerification({ userType: "seller" });
   const authUser = await signinUser();
 
   const title = "A black car for sale";
@@ -70,7 +70,7 @@ it("should fail when listing does not exist", async () => {
 });
 
 it("should return validation error when trying to attach car to listing with invalid data", async () => {
-  await signupUserWithVerification({ userType: "buyer" });
+  await signupUserWithVerification({ userType: "seller" });
   const authUser = await signinUser();
 
   const title = "A black car for sale";
@@ -88,7 +88,7 @@ it("should return validation error when trying to attach car to listing with inv
   const listingId = response.body.listing.id;
 
   const attachCarResponse = await request(app)
-    .post(`/api/listings/${listingId}/cars`)
+    .post(`/api/listings/${listingId}/car`)
     .send({})
     .auth(authUser.accessToken, { type: "bearer" });
 
@@ -97,7 +97,7 @@ it("should return validation error when trying to attach car to listing with inv
 });
 
 it("should attach car to a listing", async () => {
-  await signupUserWithVerification({ userType: "buyer" });
+  await signupUserWithVerification({ userType: "seller" });
   const authUser = await signinUser();
 
   const title = "A black car for sale";
@@ -115,7 +115,7 @@ it("should attach car to a listing", async () => {
   const listingId = response.body.listing.id;
 
   const attachCarResponse = await request(app)
-    .post(`/api/listings/${listingId}/cars`)
+    .post(`/api/listings/${listingId}/car`)
     .send({
       makeId: 449,
       modelId: 2085,
@@ -130,7 +130,10 @@ it("should attach car to a listing", async () => {
       transmission: "automatic",
       fiscalPower: 8,
       doorsNumber: 5,
-      filenames: ["pic_1.jpeg", "pic_2.jpeg", "pic_3.jpeg"],
+      files: [
+        { name: "file1.png", isPrimary: true, type: "image" },
+        { name: "file2.png", isPrimary: false, type: "image" },
+      ],
     })
     .auth(authUser.accessToken, { type: "bearer" });
 
