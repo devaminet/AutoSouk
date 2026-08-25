@@ -19,7 +19,15 @@ import { NotAuthorizedError } from "../../errors/not_authorized_error";
 import { refreshTokensTable } from "../../db/schema/refresh_tokens";
 import { NotFoundError } from "../../errors/not_found_error";
 import { forgotPasswordTokensTable } from "../../db/schema/forget_password_tokens";
-import { createUser, findUserByEmail, insertVerificationToken } from "./db";
+import {
+  createUser,
+  deleteVerificationToken,
+  findUserByEmail,
+  findUserById,
+  getVerificationToken,
+  insertVerificationToken,
+  verifyUserById,
+} from "./db";
 import { tokenExpirationMinutes } from "../../utils/constants";
 
 export const setupUser = async (user: z.infer<typeof registerSchema>) => {
@@ -127,44 +135,29 @@ export const loginUser = async (data: { email: string; password: string }) => {
 };
 
 export const verifyUser = async (token: string) => {
-  const response = await db
-    .select()
-    .from(emailVerificationTokensTable)
-    .where(eq(emailVerificationTokensTable.token, token as string))
-    .limit(1);
-  if (response.length === 0) {
+  const tokenResponse = await getVerificationToken(token);
+  if (!tokenResponse) {
     throw new BadRequestError("Invalid token");
   }
-  const { expiresAt } = response[0];
+  const { expiresAt } = tokenResponse;
   const difference =
     (expiresAt.getTime() - new Date().getTime()) /
     1000 /
     60 /
     tokenExpirationMinutes;
   if (difference <= 0) {
-    await db
-      .delete(emailVerificationTokensTable)
-      .where(eq(emailVerificationTokensTable.token, token as string));
+    await deleteVerificationToken(token);
     throw new BadRequestError("Link has been expired");
   }
-  const user = await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.id, response[0].userId))
-    .limit(1);
-  if (user.length === 0) {
+  const user = await findUserById(tokenResponse.userId);
+  if (!user) {
     throw new NotAuthorizedError();
   }
-  if (user[0].isVerified) {
+  if (user.isVerified) {
     throw new BadRequestError("User is already verified");
   }
-  await db
-    .update(usersTable)
-    .set({ isVerified: true })
-    .where(eq(usersTable.id, response[0].userId));
-  await db
-    .delete(emailVerificationTokensTable)
-    .where(eq(emailVerificationTokensTable.token, token as string));
+  await verifyUserById(tokenResponse.userId);
+  await deleteVerificationToken(token);
 
   return { success: true };
 };
