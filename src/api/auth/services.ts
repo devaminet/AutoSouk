@@ -19,53 +19,8 @@ import { NotAuthorizedError } from "../../errors/not_authorized_error";
 import { refreshTokensTable } from "../../db/schema/refresh_tokens";
 import { NotFoundError } from "../../errors/not_found_error";
 import { forgotPasswordTokensTable } from "../../db/schema/forget_password_tokens";
-
-const tokenExpirationMinutes = 5;
-
-export const findUserByEmail = async (
-  email: string,
-): Promise<typeof usersTable.$inferSelect | null> => {
-  const user = await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.email, email))
-    .limit(1);
-
-  return user[0];
-};
-
-export const createUser = async (user: z.infer<typeof registerSchema>) => {
-  const { email, password, city, firstName, lastName, phone, userType } = user;
-  const { hashedPassword, salt } = await hashPassword(password);
-
-  const createdUser = await db
-    .insert(usersTable)
-    .values({
-      email,
-      password: hashedPassword,
-      salt,
-      city,
-      firstName,
-      lastName,
-      phone,
-      role: userType,
-    })
-    .returning({ id: usersTable.id });
-
-  return createdUser[0].id;
-};
-
-const insertVerificationToken = async (
-  userId: number,
-  token: string,
-  expiresAt: Date,
-) => {
-  await db.insert(emailVerificationTokensTable).values({
-    userId,
-    token,
-    expiresAt,
-  });
-};
+import { createUser, findUserByEmail, insertVerificationToken } from "./db";
+import { tokenExpirationMinutes } from "../../utils/constants";
 
 export const setupUser = async (user: z.infer<typeof registerSchema>) => {
   const { firstName, email } = user;
