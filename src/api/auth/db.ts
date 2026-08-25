@@ -6,6 +6,7 @@ import { registerSchema } from "./request_schema";
 import { hashPassword } from "../../utils/functions";
 import { emailVerificationTokensTable } from "../../db/schema/email_verification_tokens";
 import { refreshTokensTable } from "../../db/schema/refresh_tokens";
+import { forgotPasswordTokensTable } from "../../db/schema/forget_password_tokens";
 
 export const findUserByEmail = async (
   email: string,
@@ -104,4 +105,40 @@ export const insertUserRefrechToken = async (
     .insert(refreshTokensTable)
     .values({ userId: userId, currentToken: refreshToken })
     .returning();
+};
+
+export const insertPasswordResetToken = async (
+  userId: number,
+  token: string,
+  expiresAt: Date,
+) => {
+  return await db
+    .insert(forgotPasswordTokensTable)
+    .values({
+      userId,
+      token,
+      expiresAt,
+    })
+    .returning();
+};
+
+export const findPasswordResetToken = async (token: string) => {
+  const result = await db
+    .select()
+    .from(forgotPasswordTokensTable)
+    .where(eq(forgotPasswordTokensTable.token, token));
+
+  if (result.length === 0) {
+    return null;
+  }
+
+  return result[0];
+};
+
+export const deletePasswordResetToken = async (token: string) => {
+  const result = await db
+    .delete(forgotPasswordTokensTable)
+    .where(eq(forgotPasswordTokensTable.token, token));
+
+  return result.rows;
 };

@@ -20,10 +20,13 @@ import { NotFoundError } from "../../errors/not_found_error";
 import { forgotPasswordTokensTable } from "../../db/schema/forget_password_tokens";
 import {
   createUser,
+  deletePasswordResetToken,
   deleteVerificationToken,
+  findPasswordResetToken,
   findUserByEmail,
   findUserById,
   getVerificationToken,
+  insertPasswordResetToken,
   insertUserRefrechToken,
   insertVerificationToken,
   verifyUserById,
@@ -286,11 +289,7 @@ export const sendForgotPasswordLink = async (email: string) => {
   const token = generateToken();
   const expiresAt = new Date(Date.now() + 1000 * 60 * tokenExpirationMinutes);
 
-  await db.insert(forgotPasswordTokensTable).values({
-    userId: foundUser.id,
-    token,
-    expiresAt,
-  });
+  await insertPasswordResetToken(foundUser.id, token, expiresAt);
 
   const forgotPasswordHTML = await readTemplateFile("forgot_password.ejs", {
     firstName: foundUser.firstName,
@@ -310,31 +309,22 @@ export const verifyForgotPasswordToken = async (
   token: string,
   email: string,
 ) => {
-  const result = await db
-    .select()
-    .from(forgotPasswordTokensTable)
-    .where(eq(forgotPasswordTokensTable.token, token as string));
-  if (result.length === 0) {
+  const result = await findPasswordResetToken(token);
+  if (!result) {
     throw new BadRequestError("Invalid token");
   }
   const difference =
-    new Date(result[0].expiresAt).getTime() - new Date().getTime();
+    new Date(result.expiresAt).getTime() - new Date().getTime();
 
   if (difference <= 0) {
-    await db
-      .delete(forgotPasswordTokensTable)
-      .where(eq(forgotPasswordTokensTable.token, token as string));
+    await deletePasswordResetToken(token);
     throw new BadRequestError("Link has been expired");
   }
-  const user = await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.id, result[0].userId))
-    .limit(1);
-  if (user.length === 0) {
+  const user = await findUserById(result.userId);
+  if (!user) {
     throw new NotFoundError();
   }
-  if (user[0].email !== (email as string)) {
+  if (user.email !== (email as string)) {
     throw new BadRequestError("Invalid token");
   }
 
