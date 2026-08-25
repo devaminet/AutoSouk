@@ -22,22 +22,25 @@ const createListing = async () => {
   const listingId = response.body.listing.id as number;
 
   await request(app)
-    .post(`/api/listings/${listingId}/cars`)
+    .post(`/api/listings/${listingId}/car`)
     .send({
       makeId: 449,
       modelId: 2085,
       carburantId: 3,
-      originId: 4,
-      stateId: 6,
-      price: 500000,
-      year: 2025,
-      ownersCount: 0,
-      city: "Casablanca",
-      distance: "60km",
+      originId: 2,
+      stateId: 3,
+      price: 70000,
+      year: 2010,
+      ownersCount: 2,
+      city: "casablanca",
       transmission: "automatic",
-      fiscalPower: 8,
+      distance: "180000KM",
+      fiscalPower: 7,
       doorsNumber: 5,
-      filenames: ["pic_1.jpeg", "pic_2.jpeg", "pic_3.jpeg"],
+      files: [
+        { name: "file1.png", type: "image", isPrimary: true },
+        { name: "file2.png", type: "image", isPrimary: false },
+      ],
     })
     .auth(authUser.accessToken, { type: "bearer" });
 
@@ -174,7 +177,7 @@ it("should return user favorite list", async () => {
     .get("/api/favorite_listings")
     .send()
     .auth(authUser.accessToken, { type: "bearer" });
-  console.log(response);
+
   const listings = response.body.listings;
 
   expect(listings).toHaveLength(1);
