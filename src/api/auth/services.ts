@@ -174,11 +174,7 @@ export const resendVerificationEmail = async (email: string) => {
   const expiresAt = new Date(Date.now() + 1000 * 60 * tokenExpirationMinutes);
   const token = generateToken();
 
-  await db.insert(emailVerificationTokensTable).values({
-    userId: user.id,
-    token,
-    expiresAt,
-  });
+  await insertVerificationToken(user.id, token, expiresAt);
 
   const registerHTML = await readTemplateFile("register.ejs", {
     firstName: user.firstName,
