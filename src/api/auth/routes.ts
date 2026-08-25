@@ -7,11 +7,11 @@ import {
   resendTokenSchema,
   resetPasswordSchema,
   updatePasswordSchema,
-} from "./request-schema";
-import { RequestValidationError } from "../../errors/request-validation-error";
-import { BadRequestError } from "../../errors/bad-request-error";
-import { NotAuthorizedError } from "../../errors/not-authorized-error";
-import isAuthenticated from "../../middlewares/is-authenticated";
+} from "./request_schema";
+import { RequestValidationError } from "../../errors/request_validation_error";
+import { BadRequestError } from "../../errors/bad_request_error";
+import { NotAuthorizedError } from "../../errors/not_authorized_error";
+import isAuthenticated from "../../middlewares/is_authenticated";
 import {
   loginUser,
   refreshTokens,
@@ -23,7 +23,7 @@ import {
   verifyForgotPasswordToken,
   verifyUser,
 } from "./services";
-import { InternalServerError } from "../../errors/internal-server-error";
+import { InternalServerError } from "../../errors/internal_server_error";
 
 const tokenExpirationMinutes = 5;
 const authRouter = Router();

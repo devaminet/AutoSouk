@@ -1,12 +1,12 @@
 import { Router } from "express";
-import isAuthenticated from "../../middlewares/is-authenticated";
-import { isBuyer } from "../../middlewares/is-buyer";
+import isAuthenticated from "../../middlewares/is_authenticated";
+import { isBuyer } from "../../middlewares/is_buyer";
 import {
   createFavoriteListingSchema,
   getFavoriteListingSchema,
   removeFavoriteListingSchema,
-} from "./request-schema";
-import { RequestValidationError } from "../../errors/request-validation-error";
+} from "./request_schema";
+import { RequestValidationError } from "../../errors/request_validation_error";
 import {
   favorListing,
   getUserFavoriteListings,

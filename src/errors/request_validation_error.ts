@@ -1,5 +1,5 @@
 import { ZodIssue } from "zod";
-import { CustomError } from "./custom-error";
+import { CustomError } from "./custom_error";
 
 export class RequestValidationError extends CustomError {
   statusCode = 400;

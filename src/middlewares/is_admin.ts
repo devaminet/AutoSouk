@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-import { NotAuthorizedError } from "../errors/not-authorized-error";
-import { NotAllowedError } from "../errors/not-allowed";
+import { NotAuthorizedError } from "../errors/not_authorized_error";
+import { NotAllowedError } from "../errors/not_allowed";
 
 export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   if (!req.currentUser) {

@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { BadRequestError } from "../../errors/bad-request-error";
-import { InternalServerError } from "../../errors/internal-server-error";
+import { BadRequestError } from "../../errors/bad_request_error";
+import { InternalServerError } from "../../errors/internal_server_error";
 import {
   createFavoriteListing,
   removeFavoriteListing,
   userFavoriteListings,
 } from "./db";
-import { QueryParams } from "./request-schema";
+import { QueryParams } from "./request_schema";
 
 export const favorListing = async (data: {
   userId: number;

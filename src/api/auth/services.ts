@@ -2,7 +2,7 @@ import { and, eq, ne } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db";
 import { usersTable } from "../../db/schema/user";
-import { registerSchema, resetPasswordSchema } from "./request-schema";
+import { registerSchema, resetPasswordSchema } from "./request_schema";
 import {
   generateJWT,
   generateToken,
@@ -14,10 +14,10 @@ import {
   verifyPassword,
 } from "../../utils/functions";
 import { emailVerificationTokensTable } from "../../db/schema/email_verification_tokens";
-import { BadRequestError } from "../../errors/bad-request-error";
-import { NotAuthorizedError } from "../../errors/not-authorized-error";
+import { BadRequestError } from "../../errors/bad_request_error";
+import { NotAuthorizedError } from "../../errors/not_authorized_error";
 import { refreshTokensTable } from "../../db/schema/refresh_tokens";
-import { NotFoundError } from "../../errors/not-found-error";
+import { NotFoundError } from "../../errors/not_found_error";
 import { forgotPasswordTokensTable } from "../../db/schema/forget_password_tokens";
 
 const tokenExpirationMinutes = 5;
@@ -344,7 +344,7 @@ export const sendForgotPasswordLink = async (email: string) => {
     expiresAt,
   });
 
-  const forgotPasswordHTML = await readTemplateFile("forgot-password.ejs", {
+  const forgotPasswordHTML = await readTemplateFile("forgot_password.ejs", {
     firstName: foundUser.firstName,
     forgotPasswordUrl: `${process.env.BACKEND_URL}/api/auth/forgot-password?token=${token}&email=${email}`,
     expiration: `${tokenExpirationMinutes} minutes`,

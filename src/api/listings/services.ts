@@ -9,9 +9,9 @@ import {
   getFileType,
 } from "../../utils/functions";
 import { carMediaTable } from "../../db/schema/car_media";
-import { createCarSchema, getListingsQuerySchema } from "./request-schema";
-import { BadRequestError } from "../../errors/bad-request-error";
-import { NotFoundError } from "../../errors/not-found-error";
+import { createCarSchema, getListingsQuerySchema } from "./request_schema";
+import { BadRequestError } from "../../errors/bad_request_error";
+import { NotFoundError } from "../../errors/not_found_error";
 import { carBucketName } from "../../utils/constants";
 
 export const saveListing = async (

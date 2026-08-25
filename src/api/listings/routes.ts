@@ -3,10 +3,10 @@ import {
   createCarSchema,
   createListingSchema,
   getListingsQuerySchema,
-} from "./request-schema";
-import { RequestValidationError } from "../../errors/request-validation-error";
-import isAuthenticated from "../../middlewares/is-authenticated";
-import { NotFoundError } from "../../errors/not-found-error";
+} from "./request_schema";
+import { RequestValidationError } from "../../errors/request_validation_error";
+import isAuthenticated from "../../middlewares/is_authenticated";
+import { NotFoundError } from "../../errors/not_found_error";
 import {
   generateGetPresignedUrls,
   generatePresignedUrl,
@@ -21,9 +21,9 @@ import {
   getListings,
   deleteListing,
 } from "./services";
-import { isAdmin } from "../../middlewares/is-admin";
-import { isSeller } from "../../middlewares/is-seller";
-import { InternalServerError } from "../../errors/internal-server-error";
+import { isAdmin } from "../../middlewares/is_admin";
+import { isSeller } from "../../middlewares/is_seller";
+import { InternalServerError } from "../../errors/internal_server_error";
 
 const listingRouter = Router();
 

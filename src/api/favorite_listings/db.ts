@@ -5,7 +5,7 @@ import { listingTable } from "../../db/schema/listing";
 import { carTable } from "../../db/schema/car";
 import { usersTable } from "../../db/schema/user";
 import { carMediaTable } from "../../db/schema/car_media";
-import { QueryParams } from "./request-schema";
+import { QueryParams } from "./request_schema";
 import { generateGetPresignedUrl } from "../../utils/functions";
 import { carBucketName } from "../../utils/constants";
 
