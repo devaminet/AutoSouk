@@ -17,10 +17,10 @@ import { BadRequestError } from "../../errors/bad_request_error";
 import { NotAuthorizedError } from "../../errors/not_authorized_error";
 import { refreshTokensTable } from "../../db/schema/refresh_tokens";
 import { NotFoundError } from "../../errors/not_found_error";
-import { forgotPasswordTokensTable } from "../../db/schema/forget_password_tokens";
 import {
   createUser,
   deletePasswordResetToken,
+  deletePasswordResetTokenByUserId,
   deleteVerificationToken,
   findPasswordResetToken,
   findUserByEmail,
@@ -332,24 +332,20 @@ export const verifyForgotPasswordToken = async (
 };
 
 export const updatePassword = async (token: string, password: string) => {
-  const user = await db
-    .select()
-    .from(forgotPasswordTokensTable)
-    .where(eq(forgotPasswordTokensTable.token, token));
-  if (user.length === 0) {
+  const user = await findPasswordResetToken(token);
+  if (!user) {
     throw new BadRequestError("Invalid token");
   }
+
   const { hashedPassword, salt } = await hashPassword(password);
   const result = await db
     .update(usersTable)
     .set({ password: hashedPassword, salt })
-    .where(eq(usersTable.id, user[0].userId));
+    .where(eq(usersTable.id, user.userId));
   if (result.rowCount === 0) {
     return { success: false };
   }
-  await db
-    .delete(forgotPasswordTokensTable)
-    .where(eq(forgotPasswordTokensTable.userId, user[0].id));
+  await deletePasswordResetTokenByUserId(user.id);
 
   return { success: true };
 };

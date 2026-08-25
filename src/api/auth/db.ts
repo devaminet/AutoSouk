@@ -142,3 +142,11 @@ export const deletePasswordResetToken = async (token: string) => {
 
   return result.rows;
 };
+
+export const deletePasswordResetTokenByUserId = async (id: number) => {
+  const result = await db
+    .delete(forgotPasswordTokensTable)
+    .where(eq(forgotPasswordTokensTable.userId, id));
+
+  return result.rows;
+};
