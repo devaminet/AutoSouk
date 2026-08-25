@@ -5,6 +5,7 @@ import { usersTable } from "../../db/schema/user";
 import { registerSchema } from "./request_schema";
 import { hashPassword } from "../../utils/functions";
 import { emailVerificationTokensTable } from "../../db/schema/email_verification_tokens";
+import { refreshTokensTable } from "../../db/schema/refresh_tokens";
 
 export const findUserByEmail = async (
   email: string,
@@ -93,4 +94,14 @@ export const verifyUserById = async (id: number) => {
     .where(eq(usersTable.id, id));
 
   return response.rows;
+};
+
+export const insertUserRefrechToken = async (
+  userId: number,
+  refreshToken: string,
+) => {
+  return await db
+    .insert(refreshTokensTable)
+    .values({ userId: userId, currentToken: refreshToken })
+    .returning();
 };

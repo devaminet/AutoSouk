@@ -13,7 +13,6 @@ import {
   verifyJWT,
   verifyPassword,
 } from "../../utils/functions";
-import { emailVerificationTokensTable } from "../../db/schema/email_verification_tokens";
 import { BadRequestError } from "../../errors/bad_request_error";
 import { NotAuthorizedError } from "../../errors/not_authorized_error";
 import { refreshTokensTable } from "../../db/schema/refresh_tokens";
@@ -25,10 +24,12 @@ import {
   findUserByEmail,
   findUserById,
   getVerificationToken,
+  insertUserRefrechToken,
   insertVerificationToken,
   verifyUserById,
 } from "./db";
 import { tokenExpirationMinutes } from "../../utils/constants";
+import { InternalServerError } from "../../errors/internal_server_error";
 
 export const setupUser = async (user: z.infer<typeof registerSchema>) => {
   const { firstName, email } = user;
@@ -123,9 +124,12 @@ export const loginUser = async (data: { email: string; password: string }) => {
     },
     Number(process.env.JWT_REFRESH_TOKEN_EXPIRATION_SECONDS!),
   );
-  await db
-    .insert(refreshTokensTable)
-    .values({ userId: user.id, currentToken: refreshToken });
+
+  if (!refreshToken) {
+    throw new InternalServerError("Failed to log the user in");
+  }
+
+  await insertUserRefrechToken(user.id, refreshToken);
 
   return {
     accessToken,
