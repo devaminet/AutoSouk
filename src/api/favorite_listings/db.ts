@@ -6,7 +6,7 @@ import { carTable } from "../../db/schema/car";
 import { usersTable } from "../../db/schema/user";
 import { carMediaTable } from "../../db/schema/car_media";
 import { QueryParams } from "./request-schema";
-import { generatePresignedUrl } from "../../utils/functions";
+import { generateGetPresignedUrl } from "../../utils/functions";
 import { carBucketName } from "../../utils/constants";
 
 export const createFavoriteListing = async ({
@@ -79,7 +79,7 @@ export const userFavoriteListings = async (
 
   for (const listing of listings) {
     for (let image of listing.images) {
-      const presignedUrl = await generatePresignedUrl(
+      const presignedUrl = await generateGetPresignedUrl(
         carBucketName,
         image.link,
       );

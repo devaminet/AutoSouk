@@ -8,9 +8,8 @@ import { RequestValidationError } from "../../errors/request-validation-error";
 import isAuthenticated from "../../middlewares/is-authenticated";
 import { NotFoundError } from "../../errors/not-found-error";
 import {
+  generateGetPresignedUrls,
   generatePresignedUrl,
-  generatePresignedUrls,
-  getFileType,
 } from "../../utils/functions";
 import { carBucketName } from "../../utils/constants";
 import {
@@ -126,7 +125,7 @@ listingRouter.get(
     const carMedias = listing.car?.carMedias;
     if (carMedias) {
       const filenames = carMedias.map((media) => media.link);
-      const urlsMap = await generatePresignedUrls(carBucketName, filenames);
+      const urlsMap = await generateGetPresignedUrls(carBucketName, filenames);
       for (const media of carMedias) {
         media.link = urlsMap.get(media.link) || "";
       }
