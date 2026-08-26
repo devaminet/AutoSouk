@@ -214,3 +214,29 @@ export const updateRefreshToken = async (
     )
     .returning();
 };
+
+export const updateUserPassword = async (
+  email: string,
+  password: string,
+  salt: string,
+) => {
+  const result = await db
+    .update(usersTable)
+    .set({ password, salt })
+    .where(eq(usersTable.email, email));
+
+  return result.rowCount;
+};
+
+export const updateUserPasswordById = async (
+  userId: number,
+  password: string,
+  salt: string,
+) => {
+  const result = await db
+    .update(usersTable)
+    .set({ password, salt })
+    .where(eq(usersTable.id, userId));
+
+  return result.rowCount;
+};

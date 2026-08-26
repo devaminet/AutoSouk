@@ -1,4 +1,4 @@
-import { and, eq, ne } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db";
 import { usersTable } from "../../db/schema/user";
@@ -32,6 +32,8 @@ import {
   insertUserRefrechToken,
   insertVerificationToken,
   updateRefreshToken,
+  updateUserPassword,
+  updateUserPasswordById,
   verifyUserById,
 } from "./db";
 import { tokenExpirationMinutes } from "../../utils/constants";
@@ -85,12 +87,9 @@ export const resetPassword = async (
     throw new BadRequestError("Invalid password");
   }
   const { hashedPassword, salt } = await hashPassword(password);
-  const result = await db
-    .update(usersTable)
-    .set({ password: hashedPassword, salt })
-    .where(eq(usersTable.email, email));
+  const result = await updateUserPassword(email, hashedPassword, salt);
 
-  return result.rowCount;
+  return result;
 };
 
 export const loginUser = async (data: { email: string; password: string }) => {
@@ -314,11 +313,12 @@ export const updatePassword = async (token: string, password: string) => {
   }
 
   const { hashedPassword, salt } = await hashPassword(password);
-  const result = await db
-    .update(usersTable)
-    .set({ password: hashedPassword, salt })
-    .where(eq(usersTable.id, user.userId));
-  if (result.rowCount === 0) {
+  const result = await updateUserPasswordById(
+    user.userId,
+    hashedPassword,
+    salt,
+  );
+  if (result === 0) {
     return { success: false };
   }
   await deletePasswordResetTokenByUserId(user.id);
