@@ -62,7 +62,7 @@ it("should fail when sending invalid email", async () => {
 it("should fail when sending invalid password", async () => {
   const { body, statusCode } = await request(app)
     .post("/api/auth/login")
-    .send({ email: testUserCredentials.email, password: "User@" });
+    .send({ email: testUserCredentials.email, password: "" });
   expect(statusCode).toBe(400);
   expect(body.errors).toHaveLength(1);
   expect(body.errors[0].field).toBe("password");

@@ -29,7 +29,7 @@ import {
   findUserRefreshToken,
   getVerificationToken,
   insertPasswordResetToken,
-  insertUserRefrechToken,
+  insertUserRefreshToken,
   insertVerificationToken,
   updateRefreshToken,
   updateUserPassword,
@@ -134,7 +134,7 @@ export const loginUser = async (data: { email: string; password: string }) => {
     throw new InternalServerError("Failed to log the user in");
   }
 
-  await insertUserRefrechToken(user.id, refreshToken);
+  await insertUserRefreshToken(user.id, refreshToken);
 
   return {
     accessToken,
@@ -216,43 +216,39 @@ export const refreshTokens = async (token: string) => {
     await deleteRefreshToken(decoded.id);
     return { success: false };
   }
-  if (userToken) {
-    const accessToken = await generateJWT(
-      {
-        id: decoded.id,
-        email: decoded.email,
-        issuedAt: new Date().getTime(),
-        role: decoded.role,
-      },
-      Number(process.env.JWT_ACCESS_TOKEN_EXPIRATION_SECONDS!),
-    );
-    const refreshToken = await generateJWT(
-      {
-        id: decoded.id,
-        email: decoded.email,
-        issuedAt: new Date().getTime(),
-        role: decoded.role,
-      },
-      Number(process.env.JWT_REFRESH_TOKEN_EXPIRATION_SECONDS!),
-    );
+  const accessToken = await generateJWT(
+    {
+      id: decoded.id,
+      email: decoded.email,
+      issuedAt: new Date().getTime(),
+      role: decoded.role,
+    },
+    Number(process.env.JWT_ACCESS_TOKEN_EXPIRATION_SECONDS!),
+  );
+  const refreshToken = await generateJWT(
+    {
+      id: decoded.id,
+      email: decoded.email,
+      issuedAt: new Date().getTime(),
+      role: decoded.role,
+    },
+    Number(process.env.JWT_REFRESH_TOKEN_EXPIRATION_SECONDS!),
+  );
 
-    if (!refreshToken) {
-      throw new InternalServerError("An error occurred");
-    }
-    await updateRefreshToken(decoded.id, token, refreshToken);
-    const user = await findUserById(decoded.id);
-    if (!user) {
-      throw new NotFoundError("User was not found");
-    }
-    return {
-      success: true,
-      refreshToken,
-      accessToken,
-      user: sanitizeUser(user),
-    };
+  if (!refreshToken) {
+    throw new InternalServerError("An error occurred");
   }
-
-  return { success: false };
+  await updateRefreshToken(decoded.id, token, refreshToken);
+  const user = await findUserById(decoded.id);
+  if (!user) {
+    throw new NotFoundError("User was not found");
+  }
+  return {
+    success: true,
+    refreshToken,
+    accessToken,
+    user: sanitizeUser(user),
+  };
 };
 
 export const sendForgotPasswordLink = async (email: string) => {

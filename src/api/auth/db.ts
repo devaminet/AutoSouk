@@ -97,7 +97,7 @@ export const verifyUserById = async (id: number) => {
   return response.rows;
 };
 
-export const insertUserRefrechToken = async (
+export const insertUserRefreshToken = async (
   userId: number,
   refreshToken: string,
 ) => {
@@ -170,7 +170,7 @@ export const findReusedRefreshToken = async (token: string) => {
       ),
     );
 
-  if (!result) {
+  if (result.length === 0) {
     return null;
   }
 

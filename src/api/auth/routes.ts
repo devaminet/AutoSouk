@@ -24,8 +24,8 @@ import {
   verifyUser,
 } from "./services";
 import { InternalServerError } from "../../errors/internal_server_error";
+import { tokenExpirationMinutes } from "../../utils/constants";
 
-const tokenExpirationMinutes = 5;
 const authRouter = Router();
 
 authRouter.post("/register", async (req, res) => {
