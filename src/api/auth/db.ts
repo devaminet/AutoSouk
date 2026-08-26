@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db";
 import { usersTable } from "../../db/schema/user";
@@ -149,4 +149,68 @@ export const deletePasswordResetTokenByUserId = async (id: number) => {
     .where(eq(forgotPasswordTokensTable.userId, id));
 
   return result.rows;
+};
+
+export const deleteRefreshToken = async (userId: number) => {
+  const result = await db
+    .delete(refreshTokensTable)
+    .where(eq(refreshTokensTable.userId, userId));
+
+  return result.rows;
+};
+
+export const findReusedRefreshToken = async (token: string) => {
+  const result = await db
+    .select()
+    .from(refreshTokensTable)
+    .where(
+      and(
+        ne(refreshTokensTable.currentToken, token),
+        eq(refreshTokensTable.lastToken, token),
+      ),
+    );
+
+  if (!result) {
+    return null;
+  }
+
+  return result[0];
+};
+
+export const findUserRefreshToken = async (userId: number, token: string) => {
+  const userToken = await db
+    .select()
+    .from(refreshTokensTable)
+    .where(
+      and(
+        eq(refreshTokensTable.currentToken, token),
+        eq(refreshTokensTable.userId, userId),
+      ),
+    );
+
+  if (userToken.length === 0) {
+    return null;
+  }
+
+  return userToken[0];
+};
+
+export const updateRefreshToken = async (
+  userId: number,
+  oldToken: string,
+  newToken: string,
+) => {
+  return await db
+    .update(refreshTokensTable)
+    .set({
+      currentToken: newToken,
+      lastToken: oldToken,
+    })
+    .where(
+      and(
+        eq(refreshTokensTable.currentToken, oldToken),
+        eq(refreshTokensTable.userId, userId),
+      ),
+    )
+    .returning();
 };

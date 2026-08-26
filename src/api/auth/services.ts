@@ -15,20 +15,23 @@ import {
 } from "../../utils/functions";
 import { BadRequestError } from "../../errors/bad_request_error";
 import { NotAuthorizedError } from "../../errors/not_authorized_error";
-import { refreshTokensTable } from "../../db/schema/refresh_tokens";
 import { NotFoundError } from "../../errors/not_found_error";
 import {
   createUser,
   deletePasswordResetToken,
   deletePasswordResetTokenByUserId,
+  deleteRefreshToken,
   deleteVerificationToken,
   findPasswordResetToken,
+  findReusedRefreshToken,
   findUserByEmail,
   findUserById,
+  findUserRefreshToken,
   getVerificationToken,
   insertPasswordResetToken,
   insertUserRefrechToken,
   insertVerificationToken,
+  updateRefreshToken,
   verifyUserById,
 } from "./db";
 import { tokenExpirationMinutes } from "../../utils/constants";
@@ -203,38 +206,18 @@ export const refreshTokens = async (token: string) => {
   );
 
   // re-use detection
-  const usedToken = await db
-    .select()
-    .from(refreshTokensTable)
-    .where(
-      and(
-        ne(refreshTokensTable.currentToken, token),
-        eq(refreshTokensTable.lastToken, token),
-      ),
-    );
-  if (usedToken.length > 0) {
-    await db
-      .delete(refreshTokensTable)
-      .where(eq(refreshTokensTable.userId, decoded.id));
+  const usedToken = await findReusedRefreshToken(token);
+  if (usedToken) {
+    await deleteRefreshToken(decoded.id);
     return { success: false };
   }
 
-  const userToken = await db
-    .select()
-    .from(refreshTokensTable)
-    .where(
-      and(
-        eq(refreshTokensTable.currentToken, token),
-        eq(refreshTokensTable.userId, decoded.id),
-      ),
-    );
-  if (userToken.length === 0) {
-    await db
-      .delete(refreshTokensTable)
-      .where(eq(refreshTokensTable.userId, decoded.id));
+  const userToken = await findUserRefreshToken(decoded.id, token);
+  if (!userToken) {
+    await deleteRefreshToken(decoded.id);
     return { success: false };
   }
-  if (userToken.length > 0) {
+  if (userToken) {
     const accessToken = await generateJWT(
       {
         id: decoded.id,
@@ -253,27 +236,20 @@ export const refreshTokens = async (token: string) => {
       },
       Number(process.env.JWT_REFRESH_TOKEN_EXPIRATION_SECONDS!),
     );
-    await db
-      .update(refreshTokensTable)
-      .set({
-        currentToken: refreshToken,
-        lastToken: token,
-      })
-      .where(
-        and(
-          eq(refreshTokensTable.currentToken, token),
-          eq(refreshTokensTable.userId, decoded.id),
-        ),
-      );
-    const user = await db
-      .select()
-      .from(usersTable)
-      .where(eq(usersTable.id, decoded.id));
+
+    if (!refreshToken) {
+      throw new InternalServerError("An error occurred");
+    }
+    await updateRefreshToken(decoded.id, token, refreshToken);
+    const user = await findUserById(decoded.id);
+    if (!user) {
+      throw new NotFoundError("User was not found");
+    }
     return {
       success: true,
       refreshToken,
       accessToken,
-      user: sanitizeUser(user[0]),
+      user: sanitizeUser(user),
     };
   }
 
