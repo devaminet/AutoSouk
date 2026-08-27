@@ -94,3 +94,93 @@ export const insertListing = async (
 
   return result[0];
 };
+
+export const getListingDetailsById = async (id: number) => {
+  return await db.query.listingTable.findFirst({
+    where: eq(listingTable.id, id),
+    columns: {
+      createdAt: false,
+      updatedAt: false,
+      userId: false,
+    },
+    with: {
+      user: {
+        columns: {
+          firstName: true,
+          lastName: true,
+          city: true,
+          imageUrl: true,
+          isVerified: true,
+        },
+      },
+      car: {
+        columns: {
+          id: true,
+          price: true,
+          city: true,
+          year: true,
+          distance: true,
+          doorsNumber: true,
+          fiscalPower: true,
+          transmission: true,
+          ownersCount: true,
+        },
+        with: {
+          carburant: {
+            columns: {
+              carburant: true,
+            },
+          },
+          carMedias: {
+            columns: {
+              link: true,
+              type: true,
+              isPrimary: true,
+            },
+          },
+          make: {
+            columns: {
+              name: true,
+            },
+          },
+          model: {
+            columns: {
+              name: true,
+            },
+          },
+          origin: {
+            columns: {
+              origin: true,
+            },
+          },
+          state: {
+            columns: {
+              state: true,
+            },
+          },
+        },
+      },
+    },
+  });
+};
+
+export const findListingById = async (id: number) => {
+  const listing = await db
+    .select()
+    .from(listingTable)
+    .where(eq(listingTable.id, id));
+
+  if (listing.length === 0) {
+    return null;
+  }
+
+  return listing[0];
+};
+
+export const approveListingById = async (id: number) => {
+  return await db
+    .update(listingTable)
+    .set({ status: "approved", approvedAt: new Date().toISOString() })
+    .where(eq(listingTable.id, id))
+    .returning();
+};

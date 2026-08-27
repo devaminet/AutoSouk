@@ -118,19 +118,6 @@ listingRouter.get(
   // isAuthenticated,
   async (req: Request, res: Response) => {
     const listing = await getListingDetails(+req.params.id);
-    if (!listing) {
-      throw new NotFoundError("Listing was not found!");
-    }
-
-    const carMedias = listing.car?.carMedias;
-    if (carMedias) {
-      const filenames = carMedias.map((media) => media.link);
-      const urlsMap = await generateGetPresignedUrls(carBucketName, filenames);
-      for (const media of carMedias) {
-        media.link = urlsMap.get(media.link) || "";
-      }
-    }
-
     res.status(200).json({ listing });
   },
 );

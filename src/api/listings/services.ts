@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { and, eq, desc, asc, gte, lte, ilike, count } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "../../db";
 import { listingTable } from "../../db/schema/listing";
 import { carTable } from "../../db/schema/car";
@@ -13,7 +13,13 @@ import { createCarSchema, getListingsQuerySchema } from "./request_schema";
 import { BadRequestError } from "../../errors/bad_request_error";
 import { NotFoundError } from "../../errors/not_found_error";
 import { carBucketName } from "../../utils/constants";
-import { findListings, insertListing } from "./db";
+import {
+  approveListingById,
+  findListingById,
+  findListings,
+  getListingDetailsById,
+  insertListing,
+} from "./db";
 
 export const saveListing = async (
   title: string,
@@ -79,95 +85,37 @@ export const saveCarAndMedia = async (args: {
 };
 
 export const getListingDetails = async (listingId: number) => {
-  const listing = await db.query.listingTable.findFirst({
-    where: eq(listingTable.id, listingId),
-    columns: {
-      createdAt: false,
-      updatedAt: false,
-      userId: false,
-    },
-    with: {
-      user: {
-        columns: {
-          firstName: true,
-          lastName: true,
-          city: true,
-          imageUrl: true,
-          isVerified: true,
-        },
-      },
-      car: {
-        columns: {
-          id: true,
-          price: true,
-          city: true,
-          year: true,
-          distance: true,
-          doorsNumber: true,
-          fiscalPower: true,
-          transmission: true,
-          ownersCount: true,
-        },
-        with: {
-          carburant: {
-            columns: {
-              carburant: true,
-            },
-          },
-          carMedias: {
-            columns: {
-              link: true,
-              type: true,
-              isPrimary: true,
-            },
-          },
-          make: {
-            columns: {
-              name: true,
-            },
-          },
-          model: {
-            columns: {
-              name: true,
-            },
-          },
-          origin: {
-            columns: {
-              origin: true,
-            },
-          },
-          state: {
-            columns: {
-              state: true,
-            },
-          },
-        },
-      },
-    },
-  });
+  const listing = await getListingDetailsById(listingId);
+
+  if (!listing) {
+    throw new NotFoundError("Listing was not found!");
+  }
+
+  const carMedias = listing.car?.carMedias;
+  if (carMedias) {
+    const filenames = carMedias.map((media) => media.link);
+    const urlsMap = await generateGetPresignedUrls(carBucketName, filenames);
+    for (const media of carMedias) {
+      media.link = urlsMap.get(media.link) || "";
+    }
+  }
 
   return listing;
 };
 
 export const approveListing = async (listingId: number) => {
-  const listing = await db
-    .select()
-    .from(listingTable)
-    .where(eq(listingTable.id, listingId));
+  const listing = await findListingById(listingId);
 
-  if (listing.length === 0) {
+  if (!listing) {
     throw new NotFoundError("Listing not found");
   }
 
-  if (listing[0].status === "approved") {
+  if (listing.status === "approved") {
     throw new BadRequestError("Listing is already approved");
   }
 
-  const result = await db
-    .update(listingTable)
-    .set({ status: "approved", approvedAt: new Date().toISOString() })
-    .where(eq(listingTable.id, listingId));
-  return result.rowCount;
+  const result = await approveListingById(listingId);
+  return result;
 };
 
 export const getListings = async (
