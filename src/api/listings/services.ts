@@ -13,24 +13,14 @@ import { createCarSchema, getListingsQuerySchema } from "./request_schema";
 import { BadRequestError } from "../../errors/bad_request_error";
 import { NotFoundError } from "../../errors/not_found_error";
 import { carBucketName } from "../../utils/constants";
-import { findListings } from "./db";
+import { findListings, insertListing } from "./db";
 
 export const saveListing = async (
   title: string,
   description: string,
   userId: number,
 ) => {
-  const result = await db
-    .insert(listingTable)
-    .values({
-      title,
-      description,
-      status: "draft",
-      userId,
-    })
-    .returning();
-
-  return result[0];
+  return await insertListing(title, description, userId);
 };
 
 export const getUserListing = async (

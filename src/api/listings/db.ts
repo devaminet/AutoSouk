@@ -76,3 +76,21 @@ export const findListings = async (
 
   return { listings, totalCountResult };
 };
+
+export const insertListing = async (
+  title: string,
+  description: string,
+  userId: number,
+) => {
+  const result = await db
+    .insert(listingTable)
+    .values({
+      title,
+      description,
+      status: "draft",
+      userId,
+    })
+    .returning();
+
+  return result[0];
+};
