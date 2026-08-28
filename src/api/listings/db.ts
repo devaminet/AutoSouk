@@ -4,6 +4,7 @@ import { and, asc, count, desc, eq, gte, ilike, lte } from "drizzle-orm";
 import { listingTable } from "../../db/schema/listing";
 import { carTable } from "../../db/schema/car";
 import { db } from "../../db";
+import { carMediaTable } from "../../db/schema/car_media";
 
 export const findListings = async (
   options: z.infer<typeof getListingsQuerySchema>,
@@ -183,4 +184,38 @@ export const approveListingById = async (id: number) => {
     .set({ status: "approved", approvedAt: new Date().toISOString() })
     .where(eq(listingTable.id, id))
     .returning();
+};
+
+export const findListingCarId = async (userId: number, listingId: number) => {
+  const listing = await db
+    .select({
+      id: listingTable.id,
+      userId: listingTable.userId,
+      car: {
+        id: carTable.id,
+      },
+    })
+    .from(listingTable)
+    .where(and(eq(listingTable.id, listingId), eq(listingTable.userId, userId)))
+    .innerJoin(carTable, eq(listingTable.id, carTable.listingId));
+
+  if (listing.length === 0) {
+    return null;
+  }
+
+  return listing[0];
+};
+
+export const deleteListingDetails = async (
+  listingId: number,
+  carId: number,
+) => {
+  await db.transaction(async (tx) => {
+    if (carId) {
+      await tx.delete(carMediaTable).where(eq(carMediaTable.carId, carId));
+      await tx.delete(carTable).where(eq(carTable.id, carId));
+    }
+
+    await tx.delete(listingTable).where(eq(listingTable.id, listingId));
+  });
 };
