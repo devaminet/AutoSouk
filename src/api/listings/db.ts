@@ -1,10 +1,11 @@
 import { z } from "zod";
-import { getListingsQuerySchema } from "./request_schema";
+import { createCarSchema, getListingsQuerySchema } from "./request_schema";
 import { and, asc, count, desc, eq, gte, ilike, lte } from "drizzle-orm";
 import { listingTable } from "../../db/schema/listing";
 import { carTable } from "../../db/schema/car";
 import { db } from "../../db";
 import { carMediaTable } from "../../db/schema/car_media";
+import { getFileType } from "../../utils/functions";
 
 export const findListings = async (
   options: z.infer<typeof getListingsQuerySchema>,
@@ -218,4 +219,49 @@ export const deleteListingDetails = async (
 
     await tx.delete(listingTable).where(eq(listingTable.id, listingId));
   });
+};
+
+export const checkCarExistanceByListingId = async (listingId: number) => {
+  const existingCar = await db
+    .select({ id: carTable.id })
+    .from(carTable)
+    .where(eq(carTable.listingId, listingId));
+
+  if (existingCar.length === 0) {
+    return false;
+  }
+
+  return true;
+};
+
+export const saveCarAndMedia = async (args: {
+  carDetails: Omit<z.infer<typeof createCarSchema>, "files">;
+  carMedia: { signedUrl: string; isPrimary: boolean; filename: string }[];
+  listingId: number;
+  userId: number;
+}) => {
+  const { carDetails, carMedia, listingId, userId } = args;
+
+  const car = await db.transaction(async (tx) => {
+    const newCar = await tx
+      .insert(carTable)
+      .values({
+        ...carDetails,
+        listingId,
+        userId,
+      })
+      .returning();
+
+    const carMediaValues = carMedia.map((media) => ({
+      carId: newCar[0].id,
+      link: media.filename,
+      type: getFileType(media.filename) as "image" | "video",
+      isPrimary: media.isPrimary,
+    }));
+
+    await tx.insert(carMediaTable).values(carMediaValues);
+    return { ...newCar[0] };
+  });
+
+  return car;
 };

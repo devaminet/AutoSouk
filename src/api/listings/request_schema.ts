@@ -107,3 +107,13 @@ export const getListingsQuerySchema = z.object({
     .enum(["price_asc", "price_desc", "newest", "oldest"])
     .default("newest"),
 });
+
+export const attachListingParamSchema = z.object({
+  id: z.coerce
+    .number({
+      required_error: "listingId is required",
+      invalid_type_error: "listingId must be a number",
+    })
+    .int()
+    .positive("listingId must be a positive number"),
+});

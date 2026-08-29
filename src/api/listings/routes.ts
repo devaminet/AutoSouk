@@ -1,29 +1,22 @@
 import { Router, Request, Response } from "express";
 import {
+  attachListingParamSchema,
   createCarSchema,
   createListingSchema,
   getListingsQuerySchema,
 } from "./request_schema";
 import { RequestValidationError } from "../../errors/request_validation_error";
 import isAuthenticated from "../../middlewares/is_authenticated";
-import { NotFoundError } from "../../errors/not_found_error";
-import {
-  generateGetPresignedUrls,
-  generatePresignedUrl,
-} from "../../utils/functions";
-import { carBucketName } from "../../utils/constants";
 import {
   approveListing,
   getListingDetails,
-  getUserListing,
-  saveCarAndMedia,
   saveListing,
   getListings,
   deleteListing,
+  attachCarToListing,
 } from "./services";
 import { isAdmin } from "../../middlewares/is_admin";
 import { isSeller } from "../../middlewares/is_seller";
-import { InternalServerError } from "../../errors/internal_server_error";
 
 const listingRouter = Router();
 
@@ -59,54 +52,22 @@ listingRouter.post(
   "/:id/car",
   isAuthenticated,
   async (req: Request, res: Response) => {
+    const requestParamValidation = attachListingParamSchema.safeParse(
+      req.params,
+    );
+    if (!requestParamValidation.success) {
+      throw new RequestValidationError(requestParamValidation.error.errors);
+    }
     const validateResult = createCarSchema.safeParse(req.body);
     if (!validateResult.success) {
       throw new RequestValidationError(validateResult.error.errors);
     }
-    const listingId = +req.params.id;
-    const listing = await getUserListing(listingId, req.currentUser?.id!);
-    if (!listing) {
-      throw new NotFoundError("Listing was not found");
-    }
-
-    const { files, ...carDetails } = validateResult.data;
-    const filenamesPromises = files.map((file) => {
-      return new Promise<{
-        signedUrl: string;
-        isPrimary: boolean;
-        filename: string;
-      }>((resolve, reject) => {
-        generatePresignedUrl(carBucketName, file.name)
-          .then((value) =>
-            resolve({
-              signedUrl: value,
-              isPrimary: file.isPrimary,
-              filename: file.name,
-            }),
-          )
-          .catch(() =>
-            reject(
-              new InternalServerError(
-                `Could not generate url for this image: ${file.name}`,
-              ),
-            ),
-          );
-      });
-    });
-
-    let carMedia: Awaited<(typeof filenamesPromises)[number]>[] = [];
-    try {
-      carMedia = await Promise.all(filenamesPromises);
-    } catch (error) {
-      throw new InternalServerError("Could not generate urls for images");
-    }
-
-    const car = await saveCarAndMedia({
-      carDetails,
-      carMedia,
+    const listingId = requestParamValidation.data.id;
+    const { car, carMedia } = await attachCarToListing(
+      validateResult.data,
       listingId,
-      userId: req.currentUser?.id!,
-    });
+      req.currentUser?.id!,
+    );
 
     res.status(201).json({ ...car, carMedia });
   },

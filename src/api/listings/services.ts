@@ -2,26 +2,27 @@ import { z } from "zod";
 import { and, eq } from "drizzle-orm";
 import { db } from "../../db";
 import { listingTable } from "../../db/schema/listing";
-import { carTable } from "../../db/schema/car";
 import {
   generateGetPresignedUrl,
   generateGetPresignedUrls,
-  getFileType,
+  generatePresignedUrl,
 } from "../../utils/functions";
-import { carMediaTable } from "../../db/schema/car_media";
 import { createCarSchema, getListingsQuerySchema } from "./request_schema";
 import { BadRequestError } from "../../errors/bad_request_error";
 import { NotFoundError } from "../../errors/not_found_error";
 import { carBucketName } from "../../utils/constants";
 import {
   approveListingById,
+  checkCarExistanceByListingId,
   deleteListingDetails,
   findListingById,
   findListingCarId,
   findListings,
   getListingDetailsById,
   insertListing,
+  saveCarAndMedia,
 } from "./db";
+import { InternalServerError } from "../../errors/internal_server_error";
 
 export const saveListing = async (
   title: string,
@@ -45,45 +46,65 @@ export const getUserListing = async (
   return listing.length > 0 ? listing[0] : null;
 };
 
-export const saveCarAndMedia = async (args: {
-  carDetails: Omit<z.infer<typeof createCarSchema>, "files">;
-  carMedia: { signedUrl: string; isPrimary: boolean; filename: string }[];
-  listingId: number;
-  userId: number;
-}) => {
-  const { carDetails, carMedia, listingId, userId } = args;
+export const attachCarToListing = async (
+  data: z.infer<typeof createCarSchema>,
+  listingId: number,
+  userId: number,
+) => {
+  const listing = await getUserListing(listingId, userId);
+  if (!listing) {
+    throw new NotFoundError("Listing was not found");
+  }
 
-  const existingCar = await db
-    .select({ id: carTable.id })
-    .from(carTable)
-    .where(eq(carTable.listingId, listingId));
+  const found = await checkCarExistanceByListingId(listingId);
 
-  if (existingCar.length > 0) {
+  if (found) {
     throw new BadRequestError("A car is already attached to this listing");
   }
 
-  const car = await db.transaction(async (tx) => {
-    const newCar = await tx
-      .insert(carTable)
-      .values({
-        ...carDetails,
-        listingId,
-        userId,
-      })
-      .returning();
-
-    const carMediaValues = carMedia.map((media) => ({
-      carId: newCar[0].id,
-      link: media.filename,
-      type: getFileType(media.filename) as "image" | "video",
-      isPrimary: media.isPrimary,
-    }));
-
-    await tx.insert(carMediaTable).values(carMediaValues);
-    return { ...newCar[0] };
+  const { files, ...carDetails } = data;
+  const filenamesPromises = files.map((file) => {
+    return new Promise<{
+      signedUrl: string;
+      isPrimary: boolean;
+      filename: string;
+    }>((resolve, reject) => {
+      generatePresignedUrl(carBucketName, file.name)
+        .then((value) =>
+          resolve({
+            signedUrl: value,
+            isPrimary: file.isPrimary,
+            filename: file.name,
+          }),
+        )
+        .catch(() =>
+          reject(
+            new InternalServerError(
+              `Could not generate url for this image: ${file.name}`,
+            ),
+          ),
+        );
+    });
   });
 
-  return car;
+  let carMedia: Awaited<(typeof filenamesPromises)[number]>[] = [];
+  try {
+    carMedia = await Promise.all(filenamesPromises);
+  } catch (error) {
+    throw new InternalServerError("Could not generate urls for images");
+  }
+
+  const car = await saveCarAndMedia({
+    carDetails,
+    carMedia,
+    listingId,
+    userId,
+  });
+
+  return {
+    car,
+    carMedia,
+  };
 };
 
 export const getListingDetails = async (listingId: number) => {
