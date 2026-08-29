@@ -265,3 +265,17 @@ export const saveCarAndMedia = async (args: {
 
   return car;
 };
+
+export const getUserListing = async (
+  listingId: number,
+  userId: number,
+): Promise<Pick<typeof listingTable.$inferSelect, "id" | "userId"> | null> => {
+  const listing = await db
+    .select({ id: listingTable.id, userId: listingTable.userId })
+    .from(listingTable)
+    .where(
+      and(eq(listingTable.id, listingId), eq(listingTable.userId, userId)),
+    );
+
+  return listing.length > 0 ? listing[0] : null;
+};

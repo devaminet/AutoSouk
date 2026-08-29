@@ -1,7 +1,4 @@
 import { z } from "zod";
-import { and, eq } from "drizzle-orm";
-import { db } from "../../db";
-import { listingTable } from "../../db/schema/listing";
 import {
   generateGetPresignedUrl,
   generateGetPresignedUrls,
@@ -19,6 +16,7 @@ import {
   findListingCarId,
   findListings,
   getListingDetailsById,
+  getUserListing,
   insertListing,
   saveCarAndMedia,
 } from "./db";
@@ -30,20 +28,6 @@ export const saveListing = async (
   userId: number,
 ) => {
   return await insertListing(title, description, userId);
-};
-
-export const getUserListing = async (
-  listingId: number,
-  userId: number,
-): Promise<Pick<typeof listingTable.$inferSelect, "id" | "userId"> | null> => {
-  const listing = await db
-    .select({ id: listingTable.id, userId: listingTable.userId })
-    .from(listingTable)
-    .where(
-      and(eq(listingTable.id, listingId), eq(listingTable.userId, userId)),
-    );
-
-  return listing.length > 0 ? listing[0] : null;
 };
 
 export const attachCarToListing = async (
