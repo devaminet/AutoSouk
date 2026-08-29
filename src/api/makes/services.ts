@@ -1,10 +1,7 @@
-import { db } from "../../db";
-import { makeTable } from "../../db/schema/car_make";
+import { findAllMakes } from "./db";
 
 export const getMakes = async () => {
-  const makes = await db
-    .select({ id: makeTable.id, name: makeTable.name })
-    .from(makeTable);
+  const makes = await findAllMakes();
 
   return makes;
 };
