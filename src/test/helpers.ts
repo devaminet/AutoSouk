@@ -21,7 +21,7 @@ export const signupUser = async (options?: {
     password: testUserCredentials.password,
     phone: "+212685412593",
     userType,
-    city: "Tangier",
+    cityId: 1,
   };
   const response = await request(app).post("/api/auth/register").send(formData);
 
@@ -45,7 +45,7 @@ export const signupUserWithVerification = async (options?: {
     password: testUserCredentials.password,
     phone: "+212685412593",
     userType,
-    city: "Tangier",
+    cityId: 1,
   };
   const response = await request(app).post("/api/auth/register").send(formData);
   const { verificationUrl } = (readTemplateFile as jest.Mock).mock.calls[0][1];

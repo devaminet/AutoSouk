@@ -51,12 +51,12 @@ export const registerSchema = z.object(
     userType: z.enum(["buyer", "seller", "mechanic"], {
       message: "User should be either buyer, seller or mechanic",
     }),
-    city: z
-      .string({
+    cityId: z
+      .number({
         required_error: "City is required",
-        invalid_type_error: "City must be a text",
+        invalid_type_error: "City must be a number",
       })
-      .min(3, { message: "City should have at least three caracters" }),
+      .min(1, { message: "City should have a valid ID" }),
   },
   { required_error: "User information are required!" },
 );

@@ -125,7 +125,7 @@ it("should attach car to a listing", async () => {
       price: 500000,
       year: 2025,
       ownersCount: 0,
-      city: "Casablanca",
+      cityId: 1,
       distance: "60km",
       transmission: "automatic",
       fiscalPower: 8,

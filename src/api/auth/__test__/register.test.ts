@@ -66,7 +66,7 @@ it("should return 400 when inappropriate email was provided", async () => {
       password: "USEr_@@852852",
       phone: "+212685412593",
       userType: "buyer",
-      city: "Tangier",
+      cityId: 1,
     })
     .expect(400);
   expect(response.body.errors).toHaveLength(1);
@@ -82,7 +82,7 @@ it("should return 400 when inappropriate password was provided", async () => {
       password: "USEr_@@",
       phone: "+212685412593",
       userType: "buyer",
-      city: "Tangier",
+      cityId: 1,
     })
     .expect(400);
   expect(response.body.errors).toHaveLength(1);

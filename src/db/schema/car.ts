@@ -8,6 +8,7 @@ import { carOriginTable } from "./car_origin";
 import { carStateTable } from "./state";
 import { listingTable } from "./listing";
 import { carMediaTable } from "./car_media";
+import { cityTable } from "./city";
 
 export const carTable = pgTable(
   "cars",
@@ -27,7 +28,7 @@ export const carTable = pgTable(
     price: integer().notNull(),
     year: integer().notNull(),
     ownersCount: integer("owners_count").notNull(),
-    city: varchar().notNull(),
+    cityId: integer("city_id").references(() => cityTable.id),
     distance: varchar().notNull(),
     transmission: varchar({
       enum: ["manual", "automatic"],
@@ -71,7 +72,12 @@ export const carTable = pgTable(
       columns: [table.listingId],
       foreignColumns: [listingTable.id],
     }),
-  ]
+    foreignKey({
+      name: "city_fk",
+      columns: [table.cityId],
+      foreignColumns: [cityTable.id],
+    }),
+  ],
 );
 
 export const carRelations = relations(carTable, ({ one, many }) => ({
@@ -104,4 +110,8 @@ export const carRelations = relations(carTable, ({ one, many }) => ({
     references: [listingTable.id],
   }),
   carMedias: many(carMediaTable),
+  city: one(cityTable, {
+    fields: [carTable.cityId],
+    references: [cityTable.id],
+  }),
 }));

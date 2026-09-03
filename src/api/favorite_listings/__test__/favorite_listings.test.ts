@@ -32,7 +32,7 @@ const createListing = async () => {
       price: 70000,
       year: 2010,
       ownersCount: 2,
-      city: "casablanca",
+      cityId: 1,
       transmission: "automatic",
       distance: "180000KM",
       fiscalPower: 7,

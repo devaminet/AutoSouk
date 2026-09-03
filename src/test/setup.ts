@@ -6,6 +6,7 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { db, pool } from "../db";
 import { usersTable } from "../db/schema/user";
 import { hashPassword } from "../utils/functions";
+import { seeds } from "../db/seeds";
 
 jest.mock("../utils/functions", () => {
   const originalModule = jest.requireActual("../utils/functions");
@@ -21,6 +22,7 @@ beforeAll(async () => {
   await migrate(db, {
     migrationsFolder: path.join(path.resolve(), "/drizzle"),
   });
+  await seeds();
 });
 
 beforeEach(async () => {
@@ -34,7 +36,7 @@ beforeEach(async () => {
       lastName: "admin",
       role: "admin",
       isVerified: true,
-      city: "Rabat",
+      cityId: 1,
       phone: "212600000000",
     });
   } catch (error) {

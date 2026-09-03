@@ -35,9 +35,9 @@ export const createCarSchema = z.object(
       required_error: "Owners count is required",
       invalid_type_error: "Owners count must be a number",
     }),
-    city: z.string({
+    cityId: z.number({
       required_error: "City is required",
-      invalid_type_error: "City must be a text",
+      invalid_type_error: "City must be a number",
     }),
     distance: z.string({
       required_error: "Distance is required",
@@ -64,11 +64,11 @@ export const createCarSchema = z.object(
           return {
             message: `${filename} has an invalid file type, allowed type: ${allowedFileTypes}`,
           };
-        }
-      )
+        },
+      ),
     ),
   },
   {
     required_error: "Car details are required",
-  }
+  },
 );

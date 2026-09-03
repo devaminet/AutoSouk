@@ -49,9 +49,9 @@ export const createCarSchema = z.object(
       required_error: "Owners count is required",
       invalid_type_error: "Owners count must be a number",
     }),
-    city: z.string({
+    cityId: z.number({
       required_error: "City is required",
-      invalid_type_error: "City must be a text",
+      invalid_type_error: "City must be a number",
     }),
     distance: z.string({
       required_error: "Distance is required",
@@ -100,7 +100,7 @@ export const getListingsQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(10),
   makeId: z.coerce.number().int().positive().optional(),
   modelId: z.coerce.number().int().positive().optional(),
-  city: z.string().optional(),
+  cityId: z.coerce.number().int().positive().optional(),
   minPrice: z.coerce.number().nonnegative().optional(),
   maxPrice: z.coerce.number().nonnegative().optional(),
   sort: z

@@ -206,7 +206,7 @@ export const sanitizeUser = (
     firstName: user.firstName,
     lastName: user.lastName,
     email: user.email,
-    city: user.city,
+    cityId: user.cityId,
     imageUrl: user.imageUrl,
     isVerified: user.isVerified,
     phone: user.phone,

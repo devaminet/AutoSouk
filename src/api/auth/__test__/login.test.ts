@@ -20,7 +20,7 @@ it("should return status code of 200 and response body on valid login", async ()
     firstName: formData.firstName,
     lastName: formData.lastName,
     email: formData.email,
-    city: formData.city,
+    cityId: formData.cityId,
     imageUrl: null,
     isVerified: true,
     phone: formData.phone,

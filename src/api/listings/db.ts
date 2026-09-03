@@ -10,14 +10,14 @@ import { getFileType } from "../../utils/functions";
 export const findListings = async (
   options: z.infer<typeof getListingsQuerySchema>,
 ) => {
-  const { page, limit, makeId, modelId, city, minPrice, maxPrice, sort } =
+  const { page, limit, makeId, modelId, cityId, minPrice, maxPrice, sort } =
     options;
 
   const conditions = [eq(listingTable.status, "approved")];
 
   if (makeId) conditions.push(eq(carTable.makeId, makeId));
   if (modelId) conditions.push(eq(carTable.modelId, modelId));
-  if (city) conditions.push(ilike(carTable.city, `%${city}%`));
+  if (cityId) conditions.push(eq(carTable.cityId, cityId));
   if (minPrice !== undefined) conditions.push(gte(carTable.price, minPrice));
   if (maxPrice !== undefined) conditions.push(lte(carTable.price, maxPrice));
 
@@ -59,6 +59,11 @@ export const findListings = async (
             },
             orderBy(fields, operators) {
               return operators.desc(fields.isPrimary);
+            },
+          },
+          city: {
+            columns: {
+              name: true,
             },
           },
         },
@@ -110,16 +115,22 @@ export const getListingDetailsById = async (id: number) => {
         columns: {
           firstName: true,
           lastName: true,
-          city: true,
+          cityId: true,
           imageUrl: true,
           isVerified: true,
+        },
+        with: {
+          city: {
+            columns: {
+              name: true,
+            },
+          },
         },
       },
       car: {
         columns: {
           id: true,
           price: true,
-          city: true,
           year: true,
           distance: true,
           doorsNumber: true,
@@ -158,6 +169,11 @@ export const getListingDetailsById = async (id: number) => {
           state: {
             columns: {
               state: true,
+            },
+          },
+          city: {
+            columns: {
+              name: true,
             },
           },
         },

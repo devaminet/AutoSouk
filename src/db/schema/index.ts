@@ -10,6 +10,7 @@ import * as users from "./user";
 import * as refreshTokens from "./refresh_tokens";
 import * as emailVerificationTokens from "./email_verification_tokens";
 import * as forgetPasswordToken from "./forget_password_tokens";
+import * as cities from "./city";
 
 export const schema = {
   ...cars,
@@ -24,4 +25,5 @@ export const schema = {
   ...refreshTokens,
   ...emailVerificationTokens,
   ...forgetPasswordToken,
+  ...cities,
 };

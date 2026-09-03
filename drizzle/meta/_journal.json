@@ -106,6 +106,20 @@
       "when": 1787324636107,
       "tag": "0015_added_is_primary_column_to_car_media_table",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1788415618655,
+      "tag": "0016_create_cities_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1788419415213,
+      "tag": "0017_add_city_id_column_to_cars_table",
+      "breakpoints": true
     }
   ]
 }

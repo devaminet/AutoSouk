@@ -35,7 +35,8 @@ export const findUserById = async (id: number) => {
 };
 
 export const createUser = async (user: z.infer<typeof registerSchema>) => {
-  const { email, password, city, firstName, lastName, phone, userType } = user;
+  const { email, password, cityId, firstName, lastName, phone, userType } =
+    user;
   const { hashedPassword, salt } = await hashPassword(password);
 
   const createdUser = await db
@@ -44,7 +45,7 @@ export const createUser = async (user: z.infer<typeof registerSchema>) => {
       email,
       password: hashedPassword,
       salt,
-      city,
+      cityId,
       firstName,
       lastName,
       phone,
