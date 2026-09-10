@@ -10,8 +10,8 @@
 
 **Purpose**: Confirm the existing project commands and migration numbering before changing the role model.
 
-- [ ] T001 Inspect `package.json`, `drizzle.config.ts`, and `drizzle/meta/_journal.json` to confirm the available build, migration, test commands and next sequential migration identifier
-- [ ] T002 [P] Add the relational-role acceptance scenarios and affected file list to `specs/002-user-role-relational/quickstart.md` if implementation findings require command or evidence updates
+- [x] T001 Inspect `package.json`, `drizzle.config.ts`, and `drizzle/meta/_journal.json` to confirm the available build, migration, test commands and next sequential migration identifier
+- [x] T002 [P] Add the relational-role acceptance scenarios and affected file list to `specs/002-user-role-relational/quickstart.md` if implementation findings require command or evidence updates
 
 ---
 

@@ -7,6 +7,16 @@
 - PostgreSQL available through the repository's Docker Compose configuration.
 - `DATABASE_URL` configured for local migration commands and `TEST_DB_CONNECTION_STRING` configured for Jest setup.
 
+## Affected Implementation Files
+
+- Schema and relations: `src/db/schema/roles.ts`, `src/db/schema/user.ts`, `src/db/schema/index.ts`
+- Migration: `drizzle/0018_relational_user_roles.sql`
+- Seeds: `src/db/seeds/roles_seed.ts`, `src/db/seeds/index.ts`
+- Authentication and role resolution: `src/api/auth/db.ts`, `src/api/auth/services.ts`, `src/api/auth/request_schema.ts`
+- Role serialization and request typing: `src/utils/functions.ts`, `src/middlewares/current_user.ts`, `src/types/express/index.d.ts`
+- Authorization middleware: `src/middlewares/is_admin.ts`, `src/middlewares/is_buyer.ts`, `src/middlewares/is_seller.ts`
+- Fixtures and regression tests: `src/test/setup.ts`, `src/test/helpers.ts`, `src/api/auth/__test__/`, `src/db/__test__/`, `src/middlewares/__test__/`, `src/api/listings/__test__/`, `src/api/favorite_listings/__test__/`
+
 ## 1. Generate and review the migration
 
 From the repository root:
