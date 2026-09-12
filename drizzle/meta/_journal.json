@@ -120,6 +120,13 @@
       "when": 1788419415213,
       "tag": "0017_add_city_id_column_to_cars_table",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1789084224817,
+      "tag": "0018_create_roles_table",
+      "breakpoints": true
     }
   ]
 }

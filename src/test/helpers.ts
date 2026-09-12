@@ -1,7 +1,11 @@
 import url from "url";
+import { z } from "zod";
 import request from "supertest";
 import { app } from "../app";
+import { registrationRoleSchema } from "../api/auth/request_schema";
 import { readTemplateFile } from "../utils/functions";
+
+type TestUserRole = z.infer<typeof registrationRoleSchema>;
 
 export const testUserCredentials = {
   email: "user@example.com",
@@ -9,7 +13,7 @@ export const testUserCredentials = {
 };
 
 export const signupUser = async (options?: {
-  userType?: "buyer" | "seller" | "mechanic" | "admin";
+  userType?: TestUserRole;
   email?: string;
 }) => {
   const { email = testUserCredentials.email, userType = "buyer" } =
@@ -33,7 +37,7 @@ export const signupUser = async (options?: {
 };
 
 export const signupUserWithVerification = async (options?: {
-  userType?: "buyer" | "seller" | "mechanic" | "admin";
+  userType?: TestUserRole;
   email?: string;
 }) => {
   const { email = testUserCredentials.email, userType = "buyer" } =

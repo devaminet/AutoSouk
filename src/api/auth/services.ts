@@ -1,8 +1,9 @@
-import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { db } from "../../db";
-import { usersTable } from "../../db/schema/user";
-import { registerSchema, resetPasswordSchema } from "./request_schema";
+import {
+  registerSchema,
+  registrationRoleSchema,
+  resetPasswordSchema,
+} from "./request_schema";
 import {
   generateJWT,
   generateToken,
@@ -41,6 +42,13 @@ import { InternalServerError } from "../../errors/internal_server_error";
 
 export const setupUser = async (user: z.infer<typeof registerSchema>) => {
   const { firstName, email } = user;
+  const roleValidation = registrationRoleSchema.safeParse(user.userType);
+  if (!roleValidation.success) {
+    throw new BadRequestError(
+      "User should be either buyer, seller or mechanic",
+    );
+  }
+
   const found = await findUserByEmail(email);
   if (found) {
     throw new BadRequestError("Email in use");
@@ -104,6 +112,10 @@ export const loginUser = async (data: { email: string; password: string }) => {
     throw new NotAuthorizedError("Your account is not verified");
   }
 
+  if (!foundUser.role) {
+    throw new NotAuthorizedError("User role could not be resolved");
+  }
+
   const { password: storedPassword, salt, ...user } = foundUser;
   const isPasswordValid = await verifyPassword(password, storedPassword, salt);
 
@@ -116,7 +128,7 @@ export const loginUser = async (data: { email: string; password: string }) => {
       id: user.id,
       email: user.email,
       issuedAt: new Date().getTime(),
-      role: user.role,
+      role: user.role.name,
     },
     Number(process.env.JWT_ACCESS_TOKEN_EXPIRATION_SECONDS!),
   );
@@ -125,7 +137,7 @@ export const loginUser = async (data: { email: string; password: string }) => {
       id: user.id,
       email: user.email,
       issuedAt: new Date().getTime(),
-      role: user.role,
+      role: user.role.name,
     },
     Number(process.env.JWT_REFRESH_TOKEN_EXPIRATION_SECONDS!),
   );
@@ -216,21 +228,30 @@ export const refreshTokens = async (token: string) => {
     await deleteRefreshToken(decoded.id);
     return { success: false };
   }
+
+  const user = await findUserById(decoded.id);
+  if (!user) {
+    throw new NotFoundError("User was not found");
+  }
+  if (!user.role) {
+    throw new NotAuthorizedError("User role could not be resolved");
+  }
+
   const accessToken = await generateJWT(
     {
-      id: decoded.id,
-      email: decoded.email,
+      id: user.id,
+      email: user.email,
       issuedAt: new Date().getTime(),
-      role: decoded.role,
+      role: user.role.name,
     },
     Number(process.env.JWT_ACCESS_TOKEN_EXPIRATION_SECONDS!),
   );
   const refreshToken = await generateJWT(
     {
-      id: decoded.id,
-      email: decoded.email,
+      id: user.id,
+      email: user.email,
       issuedAt: new Date().getTime(),
-      role: decoded.role,
+      role: user.role.name,
     },
     Number(process.env.JWT_REFRESH_TOKEN_EXPIRATION_SECONDS!),
   );
@@ -239,10 +260,6 @@ export const refreshTokens = async (token: string) => {
     throw new InternalServerError("An error occurred");
   }
   await updateRefreshToken(decoded.id, token, refreshToken);
-  const user = await findUserById(decoded.id);
-  if (!user) {
-    throw new NotFoundError("User was not found");
-  }
   return {
     success: true,
     refreshToken,

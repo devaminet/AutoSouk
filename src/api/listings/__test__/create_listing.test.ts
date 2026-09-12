@@ -18,6 +18,7 @@ it("should fail if user is not of type seller", async () => {
 it("should validate create listing request", async () => {
   await signupUserWithVerification({ userType: "seller" });
   const authUser = await signinUser();
+  expect(authUser.user.role).toBe("seller");
   const response = await request(app)
     .post("/api/listings")
     .auth(authUser.accessToken, { type: "bearer" });
@@ -27,6 +28,7 @@ it("should validate create listing request", async () => {
 it("should create listing and return data", async () => {
   await signupUserWithVerification({ userType: "seller" });
   const authUser = await signinUser();
+  expect(authUser.user.role).toBe("seller");
 
   const title = "A black car for sale";
   const description =

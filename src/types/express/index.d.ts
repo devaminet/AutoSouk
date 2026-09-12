@@ -1,5 +1,7 @@
 export {};
 
+type AuthenticatedRole = "buyer" | "seller" | "mechanic" | "admin";
+
 declare global {
   namespace Express {
     interface Request {
@@ -12,7 +14,7 @@ declare global {
       currentUser?: {
         id: number;
         email: string;
-        role: string;
+        role: AuthenticatedRole;
       };
     }
   }

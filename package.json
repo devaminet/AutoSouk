@@ -16,6 +16,9 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
+    "testPathIgnorePatterns": [
+      "<rootDir>/dist/"
+    ],
     "setupFilesAfterEnv": [
       "./src/test/setup.ts"
     ]

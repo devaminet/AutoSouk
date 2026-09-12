@@ -98,7 +98,7 @@ src/
 └── utils/functions.ts
 
 drizzle/
-└── 0018_relational_user_roles.sql
+└── 0018_create_roles_table.sql
 ```
 
 **Structure Decision**: Keep the existing single Express/TypeScript service structure. Add the role schema beside the existing user schema, include it in the shared Drizzle schema object, put idempotent role data seeding beside the existing reference-data seeds, and keep migration SQL in the sequential `drizzle/` directory. No new application layer or role-management endpoint is needed.

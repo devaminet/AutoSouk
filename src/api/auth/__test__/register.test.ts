@@ -3,10 +3,14 @@ import request from "supertest";
 import { app } from "../../../app";
 import { readTemplateFile, sendMail } from "../../../utils/functions";
 import { signupUser, testUserCredentials } from "../../../test/helpers";
+import { findUserByEmail } from "../db";
 
-it("should return 201 on successful signup", async () => {
-  const { statusCode } = await signupUser();
+it("should persist the requested role on successful signup", async () => {
+  const { formData, statusCode } = await signupUser();
+  const registeredUser = await findUserByEmail(formData.email);
+
   expect(statusCode).toBe(201);
+  expect(registeredUser?.role.name).toBe(formData.userType);
 });
 
 it("should fail when trying to signup with the same email", async () => {

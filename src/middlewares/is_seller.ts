@@ -8,7 +8,7 @@ export const isSeller = (req: Request, res: Response, next: NextFunction) => {
   }
 
   if (req.currentUser.role !== "seller") {
-    throw new NotAllowedError();
+    return next(new NotAllowedError());
   }
-  next();
+  return next();
 };

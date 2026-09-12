@@ -20,6 +20,7 @@ const createListing = async () => {
     .auth(authUser.accessToken, { type: "bearer" });
 
   const listingId = response.body.listing.id as number;
+  console.log("Created listing with ID:", listingId);
 
   await request(app)
     .post(`/api/listings/${listingId}/car`)
@@ -79,6 +80,7 @@ it("should be able to add listing to user favorites when he is of type buyer and
   const authUser = await signinUser({
     email: buyerEmail,
   });
+  expect(authUser.user.role).toBe("buyer");
 
   const response = await request(app)
     .post("/api/favorite_listings")

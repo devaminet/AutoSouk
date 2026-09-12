@@ -21,13 +21,13 @@
 
 **Checkpoint**: The database can represent roles and users can reference a valid role before auth or fixture changes begin.
 
-- [ ] T003 [P] Create `rolesTable`, inferred role types, and the required identity primary key, unique 50-character name, and defaulted creation date in `src/db/schema/roles.ts`
-- [ ] T004 Update `usersTable` to replace the inline `role` field with required indexed `roleId` foreign key metadata and add the user-to-role relation in `src/db/schema/user.ts`
-- [ ] T005 [P] Add `roleRelations` for the role-to-users relationship and include `rolesTable` and `roleRelations` in the exported Drizzle schema object in `src/db/schema/roles.ts` and `src/db/schema/index.ts`
-- [ ] T006 Create the reviewed sequential migration in `drizzle/0018_relational_user_roles.sql` to create and seed roles, validate null/unsupported legacy roles, backfill `users.role_id`, enforce the foreign key and `NOT NULL`, add the role ID index, and remove the legacy role column only after successful validation
-- [ ] T007 Add an idempotent default-role seed function inserting `buyer`, `seller`, `mechanic`, and `admin` with conflict protection on the unique name in `src/db/seeds/roles_seed.ts`
-- [ ] T008 Update `src/db/seeds/index.ts` so role seeding completes before dependent reference-data seeds while preserving aggregate failure reporting
-- [ ] T009 [P] Add database-level tests for role uniqueness, role-to-user/user-to-role relations, role ID foreign-key enforcement, legacy-value migration failure, and successful legacy backfill in `src/db/__test__/roles.test.ts`
+- [x] T003 [P] Create `rolesTable`, inferred role types, and the required identity primary key, unique 50-character name, and defaulted creation date in `src/db/schema/roles.ts`
+- [x] T004 Update `usersTable` to replace the inline `role` field with required indexed `roleId` foreign key metadata and add the user-to-role relation in `src/db/schema/user.ts`
+- [x] T005 [P] Add `roleRelations` for the role-to-users relationship and include `rolesTable` and `roleRelations` in the exported Drizzle schema object in `src/db/schema/roles.ts` and `src/db/schema/index.ts`
+- [x] T006 Create the reviewed sequential migration in `drizzle/0018_create_roles_table.sql` to create roles, validate null/unsupported legacy roles, materialize valid legacy role names for backfill, enforce `users.role_id` constraints, add the role ID index, and remove the legacy role column only after successful validation
+- [x] T007 Add an idempotent default-role seed function inserting `buyer`, `seller`, `mechanic`, and `admin` with conflict protection on the unique name in `src/db/seeds/roles_seed.ts`
+- [x] T008 Update `src/db/seeds/index.ts` so role seeding completes before dependent reference-data seeds while preserving aggregate failure reporting
+- [x] T009 [P] Add database-level tests for role uniqueness, role-to-user/user-to-role relations, role ID foreign-key enforcement, legacy-value migration failure, and successful legacy backfill in `src/db/__test__/roles.test.ts`
 
 ---
 
@@ -43,15 +43,15 @@ Apply the migration to a clean database, run the role seed, create one user for 
 
 ### Tests for User Story 1
 
-- [ ] T010 [P] [US1] Add role seed tests proving the four defaults are inserted exactly once and repeated seed runs preserve role IDs in `src/db/seeds/__test__/roles_seed.test.ts`
-- [ ] T011 [P] [US1] Add user persistence tests proving valid role IDs create users, missing/non-existent role IDs fail, and relation queries return the expected role name in `src/api/auth/__test__/role_persistence.test.ts`
+- [x] T010 [P] [US1] Add role seed tests proving the four defaults are inserted exactly once and repeated seed runs preserve role IDs in `src/db/seeds/__test__/roles_seed.test.ts`
+- [x] T011 [P] [US1] Add user persistence tests proving valid role IDs create users, missing/non-existent role IDs fail, and relation queries return the expected role name in `src/api/auth/__test__/role_persistence.test.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Add typed role-name-to-role-ID lookup data access for registration and fixture use in `src/api/auth/db.ts`
-- [ ] T013 [US1] Update `createUser` in `src/api/auth/db.ts` to resolve the validated `userType` to `roles.id`, insert `users.roleId`, and reject unresolved role names without creating an orphan user
-- [ ] T014 [US1] Update role-sensitive registration validation and error translation in `src/api/auth/request_schema.ts` and `src/api/auth/services.ts` without allowing public registration to create an admin user
-- [ ] T015 [US1] Update `src/utils/functions.ts` sanitization types and role serialization to read the joined role name while excluding `roleId` from the public user response
+- [x] T012 [US1] Add typed role-name-to-role-ID lookup data access for registration and fixture use in `src/api/auth/db.ts`
+- [x] T013 [US1] Update `createUser` in `src/api/auth/db.ts` to resolve the validated `userType` to `roles.id`, insert `users.roleId`, and reject unresolved role names without creating an orphan user
+- [x] T014 [US1] Update role-sensitive registration validation and error translation in `src/api/auth/request_schema.ts` and `src/api/auth/services.ts` without allowing public registration to create an admin user
+- [x] T015 [US1] Update `src/utils/functions.ts` sanitization types and role serialization to read the joined role name while excluding `roleId` from the public user response
 
 **Checkpoint**: User Story 1 is independently testable with four seeded roles, valid role-backed users, relation queries, and invalid-reference failures.
 
@@ -69,16 +69,16 @@ Log in verified buyer, seller, mechanic, and admin fixtures, assert the returned
 
 ### Tests for User Story 2
 
-- [ ] T016 [P] [US2] Update login and refresh integration assertions for joined role names and stable sanitized responses in `src/api/auth/__test__/login.test.ts` and `src/api/auth/__test__/refresh_token.test.ts`
-- [ ] T017 [P] [US2] Add authorization integration coverage for buyer, seller, and admin allow/deny decisions and unresolved-role fail-closed behavior in `src/middlewares/__test__/role_authorization.test.ts`
-- [ ] T018 [P] [US2] Add auth data-access coverage for user-by-email and user-by-ID role joins in `src/api/auth/__test__/auth_db.test.ts`
+- [x] T016 [P] [US2] Update login and refresh integration assertions for joined role names and stable sanitized responses in `src/api/auth/__test__/login.test.ts` and `src/api/auth/__test__/refresh_token.test.ts`
+- [x] T017 [P] [US2] Add authorization integration coverage for buyer, seller, and admin allow/deny decisions and unresolved-role fail-closed behavior in `src/middlewares/__test__/role_authorization.test.ts`
+- [x] T018 [P] [US2] Add auth data-access coverage for user-by-email and user-by-ID role joins in `src/api/auth/__test__/auth_db.test.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T019 [US2] Update `findUserByEmail` and `findUserById` in `src/api/auth/db.ts` to join `rolesTable` and return the related role name under the existing `role` contract
-- [ ] T020 [US2] Update login and refresh token generation in `src/api/auth/services.ts` to use the resolved role name and fail safely when the role relation cannot be resolved
-- [ ] T021 [US2] Update JWT payload typing and current-user assignment in `src/middlewares/current_user.ts` and `src/types/express/index.d.ts` while preserving existing role-name middleware inputs
-- [ ] T022 [US2] Verify and update role middleware behavior in `src/middlewares/is_admin.ts`, `src/middlewares/is_buyer.ts`, and `src/middlewares/is_seller.ts` so authorization remains server-side and unchanged
+- [x] T019 [US2] Update `findUserByEmail` and `findUserById` in `src/api/auth/db.ts` to join `rolesTable` and return the related role name under the existing `role` contract
+- [x] T020 [US2] Update login and refresh token generation in `src/api/auth/services.ts` to use the resolved role name and fail safely when the role relation cannot be resolved
+- [x] T021 [US2] Update JWT payload typing and current-user assignment in `src/middlewares/current_user.ts` and `src/types/express/index.d.ts` while preserving existing role-name middleware inputs
+- [x] T022 [US2] Verify and update role middleware behavior in `src/middlewares/is_admin.ts`, `src/middlewares/is_buyer.ts`, and `src/middlewares/is_seller.ts` so authorization remains server-side and unchanged
 
 **Checkpoint**: User Story 2 is independently testable through login, refresh, current-user loading, JWT claims, and protected-route authorization.
 
@@ -96,15 +96,15 @@ Recreate the test database, migrate and seed it at least three times, then run f
 
 ### Tests for User Story 3
 
-- [ ] T023 [P] [US3] Add migration/seed repeatability and invalid-legacy-role recovery checks to `src/db/__test__/migration_roles.test.ts`
-- [ ] T024 [P] [US3] Update fixture assertions across auth, listing, and favorite integration tests to verify role names remain stable after setup refactoring in `src/api/auth/__test__/register.test.ts`, `src/api/listings/__test__/create_listing.test.ts`, and `src/api/favorite_listings/__test__/favorite_listings.test.ts`
+- [x] T023 [P] [US3] Add migration/seed repeatability and invalid-legacy-role recovery checks to `src/db/__test__/migration_roles.test.ts`
+- [x] T024 [P] [US3] Update fixture assertions across auth, listing, and favorite integration tests to verify role names remain stable after setup refactoring in `src/api/auth/__test__/register.test.ts`, `src/api/listings/__test__/create_listing.test.ts`, and `src/api/favorite_listings/__test__/favorite_listings.test.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T025 [US3] Update `src/test/setup.ts` to rely on migrated/seeded role rows and insert the admin fixture with a valid `roleId` instead of the removed inline role field
-- [ ] T026 [US3] Update registration and authenticated-user factories in `src/test/helpers.ts` to preserve role-name inputs while resolving valid role IDs through the application path
-- [ ] T027 [US3] Audit and replace all remaining production and test references to `usersTable.role` or direct user inserts using `role` across `src/`, preserving public `role` response and JWT names
-- [ ] T028 [US3] Update any affected listing, favorite, city, and related Drizzle relation imports/tests so schema compilation and role joins have no stale user-role field references in `src/db/schema/`, `src/api/`, and `src/test/`
+- [x] T025 [US3] Update `src/test/setup.ts` to rely on migrated/seeded role rows and insert the admin fixture with a valid `roleId` instead of the removed inline role field
+- [x] T026 [US3] Update registration and authenticated-user factories in `src/test/helpers.ts` to preserve role-name inputs while resolving valid role IDs through the application path
+- [x] T027 [US3] Audit and replace all remaining production and test references to `usersTable.role` or direct user inserts using `role` across `src/`, preserving public `role` response and JWT names
+- [x] T028 [US3] Update any affected listing, favorite, city, and related Drizzle relation imports/tests so schema compilation and role joins have no stale user-role field references in `src/db/schema/`, `src/api/`, and `src/test/`
 
 **Checkpoint**: User Story 3 is independently testable through repeatable migration/seed setup and the complete existing integration suite.
 
@@ -114,12 +114,12 @@ Recreate the test database, migrate and seed it at least three times, then run f
 
 **Purpose**: Validate the complete change, document recovery behavior, and remove migration/refactor drift.
 
-- [ ] T029 [P] Update `specs/002-user-role-relational/quickstart.md` with final migration command output, seed repeatability evidence, and the confirmed focused/full test commands
-- [ ] T030 [P] Audit `specs/002-user-role-relational/data-model.md` and `specs/002-user-role-relational/contracts/auth-role-contract.md` against the final schema and API behavior, documenting any justified deviation
-- [ ] T031 Run `npm run start:build` and resolve only feature-related TypeScript errors in `src/db/`, `src/api/auth/`, `src/middlewares/`, `src/db/seeds/`, and `src/test/`
-- [ ] T032 Run the focused auth and role tests with `npx jest src/api/auth/__test__ src/db/__test__ src/middlewares/__test__ --runInBand --no-cache` and fix feature-related failures in `src/api/auth/`, `src/db/`, and `src/middlewares/`
-- [ ] T033 Run the complete test suite with `npm test -- --runInBand --watchAll=false --no-cache`, then verify migration and seed behavior against the acceptance criteria in `specs/002-user-role-relational/quickstart.md`
-- [ ] T034 Review `drizzle/0018_relational_user_roles.sql` and the final diff for transactional migration safety, invalid legacy-role reporting, no secret/error leakage, and absence of stale production inline-role references
+- [x] T029 [P] Update `specs/002-user-role-relational/quickstart.md` with final migration command output, seed repeatability evidence, and the confirmed focused/full test commands
+- [x] T030 [P] Audit `specs/002-user-role-relational/data-model.md` and `specs/002-user-role-relational/contracts/auth-role-contract.md` against the final schema and API behavior, documenting any justified deviation
+- [x] T031 Run `npm run start:build` and resolve only feature-related TypeScript errors in `src/db/`, `src/api/auth/`, `src/middlewares/`, `src/db/seeds/`, and `src/test/`
+- [x] T032 Run the focused auth and role tests with `npx jest src/api/auth/__test__ src/db/__test__ src/middlewares/__test__ --runInBand --no-cache` and fix feature-related failures in `src/api/auth/`, `src/db/`, and `src/middlewares/`
+- [x] T033 Run the complete test suite with `npm test -- --runInBand --watchAll=false --no-cache`, then verify migration and seed behavior against the acceptance criteria in `specs/002-user-role-relational/quickstart.md`
+- [x] T034 Review `drizzle/0018_create_roles_table.sql` and the final diff for transactional migration safety, invalid legacy-role reporting, no secret/error leakage, and absence of stale production inline-role references
 
 ---
 

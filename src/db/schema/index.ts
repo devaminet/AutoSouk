@@ -11,6 +11,7 @@ import * as refreshTokens from "./refresh_tokens";
 import * as emailVerificationTokens from "./email_verification_tokens";
 import * as forgetPasswordToken from "./forget_password_tokens";
 import * as cities from "./city";
+import * as roles from "./roles";
 
 export const schema = {
   ...cars,
@@ -26,4 +27,5 @@ export const schema = {
   ...emailVerificationTokens,
   ...forgetPasswordToken,
   ...cities,
+  ...roles,
 };

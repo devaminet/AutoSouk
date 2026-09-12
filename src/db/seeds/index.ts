@@ -3,6 +3,7 @@ import { generateCarOriginsData } from "./car_origins_seed";
 import { generateCarStatesData } from "./car_states_seed";
 import { generateCitiesData } from "./cities_seed";
 import { generateMakeAndModelData } from "./make_model_seed";
+import { generateRolesData } from "./roles_seed";
 
 export const seeds = async () => {
   const results = await Promise.allSettled([
@@ -11,6 +12,7 @@ export const seeds = async () => {
     generateCarStatesData(),
     generateCarCarburantData(),
     generateCitiesData(),
+    generateRolesData(),
   ]);
   const success = results.every((result) => {
     if (result.status === "rejected") {

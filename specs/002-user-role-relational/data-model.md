@@ -56,3 +56,9 @@ The migration must run as one reviewed, failure-safe unit where PostgreSQL permi
 - Auth user lookup: users joined to roles, returning user fields plus `role: roles.name`.
 - Registration: validate role name at the request boundary, resolve `roles.id`, then insert `users.role_id`.
 - Role relationship checks: query a role with its users or a user with its role using Drizzle relations or explicit joins.
+
+## Implementation Alignment
+
+- The shipped migration artifact is `drizzle/0018_create_roles_table.sql`; it creates and seeds the `roles` table, validates legacy values, backfills `users.role_id`, adds the foreign key and index, and removes the legacy column in one transactional migration.
+- The application seed path in `src/db/seeds/roles_seed.ts` repeats the same default-role seed conflict-safely, preserving role IDs on retries.
+- Invalid legacy values are reported with user ID, email, and role in the database error detail. The migration rolls back as a unit, allowing correction and retry.

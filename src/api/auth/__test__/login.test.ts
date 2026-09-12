@@ -15,8 +15,9 @@ it("should return status code of 200 and response body on valid login", async ()
       password: formData.password,
     })
     .expect(200);
-  delete loginResponse.body.user.id;
-  expect(loginResponse.body.user).toEqual({
+  const { id, ...sanitizedUser } = loginResponse.body.user;
+  expect(id).toBeDefined();
+  expect(sanitizedUser).toEqual({
     firstName: formData.firstName,
     lastName: formData.lastName,
     email: formData.email,
@@ -26,6 +27,7 @@ it("should return status code of 200 and response body on valid login", async ()
     phone: formData.phone,
     role: formData.userType,
   });
+  expect(loginResponse.body.user).not.toHaveProperty("roleId");
   expect(loginResponse.body.accessToken).toBeDefined();
   expect(loginResponse.get("Set-Cookie")?.[0]).toBeDefined();
 });

@@ -1,42 +1,64 @@
 import { and, eq, ne } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db";
+import { rolesTable } from "../../db/schema/roles";
 import { usersTable } from "../../db/schema/user";
 import { registerSchema } from "./request_schema";
 import { hashPassword } from "../../utils/functions";
 import { emailVerificationTokensTable } from "../../db/schema/email_verification_tokens";
 import { refreshTokensTable } from "../../db/schema/refresh_tokens";
 import { forgotPasswordTokensTable } from "../../db/schema/forget_password_tokens";
+import { BadRequestError } from "../../errors/bad_request_error";
 
-export const findUserByEmail = async (
-  email: string,
-): Promise<typeof usersTable.$inferSelect | null> => {
-  const user = await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.email, email))
+export const findRoleIdByName = async (
+  roleName: string,
+): Promise<number | null> => {
+  const role = await db
+    .select({ id: rolesTable.id })
+    .from(rolesTable)
+    .where(eq(rolesTable.name, roleName))
     .limit(1);
 
-  return user[0];
+  return role[0]?.id ?? null;
+};
+
+export const findRoles = async () => {
+  return await db
+    .select({ id: rolesTable.id, name: rolesTable.name })
+    .from(rolesTable);
+};
+
+export const insertUserWithRoleId = async (
+  user: typeof usersTable.$inferInsert,
+) => {
+  const [createdUser] = await db.insert(usersTable).values(user).returning();
+  return createdUser;
+};
+
+export const findUserByEmail = async (email: string) => {
+  const user = await db.query.usersTable.findFirst({
+    where: eq(usersTable.email, email),
+    with: { role: true },
+  });
+  return user ?? null;
 };
 
 export const findUserById = async (id: number) => {
-  const user = await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.id, id))
-    .limit(1);
-
-  if (user.length === 0) {
-    return null;
-  }
-
-  return user[0];
+  const user = await db.query.usersTable.findFirst({
+    where: eq(usersTable.id, id),
+    with: { role: true },
+  });
+  return user ?? null;
 };
 
 export const createUser = async (user: z.infer<typeof registerSchema>) => {
   const { email, password, cityId, firstName, lastName, phone, userType } =
     user;
+  const roleId = await findRoleIdByName(userType);
+  if (roleId === null) {
+    throw new BadRequestError("Invalid user role");
+  }
+
   const { hashedPassword, salt } = await hashPassword(password);
 
   const createdUser = await db
@@ -49,7 +71,7 @@ export const createUser = async (user: z.infer<typeof registerSchema>) => {
       firstName,
       lastName,
       phone,
-      role: userType,
+      roleId,
     })
     .returning({ id: usersTable.id });
 

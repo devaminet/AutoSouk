@@ -47,3 +47,8 @@ The role claim is resolved from the related role record. Existing authorization 
 - A non-existent role ID during persistence is rejected by service validation and the database foreign key.
 - Legacy migration values outside the supported set abort migration and identify affected users; no fallback role is assigned.
 - Existing HTTP status and error response conventions remain unchanged unless a focused test requires the established validation error to be extended.
+
+## Implementation Alignment
+
+- Public registration and authenticated responses follow this contract. The `admin` role is available through seeded/internal fixtures only.
+- The migration seeds the default role rows and validates/backfills legacy users transactionally. The application seed runner repeats the role seed conflict-safely after migrations, so deployment and test setup remain idempotent.

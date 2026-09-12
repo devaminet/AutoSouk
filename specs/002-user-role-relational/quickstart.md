@@ -10,7 +10,7 @@
 ## Affected Implementation Files
 
 - Schema and relations: `src/db/schema/roles.ts`, `src/db/schema/user.ts`, `src/db/schema/index.ts`
-- Migration: `drizzle/0018_relational_user_roles.sql`
+- Migration: `drizzle/0018_create_roles_table.sql`
 - Seeds: `src/db/seeds/roles_seed.ts`, `src/db/seeds/index.ts`
 - Authentication and role resolution: `src/api/auth/db.ts`, `src/api/auth/services.ts`, `src/api/auth/request_schema.ts`
 - Role serialization and request typing: `src/utils/functions.ts`, `src/middlewares/current_user.ts`, `src/types/express/index.d.ts`
@@ -77,3 +77,14 @@ On a disposable database only, create a legacy user with a null or unsupported i
 - Login and refresh preserve the public `role` name and JWT claim.
 - Buyer/seller/admin middleware decisions remain unchanged.
 - Invalid role input and unresolved role relations fail without authorization or orphan users.
+
+## Recorded validation
+
+The following results were recorded on 2026-09-12:
+
+- `npm run start:build`: passed.
+- `npx jest src/db/__test__/migration_roles.test.ts --runInBand --no-cache`: passed; migration and seed repeatability/recovery checks passed.
+- `npx jest src/api/auth/__test__ src/db/__test__ src/middlewares/__test__ --runInBand --no-cache`: passed; 75 tests passed across 11 suites.
+- `npm test -- --runInBand --watchAll=false --no-cache`: exit code 1; 88 of 90 tests passed across 14 suites after excluding compiled `dist` tests from Jest discovery. Remaining failures were the existing favorite-list response-shape assertion and listing car-attachment request returning HTTP 500.
+
+The focused migration/seed and role checks pass. The full-suite command remains the canonical integration check and must be rerun after the unrelated listing and favorite-list failures are resolved.

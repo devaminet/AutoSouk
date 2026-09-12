@@ -198,9 +198,23 @@ export const verifyJWT = <T>(token: string): Promise<JwtPayload & T> => {
   });
 };
 
-export const sanitizeUser = (
-  user: typeof usersTable.$inferSelect,
-): Omit<typeof user, "password" | "salt" | "updatedAt" | "createdAt"> => {
+type UserWithRole = typeof usersTable.$inferSelect & {
+  role: { name: string };
+};
+
+export type SanitizedUser = Pick<
+  typeof usersTable.$inferSelect,
+  | "id"
+  | "firstName"
+  | "lastName"
+  | "email"
+  | "cityId"
+  | "imageUrl"
+  | "isVerified"
+  | "phone"
+> & { role: string };
+
+export const sanitizeUser = (user: UserWithRole): SanitizedUser => {
   return {
     id: user.id,
     firstName: user.firstName,
@@ -210,6 +224,6 @@ export const sanitizeUser = (
     imageUrl: user.imageUrl,
     isVerified: user.isVerified,
     phone: user.phone,
-    role: user.role,
+    role: user.role.name,
   };
 };

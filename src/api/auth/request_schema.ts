@@ -21,6 +21,10 @@ const passwordShema = (options?: {
     );
 };
 
+export const registrationRoleSchema = z.enum(["buyer", "seller", "mechanic"], {
+  message: "User should be either buyer, seller or mechanic",
+});
+
 export const registerSchema = z.object(
   {
     firstName: z
@@ -48,9 +52,7 @@ export const registerSchema = z.object(
         invalid_type_error: "Phone must be a text",
       })
       .min(10, { message: "Phone should have at least 10 charaters" }),
-    userType: z.enum(["buyer", "seller", "mechanic"], {
-      message: "User should be either buyer, seller or mechanic",
-    }),
+    userType: registrationRoleSchema,
     cityId: z
       .number({
         required_error: "City is required",

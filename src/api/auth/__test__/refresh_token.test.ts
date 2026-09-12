@@ -18,12 +18,25 @@ it("should return a new access token", async () => {
     .post("/api/auth/refresh-token")
     .set("Cookie", cookies!);
   const newRefreshToken = extractRefreshTokenFromCookie(
-    response.get("Set-Cookie")?.[0]!
+    response.get("Set-Cookie")?.[0]!,
   );
 
   expect(response.body.accessToken).toBeDefined();
   expect(response.body.accessToken).not.toBe(accessToken);
   expect(newRefreshToken).not.toBe(refreshToken);
+  const { id, ...sanitizedUser } = response.body.user;
+  expect(id).toBeDefined();
+  expect(sanitizedUser).toEqual({
+    firstName: "John",
+    lastName: "Doe",
+    email: "user@example.com",
+    cityId: 1,
+    imageUrl: null,
+    isVerified: true,
+    phone: "+212685412593",
+    role: "buyer",
+  });
+  expect(response.body.user).not.toHaveProperty("roleId");
   expect(response.statusCode).toBe(200);
 });
 
@@ -56,7 +69,7 @@ it("should fail if the same token was used", async () => {
 it("should fail if invalid token was used", async () => {
   const refreshToken = await generateJWT(
     { id: 859, email: "random@example.com", issuedAt: new Date().getTime() },
-    Number(process.env.JWT_REFRESH_TOKEN_EXPIRATION_SECONDS!)
+    Number(process.env.JWT_REFRESH_TOKEN_EXPIRATION_SECONDS!),
   );
   const sessionObject = { refreshToken };
   const session = Buffer.from(JSON.stringify(sessionObject)).toString("base64");
