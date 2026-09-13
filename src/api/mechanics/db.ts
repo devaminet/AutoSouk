@@ -1,6 +1,7 @@
-import { eq } from "drizzle-orm";
+import { and, asc, count, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db";
+import { mechanicGarageImageTable } from "../../db/schema/mechanic_garage_image";
 import { mechanicTable } from "../../db/schema/mechanic";
 import { createMechanicSchema, updateMechanicSchema } from "./request_schema";
 
@@ -28,6 +29,32 @@ export const findMechanicByUserId = async (userId: number) => {
   });
 
   return mechanic ?? null;
+};
+
+export const findActiveMechanicsByCity = async (
+  cityId: number,
+  { page, limit }: { page: number; limit: number },
+) => {
+  const conditions = and(
+    eq(mechanicTable.cityId, cityId),
+    eq(mechanicTable.isActive, true),
+  );
+  const mechanics = await db.query.mechanicTable.findMany({
+    where: conditions,
+    with: {
+      city: true,
+      garageImages: true,
+    },
+    orderBy: asc(mechanicTable.id),
+    limit,
+    offset: (page - 1) * limit,
+  });
+  const totalCountResult = await db
+    .select({ count: count() })
+    .from(mechanicTable)
+    .where(conditions);
+
+  return { mechanics, totalCountResult };
 };
 
 export const insertMechanic = async (
@@ -60,4 +87,26 @@ export const updateMechanicByUserId = async (
     .returning();
 
   return mechanic ?? null;
+};
+
+export const updateMechanicActiveStatus = async (
+  mechanicId: number,
+  isActive: boolean,
+) => {
+  await db
+    .update(mechanicTable)
+    .set({ isActive })
+    .where(eq(mechanicTable.id, mechanicId));
+};
+
+export const insertMechanicGarageImage = async (
+  mechanicId: number,
+  link: string,
+) => {
+  const [garageImage] = await db
+    .insert(mechanicGarageImageTable)
+    .values({ mechanicId, link })
+    .returning();
+
+  return garageImage;
 };

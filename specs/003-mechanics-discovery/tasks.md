@@ -74,15 +74,15 @@
 
 ### Tests for User Story 2
 
-- [ ] T018 [P] [US2] Integration test for successful discovery (active mechanics returned with latitude/longitude, profile, and garage images; inactive mechanics excluded) in `src/api/listings/__test__/listing_mechanics.test.ts`
-- [ ] T019 [P] [US2] Integration test for empty-result cases (no mechanics in city, no car/city attached to the listing, listing not in `approved` status) in `src/api/listings/__test__/listing_mechanics_empty.test.ts`
+- [x] T018 [P] [US2] Integration test for successful discovery (active mechanics returned with latitude/longitude, profile, and garage images; inactive mechanics excluded) in `src/api/listings/__test__/listing_mechanics.test.ts`
+- [x] T019 [P] [US2] Integration test for empty-result cases (no mechanics in city, no car/city attached to the listing, listing not in `approved` status) in `src/api/listings/__test__/listing_mechanics_empty.test.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T020 [US2] Add `findActiveMechanicsByCity` (paginated, joined with city and garage images) to `src/api/mechanics/db.ts` (depends on T015)
-- [ ] T021 [US2] Add `listingMechanicsQuerySchema` (`page`, `limit` with defaults) to `src/api/mechanics/request_schema.ts` (depends on T014)
-- [ ] T022 [US2] Implement `getMechanicsForListing` service — resolve the listing's status/car/city, short-circuit to an empty paginated result when not `approved` or no city is resolvable, otherwise return paginated active mechanics with presigned image URLs — in `src/api/mechanics/services.ts` (depends on T020)
-- [ ] T023 [US2] Implement `GET /:id/mechanics` route in `src/api/listings/routes.ts`, validating query params with `listingMechanicsQuerySchema` and calling `getMechanicsForListing` (depends on T021, T022)
+- [x] T020 [US2] Add `findActiveMechanicsByCity` (paginated, joined with city and garage images) to `src/api/mechanics/db.ts` (depends on T015)
+- [x] T021 [US2] Add `listingMechanicsQuerySchema` (`page`, `limit` with defaults) to `src/api/mechanics/request_schema.ts` (depends on T014)
+- [x] T022 [US2] Implement `getMechanicsForListing` service — resolve the listing's status/car/city, short-circuit to an empty paginated result when not `approved` or no city is resolvable, otherwise return paginated active mechanics with presigned image URLs — in `src/api/mechanics/services.ts` (depends on T020)
+- [x] T023 [US2] Implement `GET /:id/mechanics` route in `src/api/listings/routes.ts`, validating query params with `listingMechanicsQuerySchema` and calling `getMechanicsForListing` (depends on T021, T022)
 
 **Checkpoint**: User Stories 1 and 2 both work independently — core discovery MVP complete
 

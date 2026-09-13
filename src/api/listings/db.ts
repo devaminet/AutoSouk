@@ -195,6 +195,24 @@ export const findListingById = async (id: number) => {
   return listing[0];
 };
 
+export const findListingCityById = async (id: number) => {
+  const listing = await db.query.listingTable.findFirst({
+    where: eq(listingTable.id, id),
+    columns: {
+      status: true,
+    },
+    with: {
+      car: {
+        columns: {
+          cityId: true,
+        },
+      },
+    },
+  });
+
+  return listing ?? null;
+};
+
 export const approveListingById = async (id: number) => {
   return await db
     .update(listingTable)
