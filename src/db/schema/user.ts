@@ -12,6 +12,7 @@ import { carTable } from "./car";
 import { listingTable } from "./listing";
 import { cityTable } from "./city";
 import { rolesTable } from "./roles";
+import { mechanicTable } from "./mechanic";
 
 export const usersTable = pgTable(
   "users",
@@ -46,5 +47,9 @@ export const userRelations = relations(usersTable, ({ one, many }) => ({
   role: one(rolesTable, {
     fields: [usersTable.roleId],
     references: [rolesTable.id],
+  }),
+  mechanic: one(mechanicTable, {
+    fields: [usersTable.id],
+    references: [mechanicTable.userId],
   }),
 }));

@@ -4,6 +4,7 @@ import { NotAuthorizedError } from "../../errors/not_authorized_error";
 import { isAdmin } from "../is_admin";
 import { isBuyer } from "../is_buyer";
 import { isSeller } from "../is_seller";
+import { isMechanic } from "../is_mechanic";
 
 type RoleGuard = (req: Request, res: Response, next: NextFunction) => void;
 
@@ -29,6 +30,7 @@ describe("role authorization middleware", () => {
     ["buyer", isBuyer],
     ["seller", isSeller],
     ["admin", isAdmin],
+    ["mechanic", isMechanic],
   ])("allows %s users through their matching guard", (role, guard) => {
     expect(runGuard(guard, role)).toBeUndefined();
   });
@@ -37,6 +39,7 @@ describe("role authorization middleware", () => {
     ["buyer", isBuyer],
     ["seller", isSeller],
     ["admin", isAdmin],
+    ["mechanic", isMechanic],
   ])("denies %s users at non-matching guards", (role, guard) => {
     const otherRole = role === "buyer" ? "seller" : "buyer";
 
@@ -47,6 +50,7 @@ describe("role authorization middleware", () => {
     ["buyer", isBuyer],
     ["seller", isSeller],
     ["admin", isAdmin],
+    ["mechanic", isMechanic],
   ])("fails closed when %s role resolution is absent", (role, guard) => {
     expect(runGuard(guard, undefined)).toBeInstanceOf(NotAllowedError);
   });
@@ -59,6 +63,9 @@ describe("role authorization middleware", () => {
       NotAuthorizedError,
     );
     expect(runGuard(isAdmin, undefined, false)).toBeInstanceOf(
+      NotAuthorizedError,
+    );
+    expect(runGuard(isMechanic, undefined, false)).toBeInstanceOf(
       NotAuthorizedError,
     );
   });

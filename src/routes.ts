@@ -5,6 +5,7 @@ import carModelRouter from "./api/car_models/routes";
 import carsRouter from "./api/cars/routes";
 import listingRouter from "./api/listings/routes";
 import favoriteListingRouter from "./api/favorite_listings/routes";
+import mechanicsRouter from "./api/mechanics/routes";
 
 const router = express.Router();
 
@@ -14,5 +15,6 @@ router.use("/api/models", carModelRouter);
 router.use("/api/cars", carsRouter);
 router.use("/api/listings", listingRouter);
 router.use("/api/favorite_listings", favoriteListingRouter);
+router.use("/api/mechanics", mechanicsRouter);
 
 export default router;

@@ -12,6 +12,8 @@ import * as emailVerificationTokens from "./email_verification_tokens";
 import * as forgetPasswordToken from "./forget_password_tokens";
 import * as cities from "./city";
 import * as roles from "./roles";
+import * as mechanics from "./mechanic";
+import * as mechanicGarageImages from "./mechanic_garage_image";
 
 export const schema = {
   ...cars,
@@ -28,4 +30,6 @@ export const schema = {
   ...forgetPasswordToken,
   ...cities,
   ...roles,
+  ...mechanics,
+  ...mechanicGarageImages,
 };

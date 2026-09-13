@@ -19,8 +19,8 @@
 
 **Purpose**: Minimal infrastructure needed before schema/domain work begins
 
-- [ ] T001 [P] Add `mechanicsBucketName = "mechanics"` constant in `src/utils/constants.ts`
-- [ ] T002 Register `createBucket(mechanicsBucketName)` alongside the existing `createBucket(carBucketName)` call in `src/index.ts` (depends on T001)
+- [x] T001 [P] Add `mechanicsBucketName = "mechanics"` constant in `src/utils/constants.ts`
+- [x] T002 Register `createBucket(mechanicsBucketName)` alongside the existing `createBucket(carBucketName)` call in `src/index.ts` (depends on T001)
 
 ---
 
@@ -30,15 +30,15 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T003 [P] Define `mechanicTable` and `mechanicRelations` (`user` one, `city` one, `garageImages` many) in `src/db/schema/mechanic.ts` per [data-model.md](./data-model.md), including the `latitude`/`longitude` CHECK constraints and a unique index on `user_id` and an index on `city_id`
-- [ ] T004 [P] Define `mechanicGarageImageTable` and its `mechanic` relation in `src/db/schema/mechanic_garage_image.ts` per [data-model.md](./data-model.md), including an index on `mechanic_id`
-- [ ] T005 Add a `mechanic: one(mechanicTable)` relation to `userRelations` in `src/db/schema/user.ts` (depends on T003)
-- [ ] T006 Add a `mechanics: many(mechanicTable)` relation to `cityRelations` in `src/db/schema/city.ts` (depends on T003)
-- [ ] T007 Register `./mechanic` and `./mechanic_garage_image` in the schema barrel `src/db/schema/index.ts` (depends on T003, T004)
-- [ ] T008 Generate and review the Drizzle migration for the `mechanics` and `mechanic_garage_images` tables (`npx drizzle-kit generate`) under `drizzle/` (depends on T005, T006, T007)
-- [ ] T009 [P] Create the `isMechanic` role middleware in `src/middlewares/is_mechanic.ts`, mirroring `src/middlewares/is_seller.ts`
-- [ ] T010 [P] Add `isMechanic` allow/deny/fail-closed cases to `src/middlewares/__test__/role_authorization.test.ts`
-- [ ] T011 Create the `mechanicsRouter` skeleton in `src/api/mechanics/routes.ts` and mount it at `/api/mechanics` in `src/routes.ts` (depends on T009)
+- [x] T003 [P] Define `mechanicTable` and `mechanicRelations` (`user` one, `city` one, `garageImages` many) in `src/db/schema/mechanic.ts` per [data-model.md](./data-model.md), including the `latitude`/`longitude` CHECK constraints and a unique index on `user_id` and an index on `city_id` (the `garageImages` relation is added by T004 to avoid a forward import)
+- [x] T004 [P] Define `mechanicGarageImageTable` and its `mechanic` relation in `src/db/schema/mechanic_garage_image.ts` per [data-model.md](./data-model.md), including an index on `mechanic_id`
+- [x] T005 Add a `mechanic: one(mechanicTable)` relation to `userRelations` in `src/db/schema/user.ts` (depends on T003)
+- [x] T006 Add a `mechanics: many(mechanicTable)` relation to `cityRelations` in `src/db/schema/city.ts` (depends on T003)
+- [x] T007 Register `./mechanic` and `./mechanic_garage_image` in the schema barrel `src/db/schema/index.ts` (depends on T003, T004)
+- [x] T008 Generate and review the Drizzle migration for the `mechanics` and `mechanic_garage_images` tables (`npx drizzle-kit generate`) under `drizzle/` (depends on T005, T006, T007)
+- [x] T009 [P] Create the `isMechanic` role middleware in `src/middlewares/is_mechanic.ts`, mirroring `src/middlewares/is_seller.ts`
+- [x] T010 [P] Add `isMechanic` allow/deny/fail-closed cases to `src/middlewares/__test__/role_authorization.test.ts`
+- [x] T011 Create the `mechanicsRouter` skeleton in `src/api/mechanics/routes.ts` and mount it at `/api/mechanics` in `src/routes.ts` (depends on T009)
 
 **Checkpoint**: Foundation ready — user story implementation can now begin
 

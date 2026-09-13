@@ -4,6 +4,7 @@ import { integer } from "drizzle-orm/pg-core";
 import { pgTable } from "drizzle-orm/pg-core";
 import { usersTable } from "./user";
 import { carTable } from "./car";
+import { mechanicTable } from "./mechanic";
 
 export const cityTable = pgTable("cities", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -13,4 +14,5 @@ export const cityTable = pgTable("cities", {
 export const cityRelations = relations(cityTable, ({ many }) => ({
   users: many(usersTable),
   cars: many(carTable),
+  mechanics: many(mechanicTable),
 }));
