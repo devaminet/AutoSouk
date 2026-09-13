@@ -52,15 +52,15 @@
 
 ### Tests for User Story 1
 
-- [ ] T012 [P] [US1] Integration test for profile creation (success, missing latitude/longitude rejected, duplicate-profile rejected, non-mechanic role denied) in `src/api/mechanics/__test__/create_mechanic.test.ts`
-- [ ] T013 [P] [US1] Integration test for retrieving and updating the caller's own profile (partial update persists, no-profile-yet returns 404) in `src/api/mechanics/__test__/update_mechanic.test.ts`
+- [x] T012 [P] [US1] Integration test for profile creation (success, missing latitude/longitude rejected, duplicate-profile rejected, non-mechanic role denied) in `src/api/mechanics/__test__/create_mechanic.test.ts`
+- [x] T013 [P] [US1] Integration test for retrieving and updating the caller's own profile (partial update persists, no-profile-yet returns 404) in `src/api/mechanics/__test__/update_mechanic.test.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T014 [US1] Add `createMechanicSchema` and `updateMechanicSchema` (name, cityId, address, latitude, longitude, optional description/phone/inspectionPrice/profileImageFilename, with lat/long range validation) to `src/api/mechanics/request_schema.ts`
-- [ ] T015 [US1] Add `findMechanicByUserId`, `insertMechanic`, and `updateMechanicByUserId` Drizzle queries to `src/api/mechanics/db.ts` (depends on T014)
-- [ ] T016 [US1] Implement `createMechanicProfile` and `updateMechanicProfile` services — duplicate-profile check, presigned PUT URL for the optional profile image — in `src/api/mechanics/services.ts` (depends on T015)
-- [ ] T017 [US1] Implement `POST /api/mechanics`, `GET /api/mechanics/me`, and `PATCH /api/mechanics/me` routes (guarded by `isAuthenticated` + `isMechanic`) in `src/api/mechanics/routes.ts` (depends on T016)
+- [x] T014 [US1] Add `createMechanicSchema` and `updateMechanicSchema` (name, cityId, address, latitude, longitude, optional description/phone/inspectionPrice/profileImageFilename, with lat/long range validation) to `src/api/mechanics/request_schema.ts`
+- [x] T015 [US1] Add `findMechanicByUserId`, `insertMechanic`, and `updateMechanicByUserId` Drizzle queries to `src/api/mechanics/db.ts` (depends on T014)
+- [x] T016 [US1] Implement `createMechanicProfile` and `updateMechanicProfile` services — duplicate-profile check, presigned PUT URL for the optional profile image — in `src/api/mechanics/services.ts` (depends on T015)
+- [x] T017 [US1] Implement `POST /api/mechanics`, `GET /api/mechanics/me`, and `PATCH /api/mechanics/me` routes (guarded by `isAuthenticated` + `isMechanic`) in `src/api/mechanics/routes.ts` (depends on T016)
 
 **Checkpoint**: User Story 1 is fully functional and independently testable
 
