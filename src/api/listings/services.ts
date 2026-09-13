@@ -61,13 +61,14 @@ export const attachCarToListing = async (
             filename: file.name,
           }),
         )
-        .catch(() =>
+        .catch((err) => {
+          console.error("Error generating presigned URL for file:", err);
           reject(
             new InternalServerError(
               `Could not generate url for this image: ${file.name}`,
             ),
-          ),
-        );
+          );
+        });
     });
   });
 
