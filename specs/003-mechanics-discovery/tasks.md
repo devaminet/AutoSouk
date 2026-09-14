@@ -96,13 +96,13 @@
 
 ### Tests for User Story 3
 
-- [ ] T024 [P] [US3] Integration test for public profile retrieval (active mechanic returns full profile + garage images; inactive mechanic returns 404 for the public but 200 for its owner) in `src/api/mechanics/__test__/get_mechanic.test.ts`
+- [x] T024 [P] [US3] Integration test for public profile retrieval (active mechanic returns full profile + garage images; inactive mechanic returns 404 for the public but 200 for its owner) in `src/api/mechanics/__test__/get_mechanic.test.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T025 [US3] Add `findMechanicById` (joined with city and garage images) query to `src/api/mechanics/db.ts` (depends on T015)
-- [ ] T026 [US3] Implement `getMechanicById` service — active-only visibility for non-owners, full visibility for the owner, presigned image URLs — in `src/api/mechanics/services.ts` (depends on T025)
-- [ ] T027 [US3] Implement `GET /api/mechanics/:id` route (public, optional auth via existing `current_user` middleware) in `src/api/mechanics/routes.ts` (depends on T026)
+- [x] T025 [US3] Add `findMechanicById` (joined with city and garage images) query to `src/api/mechanics/db.ts` (depends on T015)
+- [x] T026 [US3] Implement `getMechanicById` service — active-only visibility for non-owners, full visibility for the owner, presigned image URLs — in `src/api/mechanics/services.ts` (depends on T025)
+- [x] T027 [US3] Implement `GET /api/mechanics/:id` route (public, optional auth via existing `current_user` middleware) in `src/api/mechanics/routes.ts` (depends on T026)
 
 **Checkpoint**: User Stories 1–3 all work independently
 

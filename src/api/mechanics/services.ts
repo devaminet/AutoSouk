@@ -11,6 +11,7 @@ import {
 import { findListingCityById } from "../listings/db";
 import {
   findActiveMechanicsByCity,
+  findMechanicById,
   findMechanicByUserId,
   insertMechanic,
   updateMechanicByUserId,
@@ -68,6 +69,37 @@ export const getOwnMechanicProfile = async (userId: number) => {
   const mechanic = await findMechanicByUserId(userId);
   if (!mechanic) {
     throw new NotFoundError("Mechanic profile was not found");
+  }
+
+  return mechanic;
+};
+
+export const getMechanicById = async (
+  mechanicId: number,
+  requesterUserId?: number,
+) => {
+  const mechanic = await findMechanicById(mechanicId);
+  const isOwner = mechanic?.userId === requesterUserId;
+  if (!mechanic || (!mechanic.isActive && !isOwner)) {
+    throw new NotFoundError("Mechanic profile was not found");
+  }
+
+  try {
+    if (mechanic.profileImageUrl) {
+      mechanic.profileImageUrl = await generateGetPresignedUrl(
+        mechanicsBucketName,
+        mechanic.profileImageUrl,
+      );
+    }
+
+    const filenames = mechanic.garageImages.map((image) => image.link);
+    const urls = await generateGetPresignedUrls(mechanicsBucketName, filenames);
+    for (const image of mechanic.garageImages) {
+      image.link = urls.get(image.link) ?? "";
+    }
+  } catch (error) {
+    console.error("Error generating mechanic image URLs:", error);
+    throw new InternalServerError("Could not generate mechanic image URLs");
   }
 
   return mechanic;

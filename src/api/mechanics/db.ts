@@ -31,6 +31,18 @@ export const findMechanicByUserId = async (userId: number) => {
   return mechanic ?? null;
 };
 
+export const findMechanicById = async (mechanicId: number) => {
+  const mechanic = await db.query.mechanicTable.findFirst({
+    where: eq(mechanicTable.id, mechanicId),
+    with: {
+      city: true,
+      garageImages: true,
+    },
+  });
+
+  return mechanic ?? null;
+};
+
 export const findActiveMechanicsByCity = async (
   cityId: number,
   { page, limit }: { page: number; limit: number },
