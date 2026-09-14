@@ -7,16 +7,20 @@ import {
   generateGetPresignedUrl,
   generateGetPresignedUrls,
   generatePresignedUrl,
+  generatePresignedUrls,
 } from "../../utils/functions";
 import { findListingCityById } from "../listings/db";
 import {
+  deleteGarageImageByOwner,
   findActiveMechanicsByCity,
   findMechanicById,
   findMechanicByUserId,
+  insertGarageImages,
   insertMechanic,
   updateMechanicByUserId,
 } from "./db";
 import {
+  addGarageImagesSchema,
   createMechanicSchema,
   listingMechanicsQuerySchema,
   updateMechanicSchema,
@@ -25,6 +29,7 @@ import {
 type CreateMechanicData = z.infer<typeof createMechanicSchema>;
 type UpdateMechanicData = z.infer<typeof updateMechanicSchema>;
 type ListingMechanicsQuery = z.infer<typeof listingMechanicsQuerySchema>;
+type AddGarageImagesData = z.infer<typeof addGarageImagesSchema>;
 
 const getProfileImageUploadUrl = async (filename?: string) => {
   if (!filename) {
@@ -71,7 +76,70 @@ export const getOwnMechanicProfile = async (userId: number) => {
     throw new NotFoundError("Mechanic profile was not found");
   }
 
+  try {
+    const filenames = mechanic.garageImages.map((image) => image.link);
+    const urls = await generateGetPresignedUrls(mechanicsBucketName, filenames);
+    for (const image of mechanic.garageImages) {
+      image.link = urls.get(image.link) ?? "";
+    }
+  } catch (error) {
+    console.error("Error generating mechanic image URLs:", error);
+    throw new InternalServerError("Could not generate mechanic image URLs");
+  }
+
   return mechanic;
+};
+
+export const addGarageImages = async (
+  userId: number,
+  data: AddGarageImagesData,
+) => {
+  const mechanic = await findMechanicByUserId(userId);
+  if (!mechanic) {
+    throw new NotFoundError("Mechanic profile was not found");
+  }
+
+  let uploadUrls: Map<string, string>;
+  try {
+    uploadUrls = await generatePresignedUrls(
+      mechanicsBucketName,
+      data.filenames,
+    );
+  } catch (error) {
+    console.error("Error generating garage image upload URLs:", error);
+    throw new InternalServerError(
+      "Could not generate garage image upload URLs",
+    );
+  }
+
+  if (data.filenames.some((filename) => !uploadUrls.has(filename))) {
+    throw new InternalServerError(
+      "Could not generate garage image upload URLs",
+    );
+  }
+
+  const garageImages = await insertGarageImages(mechanic.id, data.filenames);
+  return {
+    garageImages: garageImages.map((image) => ({
+      id: image.id,
+      filename: image.link,
+      signedUrl: uploadUrls.get(image.link)!,
+    })),
+  };
+};
+
+export const removeGarageImage = async (userId: number, imageId: number) => {
+  const mechanic = await findMechanicByUserId(userId);
+  if (!mechanic) {
+    throw new NotFoundError("Mechanic profile was not found");
+  }
+
+  const garageImage = await deleteGarageImageByOwner(imageId, mechanic.id);
+  if (!garageImage) {
+    throw new NotFoundError("Garage image was not found");
+  }
+
+  return { deleted: true, imageId: garageImage.id };
 };
 
 export const getMechanicById = async (

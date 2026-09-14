@@ -122,3 +122,34 @@ export const insertMechanicGarageImage = async (
 
   return garageImage;
 };
+
+export const insertGarageImages = async (
+  mechanicId: number,
+  links: string[],
+) => {
+  if (links.length === 0) {
+    return [];
+  }
+
+  return await db
+    .insert(mechanicGarageImageTable)
+    .values(links.map((link) => ({ mechanicId, link })))
+    .returning();
+};
+
+export const deleteGarageImageByOwner = async (
+  imageId: number,
+  mechanicId: number,
+) => {
+  const [garageImage] = await db
+    .delete(mechanicGarageImageTable)
+    .where(
+      and(
+        eq(mechanicGarageImageTable.id, imageId),
+        eq(mechanicGarageImageTable.mechanicId, mechanicId),
+      ),
+    )
+    .returning();
+
+  return garageImage ?? null;
+};

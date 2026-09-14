@@ -116,14 +116,14 @@
 
 ### Tests for User Story 4
 
-- [ ] T028 [P] [US4] Integration test for adding/removing garage images (success, zero-image profile returns empty list, cross-mechanic add/remove denied, invalid file type rejected) in `src/api/mechanics/__test__/garage_images.test.ts`
+- [x] T028 [P] [US4] Integration test for adding/removing garage images (success, zero-image profile returns empty list, cross-mechanic add/remove denied, invalid file type rejected) in `src/api/mechanics/__test__/garage_images.test.ts`
 
 ### Implementation for User Story 4
 
-- [ ] T029 [US4] Add `addGarageImagesSchema` (`filenames: string[]`, image-type validated via existing `getFileType`/`allowedFileTypes`) to `src/api/mechanics/request_schema.ts` (depends on T014)
-- [ ] T030 [US4] Add `insertGarageImages` and `deleteGarageImageByOwner` (mechanic-scoped) queries to `src/api/mechanics/db.ts` (depends on T015)
-- [ ] T031 [US4] Implement `addGarageImages` and `removeGarageImage` services — ownership check, presigned PUT URLs on add, presigned GET URLs on read — in `src/api/mechanics/services.ts` (depends on T030)
-- [ ] T032 [US4] Implement `POST /api/mechanics/me/garage-images` and `DELETE /api/mechanics/me/garage-images/:imageId` routes in `src/api/mechanics/routes.ts` (depends on T031, T029)
+- [x] T029 [US4] Add `addGarageImagesSchema` (`filenames: string[]`, image-type validated via existing `getFileType`/`allowedFileTypes`) to `src/api/mechanics/request_schema.ts` (depends on T014)
+- [x] T030 [US4] Add `insertGarageImages` and `deleteGarageImageByOwner` (mechanic-scoped) queries to `src/api/mechanics/db.ts` (depends on T015)
+- [x] T031 [US4] Implement `addGarageImages` and `removeGarageImage` services — ownership check, presigned PUT URLs on add, presigned GET URLs on read — in `src/api/mechanics/services.ts` (depends on T030)
+- [x] T032 [US4] Implement `POST /api/mechanics/me/garage-images` and `DELETE /api/mechanics/me/garage-images/:imageId` routes in `src/api/mechanics/routes.ts` (depends on T031, T029)
 
 **Checkpoint**: User Stories 1–4 all work independently
 
