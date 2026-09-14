@@ -137,14 +137,14 @@
 
 ### Tests for User Story 5
 
-- [ ] T033 [P] [US5] Integration test for activation/deactivation (status change immediately reflected in discovery and public `GET /api/mechanics/:id`; cross-mechanic status change denied) in `src/api/mechanics/__test__/toggle_status.test.ts`
+- [x] T033 [P] [US5] Integration test for activation/deactivation (status change immediately reflected in discovery and public `GET /api/mechanics/:id`; cross-mechanic status change denied) in `src/api/mechanics/__test__/toggle_status.test.ts`
 
 ### Implementation for User Story 5
 
-- [ ] T034 [US5] Add `updateStatusSchema` (`isActive: boolean`) to `src/api/mechanics/request_schema.ts` (depends on T014)
-- [ ] T035 [US5] Add `updateMechanicStatusByUserId` query to `src/api/mechanics/db.ts` (depends on T015)
-- [ ] T036 [US5] Implement `updateMechanicStatus` service in `src/api/mechanics/services.ts` (depends on T035)
-- [ ] T037 [US5] Implement `PATCH /api/mechanics/me/status` route in `src/api/mechanics/routes.ts` (depends on T036, T034)
+- [x] T034 [US5] Add `updateStatusSchema` (`isActive: boolean`) to `src/api/mechanics/request_schema.ts` (depends on T014)
+- [x] T035 [US5] Add `updateMechanicStatusByUserId` query to `src/api/mechanics/db.ts` (depends on T015)
+- [x] T036 [US5] Implement `updateMechanicStatus` service in `src/api/mechanics/services.ts` (depends on T035)
+- [x] T037 [US5] Implement `PATCH /api/mechanics/me/status` route in `src/api/mechanics/routes.ts` (depends on T036, T034)
 
 **Checkpoint**: All user stories are independently functional
 

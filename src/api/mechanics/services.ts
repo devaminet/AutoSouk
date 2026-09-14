@@ -18,6 +18,7 @@ import {
   insertGarageImages,
   insertMechanic,
   updateMechanicByUserId,
+  updateMechanicStatusByUserId,
 } from "./db";
 import {
   addGarageImagesSchema,
@@ -247,4 +248,16 @@ export const updateMechanicProfile = async (
   );
 
   return { mechanic, profileImageUploadUrl };
+};
+
+export const updateMechanicStatus = async (
+  userId: number,
+  isActive: boolean,
+) => {
+  const mechanic = await updateMechanicStatusByUserId(userId, isActive);
+  if (!mechanic) {
+    throw new NotFoundError("Mechanic profile was not found");
+  }
+
+  return mechanic;
 };

@@ -101,6 +101,19 @@ export const updateMechanicByUserId = async (
   return mechanic ?? null;
 };
 
+export const updateMechanicStatusByUserId = async (
+  userId: number,
+  isActive: boolean,
+) => {
+  const [mechanic] = await db
+    .update(mechanicTable)
+    .set({ isActive })
+    .where(eq(mechanicTable.userId, userId))
+    .returning();
+
+  return mechanic ?? null;
+};
+
 export const updateMechanicActiveStatus = async (
   mechanicId: number,
   isActive: boolean,

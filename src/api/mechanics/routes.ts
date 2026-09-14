@@ -9,6 +9,7 @@ import {
   garageImageIdParamSchema,
   mechanicIdParamSchema,
   updateMechanicSchema,
+  updateStatusSchema,
 } from "./request_schema";
 import {
   addGarageImages,
@@ -17,6 +18,7 @@ import {
   getOwnMechanicProfile,
   removeGarageImage,
   updateMechanicProfile,
+  updateMechanicStatus,
 } from "./services";
 
 const mechanicsRouter = Router();
@@ -51,6 +53,24 @@ mechanicsRouter.patch("/me", isAuthenticated, isMechanic, async (req, res) => {
   );
   res.status(200).json(result);
 });
+
+mechanicsRouter.patch(
+  "/me/status",
+  isAuthenticated,
+  isMechanic,
+  async (req, res) => {
+    const validationResult = updateStatusSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      throw new RequestValidationError(validationResult.error.errors);
+    }
+
+    const mechanic = await updateMechanicStatus(
+      req.currentUser!.id,
+      validationResult.data.isActive,
+    );
+    res.status(200).json({ mechanic });
+  },
+);
 
 mechanicsRouter.post(
   "/me/garage-images",

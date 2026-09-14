@@ -79,6 +79,16 @@ export const addGarageImagesSchema = z.object({
   ),
 });
 
+export const updateStatusSchema = z.object(
+  {
+    isActive: z.boolean({
+      required_error: "Active status is required",
+      invalid_type_error: "Active status must be a boolean",
+    }),
+  },
+  { required_error: "Mechanic status is required" },
+);
+
 export const listingMechanicsQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(10),
