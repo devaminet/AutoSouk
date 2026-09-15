@@ -1,14 +1,17 @@
 import express from "express";
 import cookieSession from "cookie-session";
+import swaggerUi from "swagger-ui-express";
 import router from "./routes";
 import errorHandler from "./middlewares/error_handler";
 import { NotFoundError } from "./errors/not_found_error";
 import currentUser from "./middlewares/current_user";
+import { swaggerSpec } from "./swagger";
 
 export const app = express();
 
 app.disable("x-powered-by");
 app.use(express.json());
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use(
   cookieSession({
     secret: process.env.COOKIE_SECRET,
