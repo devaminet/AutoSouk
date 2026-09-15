@@ -154,9 +154,9 @@
 
 **Purpose**: Final validation across all stories
 
-- [ ] T038 [P] Run the full test suite (`npm test`) and fix any regressions across `src/api/mechanics`, `src/api/listings`, and `src/middlewares`
-- [ ] T039 [P] Execute the [quickstart.md](./quickstart.md) manual validation steps end-to-end and confirm every Success Criteria mapping passes
-- [ ] T040 Review response payloads, status codes, and error mappings against [contracts/mechanics-api.md](./contracts/mechanics-api.md) for consistency
+- [x] T038 [P] Run the full test suite (`npm test`) and fix any regressions across `src/api/mechanics`, `src/api/listings`, and `src/middlewares`
+- [x] T039 [P] Execute the [quickstart.md](./quickstart.md) manual validation steps end-to-end and confirm every Success Criteria mapping passes
+- [x] T040 Review response payloads, status codes, and error mappings against [contracts/mechanics-api.md](./contracts/mechanics-api.md) for consistency
 
 ---
 

@@ -82,7 +82,7 @@ Conventions follow the existing AutoSouk API: JSON bodies, Zod-validated inputs,
   "profileImageUrl": "https://minio.example/mechanics/....jpg?X-Amz-...",
   "isActive": true,
   "garageImages": [
-    { "id": 10, "url": "https://minio.example/mechanics/....jpg?X-Amz-..." },
+    { "id": 10, "link": "https://minio.example/mechanics/....jpg?X-Amz-..." },
   ],
 }
 ```
