@@ -15,6 +15,33 @@ import {
 
 const favoriteListingRouter = Router();
 
+/**
+ * @openapi
+ * /api/favorite_listings:
+ *   get:
+ *     tags: [Favorite Listings]
+ *     summary: Get the current buyer's favorite listings
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *     responses:
+ *       200:
+ *         description: List of favorite listings
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not a buyer
+ */
 favoriteListingRouter.get("/", isAuthenticated, isBuyer, async (req, res) => {
   const validationResult = getFavoriteListingSchema.safeParse(req.query);
   let limit = validationResult.success ? validationResult.data.limit : 10;
@@ -26,6 +53,34 @@ favoriteListingRouter.get("/", isAuthenticated, isBuyer, async (req, res) => {
   res.status(200).json({ listings });
 });
 
+/**
+ * @openapi
+ * /api/favorite_listings:
+ *   post:
+ *     tags: [Favorite Listings]
+ *     summary: Add a listing to favorites
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [listingId]
+ *             properties:
+ *               listingId:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: Favorite created
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not a buyer
+ */
 favoriteListingRouter.post("/", isAuthenticated, isBuyer, async (req, res) => {
   const validationResult = createFavoriteListingSchema.safeParse(req.body);
   if (!validationResult.success) {
@@ -39,6 +94,30 @@ favoriteListingRouter.post("/", isAuthenticated, isBuyer, async (req, res) => {
   res.status(201).json(result);
 });
 
+/**
+ * @openapi
+ * /api/favorite_listings/{listingId}:
+ *   delete:
+ *     tags: [Favorite Listings]
+ *     summary: Remove a listing from favorites
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: listingId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Favorite removed
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not a buyer
+ */
 favoriteListingRouter.delete(
   "/:listingId",
   isAuthenticated,

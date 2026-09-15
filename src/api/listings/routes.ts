@@ -22,6 +22,46 @@ import { isSeller } from "../../middlewares/is_seller";
 
 const listingRouter = Router();
 
+/**
+ * @openapi
+ * /api/listings:
+ *   get:
+ *     tags: [Listings]
+ *     summary: Get public listings (paginated, filtered)
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10 }
+ *       - in: query
+ *         name: makeId
+ *         schema: { type: integer }
+ *       - in: query
+ *         name: modelId
+ *         schema: { type: integer }
+ *       - in: query
+ *         name: cityId
+ *         schema: { type: integer }
+ *       - in: query
+ *         name: minPrice
+ *         schema: { type: number }
+ *       - in: query
+ *         name: maxPrice
+ *         schema: { type: number }
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [price_asc, price_desc, newest, oldest]
+ *           default: newest
+ *     responses:
+ *       200:
+ *         description: Paginated list of listings
+ *       400:
+ *         description: Validation error
+ */
 // Get public listings (paginated, filtered)
 listingRouter.get("/", async (req: Request, res: Response) => {
   const validationResult = getListingsQuerySchema.safeParse(req.query);
@@ -33,6 +73,36 @@ listingRouter.get("/", async (req: Request, res: Response) => {
   res.status(200).json(result);
 });
 
+/**
+ * @openapi
+ * /api/listings:
+ *   post:
+ *     tags: [Listings]
+ *     summary: Create a listing
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [title, description]
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Listing created
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not a seller
+ */
 // Create a listing
 listingRouter.post(
   "/",
@@ -49,6 +119,55 @@ listingRouter.post(
   },
 );
 
+/**
+ * @openapi
+ * /api/listings/{id}/car:
+ *   post:
+ *     tags: [Listings]
+ *     summary: Attach a car to a listing
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [makeId, modelId, carburantId, originId, stateId, price, year, ownersCount, cityId, distance, transmission, fiscalPower, doorsNumber, files]
+ *             properties:
+ *               makeId: { type: integer }
+ *               modelId: { type: integer }
+ *               carburantId: { type: integer }
+ *               originId: { type: integer }
+ *               stateId: { type: integer }
+ *               price: { type: number }
+ *               year: { type: integer }
+ *               ownersCount: { type: integer }
+ *               cityId: { type: integer }
+ *               distance: { type: string }
+ *               transmission: { type: string, enum: [manual, automatic] }
+ *               fiscalPower: { type: integer }
+ *               doorsNumber: { type: integer }
+ *               files:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     name: { type: string }
+ *                     isPrimary: { type: boolean }
+ *     responses:
+ *       201:
+ *         description: Car attached to listing
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Not authenticated
+ */
 // Attach car to a listing
 listingRouter.post(
   "/:id/car",
@@ -75,6 +194,29 @@ listingRouter.post(
   },
 );
 
+/**
+ * @openapi
+ * /api/listings/{id}/mechanics:
+ *   get:
+ *     tags: [Listings]
+ *     summary: Get active mechanics for an approved listing's city
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10 }
+ *     responses:
+ *       200:
+ *         description: List of mechanics
+ *       400:
+ *         description: Validation error
+ */
 // Get active mechanics for an approved listing's city
 listingRouter.get("/:id/mechanics", async (req: Request, res: Response) => {
   const paramsValidation = attachListingParamSchema.safeParse(req.params);
@@ -94,6 +236,23 @@ listingRouter.get("/:id/mechanics", async (req: Request, res: Response) => {
   res.status(200).json(result);
 });
 
+/**
+ * @openapi
+ * /api/listings/{id}:
+ *   get:
+ *     tags: [Listings]
+ *     summary: Get listing data by id
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Listing details
+ *       404:
+ *         description: Listing not found
+ */
 // Get listing data by id
 listingRouter.get(
   "/:id",
@@ -104,6 +263,27 @@ listingRouter.get(
   },
 );
 
+/**
+ * @openapi
+ * /api/listings/{id}/approve:
+ *   patch:
+ *     tags: [Listings]
+ *     summary: Approve a listing
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Listing approved
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not an admin
+ */
 // Approve a listing
 listingRouter.patch(
   "/:id/approve",
@@ -116,6 +296,27 @@ listingRouter.patch(
   },
 );
 
+/**
+ * @openapi
+ * /api/listings/{id}:
+ *   delete:
+ *     tags: [Listings]
+ *     summary: Delete a listing
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Listing deleted
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not the owning seller
+ */
 // Delete a listing
 listingRouter.delete(
   "/:id",
