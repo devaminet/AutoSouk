@@ -11,7 +11,9 @@ export const app = express();
 
 app.disable("x-powered-by");
 app.use(express.json());
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+if (process.env.NODE_ENV === "development") {
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+}
 app.use(
   cookieSession({
     secret: process.env.COOKIE_SECRET,
