@@ -57,15 +57,14 @@ afterEach(async () => {
   jest.resetAllMocks();
   readTemplateFileMock.mockResolvedValue("<html></html>");
 
+  await db.execute("DELETE FROM inspections");
   await db.execute("DELETE FROM cars");
-  await Promise.all([
-    db.execute("DELETE FROM listings"),
-    db.execute("DELETE FROM email_verification_tokens"),
-    db.execute("DELETE FROM forgot_password_tokens"),
-    db.execute("DELETE FROM refresh_tokens"),
-    db.execute("DELETE FROM users"),
-    db.execute("DELETE FROM favorite_listings"),
-  ]);
+  await db.execute("DELETE FROM listings");
+  await db.execute("DELETE FROM email_verification_tokens");
+  await db.execute("DELETE FROM forgot_password_tokens");
+  await db.execute("DELETE FROM refresh_tokens");
+  await db.execute("DELETE FROM favorite_listings");
+  await db.execute("DELETE FROM users");
 });
 
 afterAll(async () => {
