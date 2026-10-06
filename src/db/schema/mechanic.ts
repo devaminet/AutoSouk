@@ -12,6 +12,7 @@ import { relations, sql } from "drizzle-orm";
 import { usersTable } from "./user";
 import { cityTable } from "./city";
 import { mechanicGarageImageTable } from "./mechanic_garage_image";
+import { mechanicReviewTable } from "./mechanic_review";
 
 export const mechanicTable = pgTable(
   "mechanics",
@@ -62,4 +63,5 @@ export const mechanicRelations = relations(mechanicTable, ({ one, many }) => ({
     references: [cityTable.id],
   }),
   garageImages: many(mechanicGarageImageTable),
+  reviews: many(mechanicReviewTable),
 }));
