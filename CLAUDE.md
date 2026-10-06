@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+@.claude/rules/node-express-ts-expert.md
+
 ## Project
 
 AutoSouk: Morocco-focused marketplace for cars and independent mechanic inspections. Backend only in this repo (`src/`): Node, Express, TypeScript, PostgreSQL, Drizzle ORM. A separate React/TypeScript client consumes this API (see AGENTS.md for the full product/role model).
