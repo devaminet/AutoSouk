@@ -36,5 +36,3 @@ You have access to several specialized skills in `.claude/skills`. Invoke them v
 - **`api-design-principles`**: For REST API design standards.
 - **`drizzle-orm-expert`**: For Drizzle ORM schema design and queries.
 - **`docker-expert`**: For container optimization, security hardening, and deployment.
-- **`odoo-docker-deployment`**: For Odoo-specific Docker/Postgres/Nginx deployment setups.
-- **`x402-express-wrapper`**: For Express-specific x402 micropayment integrations (if applicable).
