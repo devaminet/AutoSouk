@@ -14,6 +14,7 @@ import * as cities from "./city";
 import * as roles from "./roles";
 import * as mechanics from "./mechanic";
 import * as mechanicGarageImages from "./mechanic_garage_image";
+import * as inspections from "./inspection";
 
 export const schema = {
   ...cars,
@@ -32,4 +33,5 @@ export const schema = {
   ...roles,
   ...mechanics,
   ...mechanicGarageImages,
+  ...inspections,
 };
