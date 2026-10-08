@@ -20,6 +20,8 @@ import {
   updateMechanicProfile,
   updateMechanicStatus,
 } from "./services";
+import { mechanicRankingsQuerySchema } from "../mechanic_reviews/request_schema";
+import { rankMechanicsByCity } from "../mechanic_reviews/services";
 
 const mechanicsRouter = Router();
 
@@ -271,6 +273,39 @@ mechanicsRouter.delete(
     res.status(200).json(result);
   },
 );
+
+/**
+ * @openapi
+ * /api/mechanics/rankings:
+ *   get:
+ *     tags: [Mechanics]
+ *     summary: Rank active mechanics by average review rating in a city
+ *     parameters:
+ *       - in: query
+ *         name: cityId
+ *         required: true
+ *         schema: { type: integer }
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10 }
+ *     responses:
+ *       200:
+ *         description: Ranked mechanics
+ *       400:
+ *         description: Validation error
+ */
+mechanicsRouter.get("/rankings", async (req, res) => {
+  const validationResult = mechanicRankingsQuerySchema.safeParse(req.query);
+  if (!validationResult.success) {
+    throw new RequestValidationError(validationResult.error.errors);
+  }
+
+  const result = await rankMechanicsByCity(validationResult.data);
+  res.status(200).json(result);
+});
 
 /**
  * @openapi

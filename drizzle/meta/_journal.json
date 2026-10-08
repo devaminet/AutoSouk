@@ -155,6 +155,13 @@
       "when": 1789681599666,
       "tag": "0022_add_mileage_consistency_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1791320789770,
+      "tag": "0023_add_mechanic_reviews_table",
+      "breakpoints": true
     }
   ]
 }

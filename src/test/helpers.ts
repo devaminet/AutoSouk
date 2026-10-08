@@ -52,7 +52,8 @@ export const signupUserWithVerification = async (options?: {
     cityId: 1,
   };
   const response = await request(app).post("/api/auth/register").send(formData);
-  const { verificationUrl } = (readTemplateFile as jest.Mock).mock.calls[0][1];
+  const mockCalls = (readTemplateFile as jest.Mock).mock.calls;
+  const { verificationUrl } = mockCalls[mockCalls.length - 1][1];
   const token = url.parse(verificationUrl, true).query.token as string;
   await request(app).get(`/api/auth/verify?token=${token}`).send().expect(200);
 

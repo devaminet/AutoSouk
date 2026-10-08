@@ -10,6 +10,7 @@ import {
   generatePresignedUrls,
 } from "../../utils/functions";
 import { findListingCityById } from "../listings/db";
+import { getMechanicRatingSummary } from "../mechanic_reviews/services";
 import {
   deleteGarageImageByOwner,
   findActiveMechanicsByCity,
@@ -61,6 +62,11 @@ const attachMechanicImageUrls = async <
   return mechanic;
 };
 
+const attachRatingSummary = async <T extends { id: number }>(mechanic: T) => ({
+  ...mechanic,
+  rating: await getMechanicRatingSummary(mechanic.id),
+});
+
 const getProfileImageUploadUrl = async (filename?: string) => {
   if (!filename) {
     return undefined;
@@ -106,7 +112,7 @@ export const getOwnMechanicProfile = async (userId: number) => {
     throw new NotFoundError("Mechanic profile was not found");
   }
 
-  return attachMechanicImageUrls(mechanic);
+  return attachRatingSummary(await attachMechanicImageUrls(mechanic));
 };
 
 export const addGarageImages = async (
@@ -171,7 +177,7 @@ export const getMechanicById = async (
     throw new NotFoundError("Mechanic profile was not found");
   }
 
-  return attachMechanicImageUrls(mechanic);
+  return attachRatingSummary(await attachMechanicImageUrls(mechanic));
 };
 
 const emptyMechanicsResult = ({ page, limit }: ListingMechanicsQuery) => ({

@@ -25,6 +25,9 @@ Capabilities:
 - Favor cars
 - Initiate a "Request Inspection" action on available cars.
 - View the detailed results of any completed inspection reports attached to a car.
+- View a mechanic's reviews and overall average rating.
+- Add, update, or delete their own review (rating 1-5, optional message) for a mechanic, limited to one review per mechanic.
+- Rank mechanics by average rating within a city.
 
 - **Seller (Role: seller)**
 
