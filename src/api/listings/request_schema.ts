@@ -117,3 +117,23 @@ export const attachListingParamSchema = z.object({
     .int()
     .positive("listingId must be a positive number"),
 });
+
+export const updateListingSchema = z
+  .object({
+    title: z
+      .string({ invalid_type_error: "Title must be a text" })
+      .min(1, "Title cannot be empty")
+      .optional(),
+    description: z
+      .string({ invalid_type_error: "Description must be a text" })
+      .min(1, "Description cannot be empty")
+      .optional(),
+    car: createCarSchema.omit({ files: true }).partial().optional(),
+  })
+  .refine(
+    (data) =>
+      data.title !== undefined ||
+      data.description !== undefined ||
+      (data.car !== undefined && Object.keys(data.car).length > 0),
+    { message: "At least one field to update is required" },
+  );
