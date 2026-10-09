@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { createCarSchema, getListingsQuerySchema } from "./request_schema";
+import {
+  createCarSchema,
+  getListingsQuerySchema,
+  updateListingSchema,
+} from "./request_schema";
 import { and, asc, count, desc, eq, gte, ilike, lte } from "drizzle-orm";
 import { listingTable } from "../../db/schema/listing";
 import { carTable } from "../../db/schema/car";
@@ -312,4 +316,33 @@ export const getUserListing = async (
     );
 
   return listing.length > 0 ? listing[0] : null;
+};
+
+export const updateListingAndMarkPending = async (
+  listingId: number,
+  changes: z.infer<typeof updateListingSchema>,
+) => {
+  const { car, ...listingChanges } = changes;
+
+  return await db.transaction(async (tx) => {
+    if (car && Object.keys(car).length > 0) {
+      await tx
+        .update(carTable)
+        .set(car)
+        .where(eq(carTable.listingId, listingId));
+    }
+
+    const updated = await tx
+      .update(listingTable)
+      .set({
+        ...listingChanges,
+        status: "pending",
+        approvedAt: null,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(listingTable.id, listingId))
+      .returning();
+
+    return updated[0];
+  });
 };

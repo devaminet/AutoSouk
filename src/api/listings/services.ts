@@ -4,7 +4,11 @@ import {
   generateGetPresignedUrls,
   generatePresignedUrl,
 } from "../../utils/functions";
-import { createCarSchema, getListingsQuerySchema } from "./request_schema";
+import {
+  createCarSchema,
+  getListingsQuerySchema,
+  updateListingSchema,
+} from "./request_schema";
 import { BadRequestError } from "../../errors/bad_request_error";
 import { NotFoundError } from "../../errors/not_found_error";
 import { carBucketName } from "../../utils/constants";
@@ -19,6 +23,7 @@ import {
   getUserListing,
   insertListing,
   saveCarAndMedia,
+  updateListingAndMarkPending,
 } from "./db";
 import { InternalServerError } from "../../errors/internal_server_error";
 
@@ -109,6 +114,23 @@ export const getListingDetails = async (listingId: number) => {
   }
 
   return listing;
+};
+
+export const updateListing = async (
+  listingId: number,
+  userId: number,
+  changes: z.infer<typeof updateListingSchema>,
+) => {
+  const listing = await getUserListing(listingId, userId);
+  if (!listing) {
+    throw new NotFoundError("Listing was not found");
+  }
+
+  if (changes.car && !(await checkCarExistanceByListingId(listingId))) {
+    throw new BadRequestError("Attach a car to this listing before editing it");
+  }
+
+  return await updateListingAndMarkPending(listingId, changes);
 };
 
 export const approveListing = async (listingId: number) => {

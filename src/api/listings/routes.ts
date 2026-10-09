@@ -4,6 +4,7 @@ import {
   createCarSchema,
   createListingSchema,
   getListingsQuerySchema,
+  updateListingSchema,
 } from "./request_schema";
 import { listingMechanicsQuerySchema } from "../mechanics/request_schema";
 import { RequestValidationError } from "../../errors/request_validation_error";
@@ -15,6 +16,7 @@ import {
   getListings,
   deleteListing,
   attachCarToListing,
+  updateListing,
 } from "./services";
 import { getMechanicsForListing } from "../mechanics/services";
 import { isAdmin } from "../../middlewares/is_admin";
@@ -259,6 +261,79 @@ listingRouter.get(
   // isAuthenticated,
   async (req: Request, res: Response) => {
     const listing = await getListingDetails(+req.params.id);
+    res.status(200).json({ listing });
+  },
+);
+
+/**
+ * @openapi
+ * /api/listings/{id}:
+ *   patch:
+ *     tags: [Listings]
+ *     summary: Update a listing and its car, and mark it pending approval
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title: { type: string }
+ *               description: { type: string }
+ *               car:
+ *                 type: object
+ *                 properties:
+ *                   makeId: { type: integer }
+ *                   modelId: { type: integer }
+ *                   carburantId: { type: integer }
+ *                   originId: { type: integer }
+ *                   stateId: { type: integer }
+ *                   price: { type: number }
+ *                   year: { type: integer }
+ *                   ownersCount: { type: integer }
+ *                   cityId: { type: integer }
+ *                   distance: { type: string }
+ *                   transmission: { type: string, enum: [manual, automatic] }
+ *                   fiscalPower: { type: integer }
+ *                   doorsNumber: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Listing updated, status set to pending
+ *       400:
+ *         description: Validation error or no car attached
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not a seller
+ *       404:
+ *         description: Listing not found for this seller
+ */
+// Update a listing and send it back for approval
+listingRouter.patch(
+  "/:id",
+  isAuthenticated,
+  isSeller,
+  async (req: Request, res: Response) => {
+    const paramValidation = attachListingParamSchema.safeParse(req.params);
+    if (!paramValidation.success) {
+      throw new RequestValidationError(paramValidation.error.errors);
+    }
+    const bodyValidation = updateListingSchema.safeParse(req.body);
+    if (!bodyValidation.success) {
+      throw new RequestValidationError(bodyValidation.error.errors);
+    }
+    const listing = await updateListing(
+      paramValidation.data.id,
+      req.currentUser?.id!,
+      bodyValidation.data,
+    );
     res.status(200).json({ listing });
   },
 );
