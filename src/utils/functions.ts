@@ -104,6 +104,21 @@ export const generatePresignedUrl = async (
   return minioClient.presignedPutObject(bucketName, filename, expires);
 };
 
+export const generateImagePostPolicy = async (
+  bucketName: string,
+  filename: string,
+  maxSizeBytes: number,
+  expirySeconds: number,
+) => {
+  const policy = minioClient.newPostPolicy();
+  policy.setBucket(bucketName);
+  policy.setKey(filename);
+  policy.setContentTypeStartsWith("image/");
+  policy.setContentLengthRange(1, maxSizeBytes);
+  policy.setExpires(new Date(Date.now() + expirySeconds * 1000));
+  return minioClient.presignedPostPolicy(policy);
+};
+
 export const generateGetPresignedUrl = async (
   bucketName: string,
   filename: string,

@@ -6,7 +6,7 @@ import {
 } from "./request_schema";
 import {
   generateJWT,
-  generatePresignedUrl,
+  generateImagePostPolicy,
   generateToken,
   hashPassword,
   readTemplateFile,
@@ -38,7 +38,12 @@ import {
   updateUserPasswordById,
   verifyUserById,
 } from "./db";
-import { tokenExpirationMinutes, usersBucketName } from "../../utils/constants";
+import {
+  maxProfileImageSizeBytes,
+  profileImageUploadExpirationSeconds,
+  tokenExpirationMinutes,
+  usersBucketName,
+} from "../../utils/constants";
 import { InternalServerError } from "../../errors/internal_server_error";
 
 const buildProfileImageName = (originalName: string) => {
@@ -46,9 +51,15 @@ const buildProfileImageName = (originalName: string) => {
   return `profile-${generateToken(16)}.${extension.toLowerCase()}`;
 };
 
-const getProfileImageUploadUrl = async (imageName: string) => {
+const getProfileImageUpload = async (imageName: string) => {
   try {
-    return await generatePresignedUrl(usersBucketName, imageName);
+    const { postURL, formData } = await generateImagePostPolicy(
+      usersBucketName,
+      imageName,
+      maxProfileImageSizeBytes,
+      profileImageUploadExpirationSeconds,
+    );
+    return { url: postURL, fields: formData };
   } catch (error) {
     console.error("Error generating profile image upload URL:", error);
     throw new InternalServerError("Could not generate profile image URL");
@@ -88,11 +99,11 @@ export const setupUser = async (user: z.infer<typeof registerSchema>) => {
     html: registerHTML,
   });
 
-  const imageUploadUrl = imageName
-    ? await getProfileImageUploadUrl(imageName)
+  const imageUpload = imageName
+    ? await getProfileImageUpload(imageName)
     : undefined;
 
-  return { token, imageUploadUrl };
+  return { token, imageUpload };
 };
 
 export const resetPassword = async (

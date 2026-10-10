@@ -129,7 +129,9 @@ it("should store the profile image name and return an upload url", async () => {
       imageName: "avatar.png",
     })
     .expect(201);
-  expect(response.body.imageUploadUrl).toContain("profile-");
+  expect(response.body.imageUpload.url).toContain("/users");
+  expect(response.body.imageUpload.fields.key).toMatch(/^profile-/);
+  expect(response.body.imageUpload.fields.policy).toBeDefined();
 
   const user = await findUserByEmail(testUserCredentials.email);
   expect(user?.imageName).toMatch(/^profile-[a-f0-9]+\.png$/);
@@ -137,7 +139,7 @@ it("should store the profile image name and return an upload url", async () => {
 
 it("should not return an upload url when no profile image is sent", async () => {
   const { responseBody } = await signupUser();
-  expect(responseBody.imageUploadUrl).toBeUndefined();
+  expect(responseBody.imageUpload).toBeUndefined();
   const user = await findUserByEmail(testUserCredentials.email);
   expect(user?.imageName).toBeNull();
 });

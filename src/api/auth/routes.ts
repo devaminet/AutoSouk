@@ -49,10 +49,10 @@ const authRouter = Router();
  *               phone: { type: string }
  *               userType: { type: string, enum: [buyer, seller, mechanic] }
  *               cityId: { type: integer }
- *               imageName: { type: string, description: "Optional profile image file name (jpg, jpeg, png, webp). Upload the file to the returned imageUploadUrl." }
+ *               imageName: { type: string, description: "Optional profile image file name (jpg, jpeg, png, webp). Upload the file with a multipart/form-data POST to imageUpload.url, sending every imageUpload.fields entry first and the file last as field \"file\". Max 10MB, image/* content type." }
  *     responses:
  *       201:
- *         description: Account created. Includes imageUploadUrl (presigned PUT) when imageName was sent.
+ *         description: Account created. Includes imageUpload ({ url, fields }, presigned POST policy) when imageName was sent.
  *       400:
  *         description: Validation error
  */
@@ -62,10 +62,8 @@ authRouter.post("/register", async (req, res) => {
     throw new RequestValidationError(validationResult.error.errors);
   }
 
-  const { token, imageUploadUrl } = await setupUser(validationResult.data);
-  res
-    .status(201)
-    .json({ message: "Account was created", token, imageUploadUrl });
+  const { token, imageUpload } = await setupUser(validationResult.data);
+  res.status(201).json({ message: "Account was created", token, imageUpload });
 });
 
 /**
