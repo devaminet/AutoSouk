@@ -51,7 +51,10 @@ export const findUserById = async (id: number) => {
   return user ?? null;
 };
 
-export const createUser = async (user: z.infer<typeof registerSchema>) => {
+export const createUser = async (
+  user: z.infer<typeof registerSchema>,
+  imageName: string | null = null,
+) => {
   const { email, password, cityId, firstName, lastName, phone, userType } =
     user;
   const roleId = await findRoleIdByName(userType);
@@ -72,6 +75,7 @@ export const createUser = async (user: z.infer<typeof registerSchema>) => {
       lastName,
       phone,
       roleId,
+      imageName,
     })
     .returning({ id: usersTable.id });
 

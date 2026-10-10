@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { allowedImageTypes, getFileType } from "../../utils/functions";
 
 const passwordShema = (options?: {
   requiredError?: string;
@@ -59,6 +60,12 @@ export const registerSchema = z.object(
         invalid_type_error: "City must be a number",
       })
       .min(1, { message: "City should have a valid ID" }),
+    imageName: z
+      .string({ invalid_type_error: "Image name must be a text" })
+      .refine((name) => getFileType(name) === "image", {
+        message: `Profile image must be one of: ${allowedImageTypes}`,
+      })
+      .optional(),
   },
   { required_error: "User information are required!" },
 );

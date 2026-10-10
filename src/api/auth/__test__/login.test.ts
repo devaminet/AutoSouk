@@ -22,7 +22,7 @@ it("should return status code of 200 and response body on valid login", async ()
     lastName: formData.lastName,
     email: formData.email,
     cityId: formData.cityId,
-    imageUrl: null,
+    imageUrl: expect.any(String),
     isVerified: true,
     phone: formData.phone,
     role: formData.userType,

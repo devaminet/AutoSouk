@@ -6,6 +6,7 @@ import {
 } from "./request_schema";
 import {
   generateJWT,
+  generatePresignedUrl,
   generateToken,
   hashPassword,
   readTemplateFile,
@@ -37,8 +38,22 @@ import {
   updateUserPasswordById,
   verifyUserById,
 } from "./db";
-import { tokenExpirationMinutes } from "../../utils/constants";
+import { tokenExpirationMinutes, usersBucketName } from "../../utils/constants";
 import { InternalServerError } from "../../errors/internal_server_error";
+
+const buildProfileImageName = (originalName: string) => {
+  const extension = originalName.substring(originalName.lastIndexOf(".") + 1);
+  return `profile-${generateToken(16)}.${extension.toLowerCase()}`;
+};
+
+const getProfileImageUploadUrl = async (imageName: string) => {
+  try {
+    return await generatePresignedUrl(usersBucketName, imageName);
+  } catch (error) {
+    console.error("Error generating profile image upload URL:", error);
+    throw new InternalServerError("Could not generate profile image URL");
+  }
+};
 
 export const setupUser = async (user: z.infer<typeof registerSchema>) => {
   const { firstName, email } = user;
@@ -54,7 +69,10 @@ export const setupUser = async (user: z.infer<typeof registerSchema>) => {
     throw new BadRequestError("Email in use");
   }
 
-  const createdUser = await createUser(user);
+  const imageName = user.imageName
+    ? buildProfileImageName(user.imageName)
+    : null;
+  const createdUser = await createUser(user, imageName);
   const expiresAt = new Date(Date.now() + 1000 * 60 * tokenExpirationMinutes);
   const token = generateToken();
 
@@ -70,7 +88,11 @@ export const setupUser = async (user: z.infer<typeof registerSchema>) => {
     html: registerHTML,
   });
 
-  return token;
+  const imageUploadUrl = imageName
+    ? await getProfileImageUploadUrl(imageName)
+    : undefined;
+
+  return { token, imageUploadUrl };
 };
 
 export const resetPassword = async (
@@ -147,11 +169,12 @@ export const loginUser = async (data: { email: string; password: string }) => {
   }
 
   await insertUserRefreshToken(user.id, refreshToken);
+  const sanitizedUser = await sanitizeUser(foundUser);
 
   return {
     accessToken,
     refreshToken,
-    user: sanitizeUser(foundUser),
+    user: sanitizedUser,
   };
 };
 
@@ -260,11 +283,13 @@ export const refreshTokens = async (token: string) => {
     throw new InternalServerError("An error occurred");
   }
   await updateRefreshToken(decoded.id, token, refreshToken);
+  const sanitizedUser = await sanitizeUser(user);
+
   return {
     success: true,
     refreshToken,
     accessToken,
-    user: sanitizeUser(user),
+    user: sanitizedUser,
   };
 };
 

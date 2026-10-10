@@ -97,3 +97,47 @@ it("should fail when register with the same email", async () => {
   const { statusCode } = await signupUser();
   expect(statusCode).toBe(400);
 });
+
+it("should return 400 when profile image has an invalid file type", async () => {
+  const response = await request(app)
+    .post("/api/auth/register")
+    .send({
+      firstName: "John",
+      lastName: "Doe",
+      email: testUserCredentials.email,
+      password: testUserCredentials.password,
+      phone: "+212685412593",
+      userType: "buyer",
+      cityId: 1,
+      imageName: "avatar.pdf",
+    })
+    .expect(400);
+  expect(response.body.errors[0].field).toBe("imageName");
+});
+
+it("should store the profile image name and return an upload url", async () => {
+  const response = await request(app)
+    .post("/api/auth/register")
+    .send({
+      firstName: "John",
+      lastName: "Doe",
+      email: testUserCredentials.email,
+      password: testUserCredentials.password,
+      phone: "+212685412593",
+      userType: "buyer",
+      cityId: 1,
+      imageName: "avatar.png",
+    })
+    .expect(201);
+  expect(response.body.imageUploadUrl).toContain("profile-");
+
+  const user = await findUserByEmail(testUserCredentials.email);
+  expect(user?.imageName).toMatch(/^profile-[a-f0-9]+\.png$/);
+});
+
+it("should not return an upload url when no profile image is sent", async () => {
+  const { responseBody } = await signupUser();
+  expect(responseBody.imageUploadUrl).toBeUndefined();
+  const user = await findUserByEmail(testUserCredentials.email);
+  expect(user?.imageName).toBeNull();
+});

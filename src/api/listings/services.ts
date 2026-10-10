@@ -1,6 +1,6 @@
 import { z } from "zod";
 import {
-  generateGetPresignedUrl,
+  getProfileImageUrl,
   generateGetPresignedUrls,
   generatePresignedUrl,
 } from "../../utils/functions";
@@ -26,6 +26,13 @@ import {
   updateListingAndMarkPending,
 } from "./db";
 import { InternalServerError } from "../../errors/internal_server_error";
+
+const withProfileImageUrl = async <T extends { imageName: string | null }>(
+  user: T,
+) => {
+  const { imageName, ...publicUser } = user;
+  return { ...publicUser, imageUrl: await getProfileImageUrl(imageName) };
+};
 
 export const saveListing = async (
   title: string,
@@ -113,7 +120,10 @@ export const getListingDetails = async (listingId: number) => {
     }
   }
 
-  return listing;
+  return {
+    ...listing,
+    user: listing.user ? await withProfileImageUrl(listing.user) : null,
+  };
 };
 
 export const updateListing = async (
@@ -152,16 +162,10 @@ export const getListings = async (
   query: z.infer<typeof getListingsQuerySchema>,
 ) => {
   const { limit, page } = query;
-  const { listings, totalCountResult } = await findListings(query);
+  const { listings: foundListings, totalCountResult } =
+    await findListings(query);
 
-  for (const listing of listings) {
-    if (listing.user && listing.user.imageUrl) {
-      const imageUrl = await generateGetPresignedUrl(
-        carBucketName,
-        listing.user.imageUrl,
-      );
-      listing.user.imageUrl = imageUrl;
-    }
+  for (const listing of foundListings) {
     const carMedias = listing.car?.carMedias;
     if (carMedias) {
       const filenames = carMedias.map((media) => media.link);
@@ -171,6 +175,13 @@ export const getListings = async (
       }
     }
   }
+
+  const listings = await Promise.all(
+    foundListings.map(async (listing) => ({
+      ...listing,
+      user: listing.user ? await withProfileImageUrl(listing.user) : null,
+    })),
+  );
 
   const totalCount =
     totalCountResult.length > 0 ? totalCountResult[0]?.count : 0;

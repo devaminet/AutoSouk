@@ -31,7 +31,7 @@ it("should return a new access token", async () => {
     lastName: "Doe",
     email: "user@example.com",
     cityId: 1,
-    imageUrl: null,
+    imageUrl: expect.any(String),
     isVerified: true,
     phone: "+212685412593",
     role: "buyer",

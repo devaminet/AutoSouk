@@ -48,7 +48,7 @@ export const findListings = async (
         columns: {
           firstName: true,
           lastName: true,
-          imageUrl: true,
+          imageName: true,
           phone: true,
         },
       },
@@ -120,7 +120,7 @@ export const getListingDetailsById = async (id: number) => {
           firstName: true,
           lastName: true,
           cityId: true,
-          imageUrl: true,
+          imageName: true,
           isVerified: true,
         },
         with: {

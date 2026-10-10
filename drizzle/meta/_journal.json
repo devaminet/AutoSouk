@@ -162,6 +162,13 @@
       "when": 1791320789770,
       "tag": "0023_add_mechanic_reviews_table",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791547436938,
+      "tag": "0024_rename_users_image_url_to_image_name",
+      "breakpoints": true
     }
   ]
 }

@@ -8,6 +8,7 @@ import Mail, { Attachment } from "nodemailer/lib/mailer";
 import { minioClient } from "../file_storage/minio";
 import { JwtPayload, sign, verify } from "jsonwebtoken";
 import { usersTable } from "../db/schema/user";
+import { defaultProfileImageName, usersBucketName } from "./constants";
 
 const iterations = 100000;
 const keyLength = 64;
@@ -17,6 +18,7 @@ const pbkdf2 = promisify(crypto.pbkdf2);
 
 const imageTypes = ["jpg", "jpeg", "png", "webp"];
 const videoTypes = ["mp4"];
+export const allowedImageTypes = imageTypes.join(", ");
 export const allowedFileTypes = [...imageTypes, ...videoTypes].join(", ");
 
 export const generateToken = (size = 32) => {
@@ -142,6 +144,13 @@ export const generatePresignedUrls = async (
   }, new Map());
 };
 
+export const getProfileImageUrl = (imageName: string | null) => {
+  return generateGetPresignedUrl(
+    usersBucketName,
+    imageName ?? defaultProfileImageName,
+  );
+};
+
 export const getFileType = (file: string) => {
   const extenstion = file.substring(file.lastIndexOf(".") + 1);
   if (imageTypes.includes(extenstion)) {
@@ -204,24 +213,20 @@ type UserWithRole = typeof usersTable.$inferSelect & {
 
 export type SanitizedUser = Pick<
   typeof usersTable.$inferSelect,
-  | "id"
-  | "firstName"
-  | "lastName"
-  | "email"
-  | "cityId"
-  | "imageUrl"
-  | "isVerified"
-  | "phone"
-> & { role: string };
+  "id" | "firstName" | "lastName" | "email" | "cityId" | "isVerified" | "phone"
+> & { role: string; imageUrl: string };
 
-export const sanitizeUser = (user: UserWithRole): SanitizedUser => {
+export const sanitizeUser = async (
+  user: UserWithRole,
+): Promise<SanitizedUser> => {
+  const imageUrl = await getProfileImageUrl(user.imageName);
   return {
     id: user.id,
     firstName: user.firstName,
     lastName: user.lastName,
     email: user.email,
     cityId: user.cityId,
-    imageUrl: user.imageUrl,
+    imageUrl,
     isVerified: user.isVerified,
     phone: user.phone,
     role: user.role.name,
