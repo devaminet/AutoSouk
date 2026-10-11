@@ -278,6 +278,7 @@ export const checkCarExistanceByListingId = async (listingId: number) => {
   return true;
 };
 
+// Returns null when the listing already has a car (unique listing_id).
 export const saveCarAndMedia = async (args: {
   carDetails: Omit<z.infer<typeof createCarSchema>, "files">;
   carMedia: { isPrimary: boolean; filename: string }[];
@@ -286,28 +287,31 @@ export const saveCarAndMedia = async (args: {
 }) => {
   const { carDetails, carMedia, listingId, userId } = args;
 
-  const car = await db.transaction(async (tx) => {
-    const newCar = await tx
+  return await db.transaction(async (tx) => {
+    const [newCar] = await tx
       .insert(carTable)
       .values({
         ...carDetails,
         listingId,
         userId,
       })
+      .onConflictDoNothing({ target: carTable.listingId })
       .returning();
 
+    if (!newCar) {
+      return null;
+    }
+
     const carMediaValues = carMedia.map((media) => ({
-      carId: newCar[0].id,
+      carId: newCar.id,
       link: media.filename,
       type: getFileType(media.filename) as "image" | "video",
       isPrimary: media.isPrimary,
     }));
 
     await tx.insert(carMediaTable).values(carMediaValues);
-    return { ...newCar[0] };
+    return newCar;
   });
-
-  return car;
 };
 
 export const getUserListing = async (

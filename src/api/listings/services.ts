@@ -135,6 +135,10 @@ export const attachCarToListing = async (
     userId,
   });
 
+  if (!car) {
+    throw new BadRequestError("A car is already attached to this listing");
+  }
+
   return {
     car,
     carMedia,

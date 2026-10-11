@@ -307,3 +307,39 @@ describe("car reference validation", () => {
     expect(response.body.errors[0].field).toBe("cityId");
   });
 });
+
+it("should return 400 instead of 500 when two cars are attached at the same time", async () => {
+  await signupUserWithVerification({ userType: "seller" });
+  const authUser = await signinUser();
+  const created = await request(app)
+    .post("/api/listings")
+    .send({ title: "A black car", description: "A brand new black Ford" })
+    .auth(authUser.accessToken, { type: "bearer" });
+  const listingId = created.body.listing.id;
+
+  const attach = () =>
+    request(app)
+      .post(`/api/listings/${listingId}/car`)
+      .send({
+        makeId: 449,
+        modelId: 2085,
+        carburantId: 3,
+        originId: 4,
+        stateId: 6,
+        price: 500000,
+        year: 2025,
+        ownersCount: 0,
+        cityId: 1,
+        distance: "60km",
+        transmission: "automatic",
+        fiscalPower: 8,
+        doorsNumber: 5,
+        files: [{ name: "file1.png", isPrimary: true }],
+      })
+      .auth(authUser.accessToken, { type: "bearer" });
+
+  const responses = await Promise.all([attach(), attach(), attach()]);
+  const statuses = responses.map((response) => response.statusCode).sort();
+
+  expect(statuses).toEqual([201, 400, 400]);
+});
