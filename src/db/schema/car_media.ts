@@ -12,6 +12,7 @@ export const carMediaTable = pgTable("car_media", {
     enum: ["image", "video"],
   }).notNull(),
   isPrimary: boolean().notNull(),
+  isUploaded: boolean("is_uploaded").notNull().default(true),
 });
 
 export const carMediaRelations = relations(carMediaTable, ({ one }) => ({

@@ -56,17 +56,26 @@ export const userFavoriteListings = async (
       listingTitle: listingTable.title,
       listingDescription: listingTable.description,
       images: sql<Array<{ link: string; type: string }>>`
-      json_agg(
-        json_build_object(
-          'link', ${carMediaTable.link},
-          'type', ${carMediaTable.type}
-        )
+      coalesce(
+        json_agg(
+          json_build_object(
+            'link', ${carMediaTable.link},
+            'type', ${carMediaTable.type}
+          )
+        ) filter (where ${carMediaTable.id} is not null),
+        '[]'::json
       )
     `.as("images"),
     })
     .from(listingTable)
     .innerJoin(carTable, eq(carTable.listingId, listingTable.id))
-    .innerJoin(carMediaTable, eq(carMediaTable.carId, carTable.id))
+    .leftJoin(
+      carMediaTable,
+      and(
+        eq(carMediaTable.carId, carTable.id),
+        eq(carMediaTable.isUploaded, true),
+      ),
+    )
     .innerJoin(usersTable, eq(usersTable.id, listingTable.userId))
     .innerJoin(
       favoriteListingsTable,

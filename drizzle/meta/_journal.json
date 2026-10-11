@@ -176,6 +176,13 @@
       "when": 1791628559038,
       "tag": "0025_add_users_pending_image_name",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1791731885314,
+      "tag": "0026_add_car_media_is_uploaded",
+      "breakpoints": true
     }
   ]
 }

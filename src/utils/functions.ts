@@ -104,19 +104,35 @@ export const generatePresignedUrl = async (
   return minioClient.presignedPutObject(bucketName, filename, expires);
 };
 
+export const generateUploadPostPolicy = async (
+  bucketName: string,
+  filename: string,
+  options: {
+    maxSizeBytes: number;
+    contentTypePrefix: string;
+    expirySeconds: number;
+  },
+) => {
+  const policy = minioClient.newPostPolicy();
+  policy.setBucket(bucketName);
+  policy.setKey(filename);
+  policy.setContentTypeStartsWith(options.contentTypePrefix);
+  policy.setContentLengthRange(1, options.maxSizeBytes);
+  policy.setExpires(new Date(Date.now() + options.expirySeconds * 1000));
+  return minioClient.presignedPostPolicy(policy);
+};
+
 export const generateImagePostPolicy = async (
   bucketName: string,
   filename: string,
   maxSizeBytes: number,
   expirySeconds: number,
 ) => {
-  const policy = minioClient.newPostPolicy();
-  policy.setBucket(bucketName);
-  policy.setKey(filename);
-  policy.setContentTypeStartsWith("image/");
-  policy.setContentLengthRange(1, maxSizeBytes);
-  policy.setExpires(new Date(Date.now() + expirySeconds * 1000));
-  return minioClient.presignedPostPolicy(policy);
+  return generateUploadPostPolicy(bucketName, filename, {
+    maxSizeBytes,
+    contentTypePrefix: "image/",
+    expirySeconds,
+  });
 };
 
 export const findObjectStat = async (bucketName: string, filename: string) => {

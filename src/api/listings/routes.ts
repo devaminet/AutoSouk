@@ -16,6 +16,7 @@ import {
   getListings,
   deleteListing,
   attachCarToListing,
+  confirmListingMedia,
   updateListing,
 } from "./services";
 import { getMechanicsForListing } from "../mechanics/services";
@@ -164,16 +165,19 @@ listingRouter.post(
  *                     isPrimary: { type: boolean }
  *     responses:
  *       201:
- *         description: Car attached to listing
+ *         description: Car attached to listing, which is now pending approval. Each carMedia item holds the stored filename, the originalName sent by the client, and upload ({ url, fields }), a presigned POST policy. Send a multipart/form-data POST to upload.url with every fields entry first and the file last as field \"file\". Images max 10MB (image/*), videos max 50MB (video/*), valid for 15 minutes.
  *       400:
  *         description: Validation error
  *       401:
  *         description: Not authenticated
+ *       403:
+ *         description: Not a seller
  */
 // Attach car to a listing
 listingRouter.post(
   "/:id/car",
   isAuthenticated,
+  isSeller,
   async (req: Request, res: Response) => {
     const requestParamValidation = attachListingParamSchema.safeParse(
       req.params,
@@ -193,6 +197,48 @@ listingRouter.post(
     );
 
     res.status(201).json({ ...car, carMedia });
+  },
+);
+
+/**
+ * @openapi
+ * /api/listings/{id}/media/confirm:
+ *   post:
+ *     tags: [Listings]
+ *     summary: Confirm car media uploads for a listing
+ *     description: Marks media found in storage as uploaded so it shows on the listing, removes invalid files, and returns fresh upload policies for files that are still missing so the client can retry.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Returns uploaded filenames, rejected filenames, and pending items with a new upload ({ url, fields })
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not a seller
+ *       404:
+ *         description: No car media found for this seller's listing
+ */
+// Confirm uploaded media for a listing
+listingRouter.post(
+  "/:id/media/confirm",
+  isAuthenticated,
+  isSeller,
+  async (req: Request, res: Response) => {
+    const paramValidation = attachListingParamSchema.safeParse(req.params);
+    if (!paramValidation.success) {
+      throw new RequestValidationError(paramValidation.error.errors);
+    }
+    const result = await confirmListingMedia(
+      paramValidation.data.id,
+      req.currentUser?.id!,
+    );
+    res.status(200).json(result);
   },
 );
 

@@ -15,59 +15,101 @@ export const createListingSchema = z.object(
   { required_error: "Body with title and description is required" },
 );
 
+const minCarYear = 1950;
+
 export const createCarSchema = z.object(
   {
-    makeId: z.number({
-      required_error: "Car make is required",
-      invalid_type_error: "Car make must be a number",
-    }),
-    modelId: z.number({
-      required_error: "Car model is required",
-      invalid_type_error: "Car model must be a number",
-    }),
-    carburantId: z.number({
-      required_error: "Carburant is required",
-      invalid_type_error: "Carburant must be a number",
-    }),
-    originId: z.number({
-      required_error: "Origin is required",
-      invalid_type_error: "Origin must be a number",
-    }),
-    stateId: z.number({
-      required_error: "State is required",
-      invalid_type_error: "State must be a number",
-    }),
-    price: z.number({
-      required_error: "Price is required",
-      invalid_type_error: "Price must be a number",
-    }),
-    year: z.number({
-      required_error: "Year is required",
-      invalid_type_error: "Year must be a number",
-    }),
-    ownersCount: z.number({
-      required_error: "Owners count is required",
-      invalid_type_error: "Owners count must be a number",
-    }),
-    cityId: z.number({
-      required_error: "City is required",
-      invalid_type_error: "City must be a number",
-    }),
-    distance: z.string({
-      required_error: "Distance is required",
-      invalid_type_error: "Distance must be a text",
-    }),
+    makeId: z
+      .number({
+        required_error: "Car make is required",
+        invalid_type_error: "Car make must be a number",
+      })
+      .int("Car make must be a whole number")
+      .positive("Car make must be a valid ID"),
+    modelId: z
+      .number({
+        required_error: "Car model is required",
+        invalid_type_error: "Car model must be a number",
+      })
+      .int("Car model must be a whole number")
+      .positive("Car model must be a valid ID"),
+    carburantId: z
+      .number({
+        required_error: "Carburant is required",
+        invalid_type_error: "Carburant must be a number",
+      })
+      .int("Carburant must be a whole number")
+      .positive("Carburant must be a valid ID"),
+    originId: z
+      .number({
+        required_error: "Origin is required",
+        invalid_type_error: "Origin must be a number",
+      })
+      .int("Origin must be a whole number")
+      .positive("Origin must be a valid ID"),
+    stateId: z
+      .number({
+        required_error: "State is required",
+        invalid_type_error: "State must be a number",
+      })
+      .int("State must be a whole number")
+      .positive("State must be a valid ID"),
+    price: z
+      .number({
+        required_error: "Price is required",
+        invalid_type_error: "Price must be a number",
+      })
+      .int("Price must be a whole number")
+      .positive("Price must be greater than 0"),
+    year: z
+      .number({
+        required_error: "Year is required",
+        invalid_type_error: "Year must be a number",
+      })
+      .int("Year must be a whole number")
+      .min(minCarYear, `Year must be ${minCarYear} or later`)
+      .refine((year) => year <= new Date().getFullYear() + 1, {
+        message: "Year cannot be in the future",
+      }),
+    ownersCount: z
+      .number({
+        required_error: "Owners count is required",
+        invalid_type_error: "Owners count must be a number",
+      })
+      .int("Owners count must be a whole number")
+      .min(0, "Owners count must not be negative"),
+    cityId: z
+      .number({
+        required_error: "City is required",
+        invalid_type_error: "City must be a number",
+      })
+      .int("City must be a whole number")
+      .positive("City must be a valid ID"),
+    distance: z
+      .string({
+        required_error: "Distance is required",
+        invalid_type_error: "Distance must be a text",
+      })
+      .trim()
+      .min(1, "Distance must not be empty"),
     transmission: z.enum(["manual", "automatic"], {
       message: "Transmission should be either manual or automatic",
     }),
-    fiscalPower: z.number({
-      required_error: "Fiscal power is required",
-      invalid_type_error: "Fiscal power must be a number",
-    }),
-    doorsNumber: z.number({
-      required_error: "Doors number is required",
-      invalid_type_error: "Doors number must be a number",
-    }),
+    fiscalPower: z
+      .number({
+        required_error: "Fiscal power is required",
+        invalid_type_error: "Fiscal power must be a number",
+      })
+      .int("Fiscal power must be a whole number")
+      .positive("Fiscal power must be greater than 0"),
+    doorsNumber: z
+      .number({
+        required_error: "Doors number is required",
+        invalid_type_error: "Doors number must be a number",
+      })
+      .int("Doors number must be a whole number")
+      .min(1, "Doors number must be at least 1")
+      .max(9, "Doors number must be 9 or less"),
     files: z
       .array(
         z.object({
@@ -88,7 +130,16 @@ export const createCarSchema = z.object(
       .refine((files) => files.filter((file) => file.isPrimary).length === 1, {
         message: "Exactly one file must be designated as primary.",
         path: [],
-      }),
+      })
+      .refine(
+        (files) =>
+          new Set(files.map((file) => file.name.toLowerCase())).size ===
+          files.length,
+        {
+          message: "File names must be unique.",
+          path: [],
+        },
+      ),
   },
   {
     required_error: "Car details are required",

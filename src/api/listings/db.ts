@@ -4,11 +4,27 @@ import {
   getListingsQuerySchema,
   updateListingSchema,
 } from "./request_schema";
-import { and, asc, count, desc, eq, gte, ilike, lte } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  lte,
+} from "drizzle-orm";
 import { listingTable } from "../../db/schema/listing";
 import { carTable } from "../../db/schema/car";
 import { db } from "../../db";
 import { carMediaTable } from "../../db/schema/car_media";
+import { makeTable } from "../../db/schema/car_make";
+import { carModelTable } from "../../db/schema/car_model";
+import { carCarburantTable } from "../../db/schema/carburant";
+import { carOriginTable } from "../../db/schema/car_origin";
+import { carStateTable } from "../../db/schema/state";
+import { cityTable } from "../../db/schema/city";
 import { getFileType } from "../../utils/functions";
 
 export const findListings = async (
@@ -61,6 +77,7 @@ export const findListings = async (
               link: true,
               isPrimary: true,
             },
+            where: eq(carMediaTable.isUploaded, true),
             orderBy(fields, operators) {
               return operators.desc(fields.isPrimary);
             },
@@ -154,6 +171,7 @@ export const getListingDetailsById = async (id: number) => {
               type: true,
               isPrimary: true,
             },
+            where: eq(carMediaTable.isUploaded, true),
           },
           make: {
             columns: {
@@ -272,36 +290,51 @@ export const checkCarExistanceByListingId = async (listingId: number) => {
   return true;
 };
 
+// Returns null when the listing already has a car (unique listing_id).
+// Attaching a car sends the listing to admin approval.
 export const saveCarAndMedia = async (args: {
   carDetails: Omit<z.infer<typeof createCarSchema>, "files">;
-  carMedia: { signedUrl: string; isPrimary: boolean; filename: string }[];
+  carMedia: { isPrimary: boolean; filename: string }[];
   listingId: number;
   userId: number;
 }) => {
   const { carDetails, carMedia, listingId, userId } = args;
 
-  const car = await db.transaction(async (tx) => {
-    const newCar = await tx
+  return await db.transaction(async (tx) => {
+    const [newCar] = await tx
       .insert(carTable)
       .values({
         ...carDetails,
         listingId,
         userId,
       })
+      .onConflictDoNothing({ target: carTable.listingId })
       .returning();
 
+    if (!newCar) {
+      return null;
+    }
+
     const carMediaValues = carMedia.map((media) => ({
-      carId: newCar[0].id,
+      carId: newCar.id,
       link: media.filename,
       type: getFileType(media.filename) as "image" | "video",
       isPrimary: media.isPrimary,
+      isUploaded: false,
     }));
 
     await tx.insert(carMediaTable).values(carMediaValues);
-    return { ...newCar[0] };
-  });
+    await tx
+      .update(listingTable)
+      .set({
+        status: "pending",
+        approvedAt: null,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(listingTable.id, listingId));
 
-  return car;
+    return newCar;
+  });
 };
 
 export const getUserListing = async (
@@ -345,4 +378,140 @@ export const updateListingAndMarkPending = async (
 
     return updated[0];
   });
+};
+
+export type CarReferenceIds = {
+  makeId?: number;
+  modelId?: number;
+  carburantId?: number;
+  originId?: number;
+  stateId?: number;
+  cityId?: number;
+};
+
+export type CarReferenceField = keyof CarReferenceIds;
+
+const idExists = async (query: Promise<{ id: number }[]>) => {
+  const rows = await query;
+  return rows.length > 0;
+};
+
+// Returns the reference fields whose id does not exist. A model is also
+// invalid when it does not belong to the given make.
+export const findInvalidCarReferences = async (
+  ids: CarReferenceIds,
+): Promise<CarReferenceField[]> => {
+  const checks: [CarReferenceField, Promise<boolean>][] = [];
+  const check = (field: CarReferenceField, query: Promise<{ id: number }[]>) =>
+    checks.push([field, idExists(query)]);
+
+  const { makeId, modelId, carburantId, originId, stateId, cityId } = ids;
+
+  if (makeId !== undefined) {
+    check(
+      "makeId",
+      db
+        .select({ id: makeTable.id })
+        .from(makeTable)
+        .where(eq(makeTable.id, makeId)),
+    );
+  }
+  if (modelId !== undefined) {
+    const conditions = [eq(carModelTable.id, modelId)];
+    if (makeId !== undefined) {
+      conditions.push(eq(carModelTable.makeId, makeId));
+    }
+    check(
+      "modelId",
+      db
+        .select({ id: carModelTable.id })
+        .from(carModelTable)
+        .where(and(...conditions)),
+    );
+  }
+  if (carburantId !== undefined) {
+    check(
+      "carburantId",
+      db
+        .select({ id: carCarburantTable.id })
+        .from(carCarburantTable)
+        .where(eq(carCarburantTable.id, carburantId)),
+    );
+  }
+  if (originId !== undefined) {
+    check(
+      "originId",
+      db
+        .select({ id: carOriginTable.id })
+        .from(carOriginTable)
+        .where(eq(carOriginTable.id, originId)),
+    );
+  }
+  if (stateId !== undefined) {
+    check(
+      "stateId",
+      db
+        .select({ id: carStateTable.id })
+        .from(carStateTable)
+        .where(eq(carStateTable.id, stateId)),
+    );
+  }
+  if (cityId !== undefined) {
+    check(
+      "cityId",
+      db
+        .select({ id: cityTable.id })
+        .from(cityTable)
+        .where(eq(cityTable.id, cityId)),
+    );
+  }
+
+  const results = await Promise.all(checks.map(([, exists]) => exists));
+  return checks.filter((_, index) => !results[index]).map(([field]) => field);
+};
+
+export const findCarReferencesByListingId = async (listingId: number) => {
+  const car = await db.query.carTable.findFirst({
+    where: eq(carTable.listingId, listingId),
+    columns: { makeId: true, modelId: true },
+  });
+
+  return car ?? null;
+};
+
+export const findCarMediaByListing = async (
+  listingId: number,
+  userId: number,
+) => {
+  return await db
+    .select({
+      id: carMediaTable.id,
+      link: carMediaTable.link,
+      type: carMediaTable.type,
+      isPrimary: carMediaTable.isPrimary,
+      isUploaded: carMediaTable.isUploaded,
+    })
+    .from(carMediaTable)
+    .innerJoin(carTable, eq(carTable.id, carMediaTable.carId))
+    .innerJoin(listingTable, eq(listingTable.id, carTable.listingId))
+    .where(
+      and(eq(listingTable.id, listingId), eq(listingTable.userId, userId)),
+    );
+};
+
+export const markCarMediaUploaded = async (mediaIds: number[]) => {
+  if (mediaIds.length === 0) {
+    return;
+  }
+  await db
+    .update(carMediaTable)
+    .set({ isUploaded: true })
+    .where(inArray(carMediaTable.id, mediaIds));
+};
+
+export const deleteCarMediaByIds = async (mediaIds: number[]) => {
+  if (mediaIds.length === 0) {
+    return;
+  }
+  await db.delete(carMediaTable).where(inArray(carMediaTable.id, mediaIds));
 };

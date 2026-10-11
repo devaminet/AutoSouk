@@ -2,7 +2,11 @@ import { z } from "zod";
 import {
   getProfileImageUrl,
   generateGetPresignedUrls,
-  generatePresignedUrl,
+  findObjectStat,
+  generateUploadPostPolicy,
+  removeObject,
+  getFileType,
+  generateToken,
 } from "../../utils/functions";
 import {
   createCarSchema,
@@ -10,13 +14,26 @@ import {
   updateListingSchema,
 } from "./request_schema";
 import { BadRequestError } from "../../errors/bad_request_error";
+import { RequestValidationError } from "../../errors/request_validation_error";
 import { NotFoundError } from "../../errors/not_found_error";
-import { carBucketName } from "../../utils/constants";
+import {
+  carBucketName,
+  carMediaUploadExpirationSeconds,
+  maxCarImageSizeBytes,
+  maxCarVideoSizeBytes,
+} from "../../utils/constants";
 import {
   approveListingById,
   checkCarExistanceByListingId,
   deleteListingDetails,
+  deleteCarMediaByIds,
+  findCarMediaByListing,
+  findCarReferencesByListingId,
+  markCarMediaUploaded,
+  findInvalidCarReferences,
   findListingById,
+  type CarReferenceField,
+  type CarReferenceIds,
   findListingCarId,
   findListings,
   getListingDetailsById,
@@ -42,6 +59,71 @@ export const saveListing = async (
   return await insertListing(title, description, userId);
 };
 
+const invalidReferenceMessages: Record<CarReferenceField, string> = {
+  makeId: "Car make does not exist",
+  modelId: "Car model does not exist for the selected make",
+  carburantId: "Carburant does not exist",
+  originId: "Origin does not exist",
+  stateId: "State does not exist",
+  cityId: "City does not exist",
+};
+
+const assertCarReferencesExist = async (ids: CarReferenceIds) => {
+  const invalidFields = await findInvalidCarReferences(ids);
+  if (invalidFields.length > 0) {
+    throw new RequestValidationError(
+      invalidFields.map((field) => ({
+        code: "custom",
+        message: invalidReferenceMessages[field],
+        path: [field],
+      })),
+    );
+  }
+};
+
+const carMediaUploadLimits = {
+  image: { maxSizeBytes: maxCarImageSizeBytes, contentTypePrefix: "image/" },
+  video: { maxSizeBytes: maxCarVideoSizeBytes, contentTypePrefix: "video/" },
+} as const;
+
+type CarMediaType = keyof typeof carMediaUploadLimits;
+
+const createCarMediaUploadPolicy = async (
+  filename: string,
+  type: CarMediaType,
+) => {
+  const { postURL, formData } = await generateUploadPostPolicy(
+    carBucketName,
+    filename,
+    {
+      ...carMediaUploadLimits[type],
+      expirySeconds: carMediaUploadExpirationSeconds,
+    },
+  );
+
+  return { url: postURL, fields: formData };
+};
+
+const buildCarMediaUpload = async (file: {
+  name: string;
+  isPrimary: boolean;
+}) => {
+  const filename = buildCarMediaName(file.name);
+  const type = getFileType(file.name) ?? "image";
+
+  return {
+    upload: await createCarMediaUploadPolicy(filename, type),
+    isPrimary: file.isPrimary,
+    filename,
+    originalName: file.name,
+  };
+};
+
+const buildCarMediaName = (originalName: string) => {
+  const extension = originalName.substring(originalName.lastIndexOf(".") + 1);
+  return `car-${generateToken(16)}.${extension.toLowerCase()}`;
+};
+
 export const attachCarToListing = async (
   data: z.infer<typeof createCarSchema>,
   listingId: number,
@@ -59,35 +141,12 @@ export const attachCarToListing = async (
   }
 
   const { files, ...carDetails } = data;
-  const filenamesPromises = files.map((file) => {
-    return new Promise<{
-      signedUrl: string;
-      isPrimary: boolean;
-      filename: string;
-    }>((resolve, reject) => {
-      generatePresignedUrl(carBucketName, file.name)
-        .then((value) =>
-          resolve({
-            signedUrl: value,
-            isPrimary: file.isPrimary,
-            filename: file.name,
-          }),
-        )
-        .catch((err) => {
-          console.error("Error generating presigned URL for file:", err);
-          reject(
-            new InternalServerError(
-              `Could not generate url for this image: ${file.name}`,
-            ),
-          );
-        });
-    });
-  });
-
-  let carMedia: Awaited<(typeof filenamesPromises)[number]>[] = [];
+  await assertCarReferencesExist(carDetails);
+  let carMedia: Awaited<ReturnType<typeof buildCarMediaUpload>>[] = [];
   try {
-    carMedia = await Promise.all(filenamesPromises);
+    carMedia = await Promise.all(files.map(buildCarMediaUpload));
   } catch (error) {
+    console.error("Error generating car media upload policies:", error);
     throw new InternalServerError("Could not generate urls for images");
   }
 
@@ -98,9 +157,74 @@ export const attachCarToListing = async (
     userId,
   });
 
+  if (!car) {
+    throw new BadRequestError("A car is already attached to this listing");
+  }
+
   return {
     car,
     carMedia,
+  };
+};
+
+const isValidUploadedMedia = (
+  stat: { size: number; metaData?: Record<string, string> },
+  type: CarMediaType,
+) => {
+  const { maxSizeBytes, contentTypePrefix } = carMediaUploadLimits[type];
+  const contentType = stat.metaData?.["content-type"] ?? "";
+  return stat.size <= maxSizeBytes && contentType.startsWith(contentTypePrefix);
+};
+
+// Marks uploaded media as visible, drops invalid objects, and returns a new
+// upload policy for media that never reached storage so the client can retry.
+export const confirmListingMedia = async (
+  listingId: number,
+  userId: number,
+) => {
+  const media = await findCarMediaByListing(listingId, userId);
+  if (media.length === 0) {
+    throw new NotFoundError("No car media was found for this listing");
+  }
+
+  const uploadedIds: number[] = [];
+  const rejected: { id: number; filename: string }[] = [];
+  const pending: typeof media = [];
+
+  for (const item of media.filter((entry) => !entry.isUploaded)) {
+    const stat = await findObjectStat(carBucketName, item.link);
+    if (!stat) {
+      pending.push(item);
+    } else if (isValidUploadedMedia(stat, item.type)) {
+      uploadedIds.push(item.id);
+    } else {
+      rejected.push({ id: item.id, filename: item.link });
+    }
+  }
+
+  await markCarMediaUploaded(uploadedIds);
+  await deleteCarMediaByIds(rejected.map((item) => item.id));
+  for (const item of rejected) {
+    try {
+      await removeObject(carBucketName, item.filename);
+    } catch (error) {
+      console.error("Error removing invalid car media:", error);
+    }
+  }
+
+  const retry = await Promise.all(
+    pending.map(async (item) => ({
+      filename: item.link,
+      upload: await createCarMediaUploadPolicy(item.link, item.type),
+    })),
+  );
+
+  return {
+    uploaded: media
+      .filter((item) => item.isUploaded || uploadedIds.includes(item.id))
+      .map((item) => item.link),
+    rejected: rejected.map((item) => item.filename),
+    pending: retry,
   };
 };
 
@@ -136,8 +260,25 @@ export const updateListing = async (
     throw new NotFoundError("Listing was not found");
   }
 
-  if (changes.car && !(await checkCarExistanceByListingId(listingId))) {
-    throw new BadRequestError("Attach a car to this listing before editing it");
+  if (changes.car) {
+    const currentCar = await findCarReferencesByListingId(listingId);
+    if (!currentCar) {
+      throw new BadRequestError(
+        "Attach a car to this listing before editing it",
+      );
+    }
+
+    const { makeId, modelId } = changes.car;
+    await assertCarReferencesExist({
+      ...changes.car,
+      // a changed make or model must stay consistent with the stored one
+      ...(makeId !== undefined || modelId !== undefined
+        ? {
+            makeId: makeId ?? currentCar.makeId ?? undefined,
+            modelId: modelId ?? currentCar.modelId ?? undefined,
+          }
+        : {}),
+    });
   }
 
   return await updateListingAndMarkPending(listingId, changes);
