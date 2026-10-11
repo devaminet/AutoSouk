@@ -143,6 +143,9 @@ it("should attach car to a listing", async () => {
   const { carMedia } = attachCarResponse.body;
   expect(carMedia).toHaveLength(2);
   expect(carMedia[0].originalName).toBe("file1.png");
+  expect(carMedia[0].upload.url).toContain("/cars");
+  expect(carMedia[0].upload.fields.key).toBe(carMedia[0].filename);
+  expect(carMedia[0].upload.fields.policy).toBeDefined();
   expect(carMedia[0].filename).toMatch(/^car-[a-f0-9]+\.png$/);
   expect(carMedia[0].filename).not.toBe(carMedia[1].filename);
 });
@@ -342,4 +345,49 @@ it("should return 400 instead of 500 when two cars are attached at the same time
   const statuses = responses.map((response) => response.statusCode).sort();
 
   expect(statuses).toEqual([201, 400, 400]);
+});
+
+it("should restrict car media uploads by size and content type", async () => {
+  await signupUserWithVerification({ userType: "seller" });
+  const authUser = await signinUser();
+  const created = await request(app)
+    .post("/api/listings")
+    .send({ title: "A black car", description: "A brand new black Ford" })
+    .auth(authUser.accessToken, { type: "bearer" });
+
+  const response = await request(app)
+    .post(`/api/listings/${created.body.listing.id}/car`)
+    .send({
+      makeId: 449,
+      modelId: 2085,
+      carburantId: 3,
+      originId: 4,
+      stateId: 6,
+      price: 500000,
+      year: 2025,
+      ownersCount: 0,
+      cityId: 1,
+      distance: "60km",
+      transmission: "automatic",
+      fiscalPower: 8,
+      doorsNumber: 5,
+      files: [
+        { name: "photo.png", isPrimary: true },
+        { name: "walkaround.mp4", isPrimary: false },
+      ],
+    })
+    .auth(authUser.accessToken, { type: "bearer" });
+  expect(response.statusCode).toBe(201);
+
+  const decode = (policy: string) =>
+    JSON.parse(Buffer.from(policy, "base64").toString("utf8")).conditions;
+  const [image, video] = response.body.carMedia.map(
+    (media: { upload: { fields: { policy: string } } }) =>
+      decode(media.upload.fields.policy),
+  );
+
+  expect(image).toContainEqual(["content-length-range", 1, 10 * 1024 * 1024]);
+  expect(image).toContainEqual(["starts-with", "$Content-Type", "image/"]);
+  expect(video).toContainEqual(["content-length-range", 1, 50 * 1024 * 1024]);
+  expect(video).toContainEqual(["starts-with", "$Content-Type", "video/"]);
 });

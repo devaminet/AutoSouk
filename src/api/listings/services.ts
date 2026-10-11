@@ -2,7 +2,8 @@ import { z } from "zod";
 import {
   getProfileImageUrl,
   generateGetPresignedUrls,
-  generatePresignedUrl,
+  generateUploadPostPolicy,
+  getFileType,
   generateToken,
 } from "../../utils/functions";
 import {
@@ -13,7 +14,12 @@ import {
 import { BadRequestError } from "../../errors/bad_request_error";
 import { RequestValidationError } from "../../errors/request_validation_error";
 import { NotFoundError } from "../../errors/not_found_error";
-import { carBucketName } from "../../utils/constants";
+import {
+  carBucketName,
+  carMediaUploadExpirationSeconds,
+  maxCarImageSizeBytes,
+  maxCarVideoSizeBytes,
+} from "../../utils/constants";
 import {
   approveListingById,
   checkCarExistanceByListingId,
@@ -70,6 +76,34 @@ const assertCarReferencesExist = async (ids: CarReferenceIds) => {
   }
 };
 
+const carMediaUploadLimits = {
+  image: { maxSizeBytes: maxCarImageSizeBytes, contentTypePrefix: "image/" },
+  video: { maxSizeBytes: maxCarVideoSizeBytes, contentTypePrefix: "video/" },
+} as const;
+
+const buildCarMediaUpload = async (file: {
+  name: string;
+  isPrimary: boolean;
+}) => {
+  const filename = buildCarMediaName(file.name);
+  const type = getFileType(file.name) ?? "image";
+  const { postURL, formData } = await generateUploadPostPolicy(
+    carBucketName,
+    filename,
+    {
+      ...carMediaUploadLimits[type],
+      expirySeconds: carMediaUploadExpirationSeconds,
+    },
+  );
+
+  return {
+    upload: { url: postURL, fields: formData },
+    isPrimary: file.isPrimary,
+    filename,
+    originalName: file.name,
+  };
+};
+
 const buildCarMediaName = (originalName: string) => {
   const extension = originalName.substring(originalName.lastIndexOf(".") + 1);
   return `car-${generateToken(16)}.${extension.toLowerCase()}`;
@@ -93,38 +127,11 @@ export const attachCarToListing = async (
 
   const { files, ...carDetails } = data;
   await assertCarReferencesExist(carDetails);
-  const filenamesPromises = files.map((file) => {
-    const filename = buildCarMediaName(file.name);
-    return new Promise<{
-      signedUrl: string;
-      isPrimary: boolean;
-      filename: string;
-      originalName: string;
-    }>((resolve, reject) => {
-      generatePresignedUrl(carBucketName, filename)
-        .then((value) =>
-          resolve({
-            signedUrl: value,
-            isPrimary: file.isPrimary,
-            filename,
-            originalName: file.name,
-          }),
-        )
-        .catch((err) => {
-          console.error("Error generating presigned URL for file:", err);
-          reject(
-            new InternalServerError(
-              `Could not generate url for this image: ${file.name}`,
-            ),
-          );
-        });
-    });
-  });
-
-  let carMedia: Awaited<(typeof filenamesPromises)[number]>[] = [];
+  let carMedia: Awaited<ReturnType<typeof buildCarMediaUpload>>[] = [];
   try {
-    carMedia = await Promise.all(filenamesPromises);
+    carMedia = await Promise.all(files.map(buildCarMediaUpload));
   } catch (error) {
+    console.error("Error generating car media upload policies:", error);
     throw new InternalServerError("Could not generate urls for images");
   }
 
