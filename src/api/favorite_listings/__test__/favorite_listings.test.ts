@@ -1,7 +1,13 @@
 import request from "supertest";
 import { app } from "../../../app";
 import { signinUser, signupUserWithVerification } from "../../../test/helpers";
-import { readTemplateFile } from "../../../utils/functions";
+import { createBucket, readTemplateFile } from "../../../utils/functions";
+import { minioClient } from "../../../file_storage/minio";
+import { carBucketName } from "../../../utils/constants";
+
+beforeAll(async () => {
+  await createBucket(carBucketName);
+});
 
 const createListing = async () => {
   await signupUserWithVerification({ userType: "seller" });
@@ -22,7 +28,7 @@ const createListing = async () => {
   const listingId = response.body.listing.id as number;
   console.log("Created listing with ID:", listingId);
 
-  await request(app)
+  const attached = await request(app)
     .post(`/api/listings/${listingId}/car`)
     .send({
       makeId: 449,
@@ -44,6 +50,20 @@ const createListing = async () => {
       ],
     })
     .auth(authUser.accessToken, { type: "bearer" });
+
+  for (const media of attached.body.carMedia) {
+    await minioClient.putObject(
+      carBucketName,
+      media.filename,
+      Buffer.from("img"),
+      3,
+      { "Content-Type": "image/png" },
+    );
+  }
+  await request(app)
+    .post(`/api/listings/${listingId}/media/confirm`)
+    .auth(authUser.accessToken, { type: "bearer" })
+    .expect(200);
 
   return { listingId, title, description };
 };

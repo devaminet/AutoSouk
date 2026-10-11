@@ -2,7 +2,9 @@ import { z } from "zod";
 import {
   getProfileImageUrl,
   generateGetPresignedUrls,
+  findObjectStat,
   generateUploadPostPolicy,
+  removeObject,
   getFileType,
   generateToken,
 } from "../../utils/functions";
@@ -24,7 +26,10 @@ import {
   approveListingById,
   checkCarExistanceByListingId,
   deleteListingDetails,
+  deleteCarMediaByIds,
+  findCarMediaByListing,
   findCarReferencesByListingId,
+  markCarMediaUploaded,
   findInvalidCarReferences,
   findListingById,
   type CarReferenceField,
@@ -81,12 +86,12 @@ const carMediaUploadLimits = {
   video: { maxSizeBytes: maxCarVideoSizeBytes, contentTypePrefix: "video/" },
 } as const;
 
-const buildCarMediaUpload = async (file: {
-  name: string;
-  isPrimary: boolean;
-}) => {
-  const filename = buildCarMediaName(file.name);
-  const type = getFileType(file.name) ?? "image";
+type CarMediaType = keyof typeof carMediaUploadLimits;
+
+const createCarMediaUploadPolicy = async (
+  filename: string,
+  type: CarMediaType,
+) => {
   const { postURL, formData } = await generateUploadPostPolicy(
     carBucketName,
     filename,
@@ -96,8 +101,18 @@ const buildCarMediaUpload = async (file: {
     },
   );
 
+  return { url: postURL, fields: formData };
+};
+
+const buildCarMediaUpload = async (file: {
+  name: string;
+  isPrimary: boolean;
+}) => {
+  const filename = buildCarMediaName(file.name);
+  const type = getFileType(file.name) ?? "image";
+
   return {
-    upload: { url: postURL, fields: formData },
+    upload: await createCarMediaUploadPolicy(filename, type),
     isPrimary: file.isPrimary,
     filename,
     originalName: file.name,
@@ -149,6 +164,67 @@ export const attachCarToListing = async (
   return {
     car,
     carMedia,
+  };
+};
+
+const isValidUploadedMedia = (
+  stat: { size: number; metaData?: Record<string, string> },
+  type: CarMediaType,
+) => {
+  const { maxSizeBytes, contentTypePrefix } = carMediaUploadLimits[type];
+  const contentType = stat.metaData?.["content-type"] ?? "";
+  return stat.size <= maxSizeBytes && contentType.startsWith(contentTypePrefix);
+};
+
+// Marks uploaded media as visible, drops invalid objects, and returns a new
+// upload policy for media that never reached storage so the client can retry.
+export const confirmListingMedia = async (
+  listingId: number,
+  userId: number,
+) => {
+  const media = await findCarMediaByListing(listingId, userId);
+  if (media.length === 0) {
+    throw new NotFoundError("No car media was found for this listing");
+  }
+
+  const uploadedIds: number[] = [];
+  const rejected: { id: number; filename: string }[] = [];
+  const pending: typeof media = [];
+
+  for (const item of media.filter((entry) => !entry.isUploaded)) {
+    const stat = await findObjectStat(carBucketName, item.link);
+    if (!stat) {
+      pending.push(item);
+    } else if (isValidUploadedMedia(stat, item.type)) {
+      uploadedIds.push(item.id);
+    } else {
+      rejected.push({ id: item.id, filename: item.link });
+    }
+  }
+
+  await markCarMediaUploaded(uploadedIds);
+  await deleteCarMediaByIds(rejected.map((item) => item.id));
+  for (const item of rejected) {
+    try {
+      await removeObject(carBucketName, item.filename);
+    } catch (error) {
+      console.error("Error removing invalid car media:", error);
+    }
+  }
+
+  const retry = await Promise.all(
+    pending.map(async (item) => ({
+      filename: item.link,
+      upload: await createCarMediaUploadPolicy(item.link, item.type),
+    })),
+  );
+
+  return {
+    uploaded: media
+      .filter((item) => item.isUploaded || uploadedIds.includes(item.id))
+      .map((item) => item.link),
+    rejected: rejected.map((item) => item.filename),
+    pending: retry,
   };
 };
 

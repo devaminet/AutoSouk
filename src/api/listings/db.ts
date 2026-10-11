@@ -4,7 +4,17 @@ import {
   getListingsQuerySchema,
   updateListingSchema,
 } from "./request_schema";
-import { and, asc, count, desc, eq, gte, ilike, lte } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  lte,
+} from "drizzle-orm";
 import { listingTable } from "../../db/schema/listing";
 import { carTable } from "../../db/schema/car";
 import { db } from "../../db";
@@ -67,6 +77,7 @@ export const findListings = async (
               link: true,
               isPrimary: true,
             },
+            where: eq(carMediaTable.isUploaded, true),
             orderBy(fields, operators) {
               return operators.desc(fields.isPrimary);
             },
@@ -160,6 +171,7 @@ export const getListingDetailsById = async (id: number) => {
               type: true,
               isPrimary: true,
             },
+            where: eq(carMediaTable.isUploaded, true),
           },
           make: {
             columns: {
@@ -307,6 +319,7 @@ export const saveCarAndMedia = async (args: {
       link: media.filename,
       type: getFileType(media.filename) as "image" | "video",
       isPrimary: media.isPrimary,
+      isUploaded: false,
     }));
 
     await tx.insert(carMediaTable).values(carMediaValues);
@@ -454,4 +467,41 @@ export const findCarReferencesByListingId = async (listingId: number) => {
   });
 
   return car ?? null;
+};
+
+export const findCarMediaByListing = async (
+  listingId: number,
+  userId: number,
+) => {
+  return await db
+    .select({
+      id: carMediaTable.id,
+      link: carMediaTable.link,
+      type: carMediaTable.type,
+      isPrimary: carMediaTable.isPrimary,
+      isUploaded: carMediaTable.isUploaded,
+    })
+    .from(carMediaTable)
+    .innerJoin(carTable, eq(carTable.id, carMediaTable.carId))
+    .innerJoin(listingTable, eq(listingTable.id, carTable.listingId))
+    .where(
+      and(eq(listingTable.id, listingId), eq(listingTable.userId, userId)),
+    );
+};
+
+export const markCarMediaUploaded = async (mediaIds: number[]) => {
+  if (mediaIds.length === 0) {
+    return;
+  }
+  await db
+    .update(carMediaTable)
+    .set({ isUploaded: true })
+    .where(inArray(carMediaTable.id, mediaIds));
+};
+
+export const deleteCarMediaByIds = async (mediaIds: number[]) => {
+  if (mediaIds.length === 0) {
+    return;
+  }
+  await db.delete(carMediaTable).where(inArray(carMediaTable.id, mediaIds));
 };

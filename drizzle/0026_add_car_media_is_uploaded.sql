@@ -1,0 +1,1 @@
+ALTER TABLE "car_media" ADD COLUMN "is_uploaded" boolean DEFAULT true NOT NULL;
