@@ -169,11 +169,14 @@ listingRouter.post(
  *         description: Validation error
  *       401:
  *         description: Not authenticated
+ *       403:
+ *         description: Not a seller
  */
 // Attach car to a listing
 listingRouter.post(
   "/:id/car",
   isAuthenticated,
+  isSeller,
   async (req: Request, res: Response) => {
     const requestParamValidation = attachListingParamSchema.safeParse(
       req.params,

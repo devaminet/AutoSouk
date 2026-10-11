@@ -141,3 +141,15 @@ it("should attach car to a listing", async () => {
 
   expect(attachCarResponse.statusCode).toBe(201);
 });
+
+it("should fail when a non seller tries to attach a car to a listing", async () => {
+  await signupUserWithVerification({ userType: "buyer" });
+  const authUser = await signinUser();
+
+  const response = await request(app)
+    .post("/api/listings/1/car")
+    .send({})
+    .auth(authUser.accessToken, { type: "bearer" });
+
+  expect(response.statusCode).toBe(403);
+});
