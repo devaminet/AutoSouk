@@ -6,10 +6,13 @@ import {
 } from "./request_schema";
 import {
   generateJWT,
+  findObjectStat,
   generateImagePostPolicy,
   generateToken,
+  getProfileImageUrl,
   hashPassword,
   readTemplateFile,
+  removeObject,
   sanitizeUser,
   sendMail,
   verifyJWT,
@@ -34,6 +37,7 @@ import {
   insertUserRefreshToken,
   insertVerificationToken,
   updateRefreshToken,
+  updateUserProfileImage,
   updateUserPassword,
   updateUserPasswordById,
   verifyUserById,
@@ -64,6 +68,93 @@ const getProfileImageUpload = async (imageName: string) => {
     console.error("Error generating profile image upload URL:", error);
     throw new InternalServerError("Could not generate profile image URL");
   }
+};
+
+type PendingImageUser = {
+  id: number;
+  imageName: string | null;
+  pendingImageName: string | null;
+};
+
+const discardObject = async (filename: string) => {
+  try {
+    await removeObject(usersBucketName, filename);
+  } catch (error) {
+    console.error("Error removing profile image:", error);
+  }
+};
+
+// Promote a pending image once the upload reached MinIO, otherwise keep the
+// current image. A missing upload is not an error: the user keeps the previous
+// (or default) image and can request a new upload url.
+export const resolvePendingProfileImage = async (user: PendingImageUser) => {
+  const { id, imageName, pendingImageName } = user;
+  if (!pendingImageName) {
+    return { imageName, uploaded: false };
+  }
+
+  const stat = await findObjectStat(usersBucketName, pendingImageName);
+  if (!stat) {
+    return { imageName, uploaded: false };
+  }
+
+  const contentType = stat.metaData?.["content-type"] ?? "";
+  if (
+    stat.size > maxProfileImageSizeBytes ||
+    !contentType.startsWith("image/")
+  ) {
+    await discardObject(pendingImageName);
+    await updateUserProfileImage(id, { pendingImageName: null });
+    return { imageName, uploaded: false };
+  }
+
+  await updateUserProfileImage(id, {
+    imageName: pendingImageName,
+    pendingImageName: null,
+  });
+  if (imageName) {
+    await discardObject(imageName);
+  }
+
+  return { imageName: pendingImageName, uploaded: true };
+};
+
+export const confirmProfileImage = async (userId: number) => {
+  const user = await findUserById(userId);
+  if (!user) {
+    throw new NotAuthorizedError();
+  }
+  if (!user.pendingImageName) {
+    throw new BadRequestError("No profile image upload is pending");
+  }
+
+  const { imageName, uploaded } = await resolvePendingProfileImage(user);
+  if (!uploaded) {
+    throw new BadRequestError(
+      "Profile image was not uploaded or is invalid, request a new upload url and retry",
+    );
+  }
+
+  return { imageUrl: await getProfileImageUrl(imageName) };
+};
+
+export const requestProfileImageUpload = async (
+  userId: number,
+  originalName: string,
+) => {
+  const user = await findUserById(userId);
+  if (!user) {
+    throw new NotAuthorizedError();
+  }
+
+  if (user.pendingImageName) {
+    await discardObject(user.pendingImageName);
+  }
+
+  const pendingImageName = buildProfileImageName(originalName);
+  await updateUserProfileImage(userId, { pendingImageName });
+
+  return { imageUpload: await getProfileImageUpload(pendingImageName) };
 };
 
 export const setupUser = async (user: z.infer<typeof registerSchema>) => {
@@ -155,6 +246,9 @@ export const loginUser = async (data: { email: string; password: string }) => {
   if (!isPasswordValid) {
     throw new NotAuthorizedError("Email or password is not correct");
   }
+
+  const { imageName } = await resolvePendingProfileImage(foundUser);
+  foundUser.imageName = imageName;
 
   const accessToken = await generateJWT(
     {

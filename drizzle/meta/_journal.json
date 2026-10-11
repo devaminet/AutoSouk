@@ -169,6 +169,13 @@
       "when": 1791547436938,
       "tag": "0024_rename_users_image_url_to_image_name",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1791628559038,
+      "tag": "0025_add_users_pending_image_name",
+      "breakpoints": true
     }
   ]
 }

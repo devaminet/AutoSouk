@@ -26,6 +26,16 @@ export const registrationRoleSchema = z.enum(["buyer", "seller", "mechanic"], {
   message: "User should be either buyer, seller or mechanic",
 });
 
+export const profileImageNameSchema = z
+  .string({ invalid_type_error: "Image name must be a text" })
+  .refine((name) => getFileType(name) === "image", {
+    message: `Profile image must be one of: ${allowedImageTypes}`,
+  });
+
+export const profileImageUploadSchema = z.object({
+  imageName: profileImageNameSchema,
+});
+
 export const registerSchema = z.object(
   {
     firstName: z
@@ -60,12 +70,7 @@ export const registerSchema = z.object(
         invalid_type_error: "City must be a number",
       })
       .min(1, { message: "City should have a valid ID" }),
-    imageName: z
-      .string({ invalid_type_error: "Image name must be a text" })
-      .refine((name) => getFileType(name) === "image", {
-        message: `Profile image must be one of: ${allowedImageTypes}`,
-      })
-      .optional(),
+    imageName: profileImageNameSchema.optional(),
   },
   { required_error: "User information are required!" },
 );

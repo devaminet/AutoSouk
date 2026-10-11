@@ -119,6 +119,22 @@ export const generateImagePostPolicy = async (
   return minioClient.presignedPostPolicy(policy);
 };
 
+export const findObjectStat = async (bucketName: string, filename: string) => {
+  try {
+    return await minioClient.statObject(bucketName, filename);
+  } catch (error) {
+    const code = (error as { code?: string }).code;
+    if (code === "NotFound" || code === "NoSuchKey") {
+      return null;
+    }
+    throw error;
+  }
+};
+
+export const removeObject = async (bucketName: string, filename: string) => {
+  await minioClient.removeObject(bucketName, filename);
+};
+
 export const generateGetPresignedUrl = async (
   bucketName: string,
   filename: string,

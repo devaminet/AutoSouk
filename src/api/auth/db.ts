@@ -75,7 +75,7 @@ export const createUser = async (
       lastName,
       phone,
       roleId,
-      imageName,
+      pendingImageName: imageName,
     })
     .returning({ id: usersTable.id });
 
@@ -266,4 +266,20 @@ export const updateUserPasswordById = async (
     .where(eq(usersTable.id, userId));
 
   return result.rowCount;
+};
+
+export const updateUserProfileImage = async (
+  userId: number,
+  values: { imageName?: string | null; pendingImageName: string | null },
+) => {
+  const [updated] = await db
+    .update(usersTable)
+    .set(values)
+    .where(eq(usersTable.id, userId))
+    .returning({
+      imageName: usersTable.imageName,
+      pendingImageName: usersTable.pendingImageName,
+    });
+
+  return updated ?? null;
 };

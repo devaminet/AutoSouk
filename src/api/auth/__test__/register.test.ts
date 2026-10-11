@@ -134,7 +134,8 @@ it("should store the profile image name and return an upload url", async () => {
   expect(response.body.imageUpload.fields.policy).toBeDefined();
 
   const user = await findUserByEmail(testUserCredentials.email);
-  expect(user?.imageName).toMatch(/^profile-[a-f0-9]+\.png$/);
+  expect(user?.imageName).toBeNull();
+  expect(user?.pendingImageName).toMatch(/^profile-[a-f0-9]+\.png$/);
 });
 
 it("should not return an upload url when no profile image is sent", async () => {

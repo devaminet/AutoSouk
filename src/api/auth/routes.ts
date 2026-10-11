@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   forgotPasswordSchema,
+  profileImageUploadSchema,
   loginSchema,
   refreshTokenSchema,
   registerSchema,
@@ -13,6 +14,8 @@ import { BadRequestError } from "../../errors/bad_request_error";
 import { NotAuthorizedError } from "../../errors/not_authorized_error";
 import isAuthenticated from "../../middlewares/is_authenticated";
 import {
+  confirmProfileImage,
+  requestProfileImageUpload,
   loginUser,
   refreshTokens,
   resendVerificationEmail,
@@ -370,6 +373,64 @@ authRouter.put("/reset-password", isAuthenticated, async (req, res) => {
 authRouter.post("/logout", (req, res) => {
   req.session = undefined;
   res.status(200).json({ message: "Success" });
+});
+
+/**
+ * @openapi
+ * /api/auth/profile-image:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Request a new profile image upload policy (use to retry a failed upload)
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [imageName]
+ *             properties:
+ *               imageName: { type: string }
+ *     responses:
+ *       200:
+ *         description: Returns imageUpload ({ url, fields }), max 10MB image/*
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Not authenticated
+ */
+authRouter.post("/profile-image", isAuthenticated, async (req, res) => {
+  const validationResult = profileImageUploadSchema.safeParse(req.body);
+  if (validationResult.error) {
+    throw new RequestValidationError(validationResult.error.errors);
+  }
+  const result = await requestProfileImageUpload(
+    req.currentUser?.id!,
+    validationResult.data.imageName,
+  );
+  res.status(200).json(result);
+});
+
+/**
+ * @openapi
+ * /api/auth/profile-image/confirm:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Confirm the pending profile image was uploaded to storage
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Image confirmed, returns presigned imageUrl
+ *       400:
+ *         description: No pending upload, or the file is missing or invalid
+ *       401:
+ *         description: Not authenticated
+ */
+authRouter.post("/profile-image/confirm", isAuthenticated, async (req, res) => {
+  const result = await confirmProfileImage(req.currentUser?.id!);
+  res.status(200).json(result);
 });
 
 export default authRouter;

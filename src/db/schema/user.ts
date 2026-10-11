@@ -29,6 +29,7 @@ export const usersTable = pgTable(
       .references(() => rolesTable.id),
     cityId: integer("city_id").references(() => cityTable.id),
     imageName: varchar("image_name"),
+    pendingImageName: varchar("pending_image_name"),
     isVerified: boolean("is_verified").default(false),
     createdAt: date("created_at").defaultNow().notNull(),
     updatedAt: date("updated_at").defaultNow().notNull(),
