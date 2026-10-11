@@ -9,6 +9,12 @@ import { listingTable } from "../../db/schema/listing";
 import { carTable } from "../../db/schema/car";
 import { db } from "../../db";
 import { carMediaTable } from "../../db/schema/car_media";
+import { makeTable } from "../../db/schema/car_make";
+import { carModelTable } from "../../db/schema/car_model";
+import { carCarburantTable } from "../../db/schema/carburant";
+import { carOriginTable } from "../../db/schema/car_origin";
+import { carStateTable } from "../../db/schema/state";
+import { cityTable } from "../../db/schema/city";
 import { getFileType } from "../../utils/functions";
 
 export const findListings = async (
@@ -345,4 +351,103 @@ export const updateListingAndMarkPending = async (
 
     return updated[0];
   });
+};
+
+export type CarReferenceIds = {
+  makeId?: number;
+  modelId?: number;
+  carburantId?: number;
+  originId?: number;
+  stateId?: number;
+  cityId?: number;
+};
+
+export type CarReferenceField = keyof CarReferenceIds;
+
+const idExists = async (query: Promise<{ id: number }[]>) => {
+  const rows = await query;
+  return rows.length > 0;
+};
+
+// Returns the reference fields whose id does not exist. A model is also
+// invalid when it does not belong to the given make.
+export const findInvalidCarReferences = async (
+  ids: CarReferenceIds,
+): Promise<CarReferenceField[]> => {
+  const checks: [CarReferenceField, Promise<boolean>][] = [];
+  const check = (field: CarReferenceField, query: Promise<{ id: number }[]>) =>
+    checks.push([field, idExists(query)]);
+
+  const { makeId, modelId, carburantId, originId, stateId, cityId } = ids;
+
+  if (makeId !== undefined) {
+    check(
+      "makeId",
+      db
+        .select({ id: makeTable.id })
+        .from(makeTable)
+        .where(eq(makeTable.id, makeId)),
+    );
+  }
+  if (modelId !== undefined) {
+    const conditions = [eq(carModelTable.id, modelId)];
+    if (makeId !== undefined) {
+      conditions.push(eq(carModelTable.makeId, makeId));
+    }
+    check(
+      "modelId",
+      db
+        .select({ id: carModelTable.id })
+        .from(carModelTable)
+        .where(and(...conditions)),
+    );
+  }
+  if (carburantId !== undefined) {
+    check(
+      "carburantId",
+      db
+        .select({ id: carCarburantTable.id })
+        .from(carCarburantTable)
+        .where(eq(carCarburantTable.id, carburantId)),
+    );
+  }
+  if (originId !== undefined) {
+    check(
+      "originId",
+      db
+        .select({ id: carOriginTable.id })
+        .from(carOriginTable)
+        .where(eq(carOriginTable.id, originId)),
+    );
+  }
+  if (stateId !== undefined) {
+    check(
+      "stateId",
+      db
+        .select({ id: carStateTable.id })
+        .from(carStateTable)
+        .where(eq(carStateTable.id, stateId)),
+    );
+  }
+  if (cityId !== undefined) {
+    check(
+      "cityId",
+      db
+        .select({ id: cityTable.id })
+        .from(cityTable)
+        .where(eq(cityTable.id, cityId)),
+    );
+  }
+
+  const results = await Promise.all(checks.map(([, exists]) => exists));
+  return checks.filter((_, index) => !results[index]).map(([field]) => field);
+};
+
+export const findCarReferencesByListingId = async (listingId: number) => {
+  const car = await db.query.carTable.findFirst({
+    where: eq(carTable.listingId, listingId),
+    columns: { makeId: true, modelId: true },
+  });
+
+  return car ?? null;
 };

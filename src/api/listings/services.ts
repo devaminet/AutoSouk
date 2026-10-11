@@ -11,13 +11,18 @@ import {
   updateListingSchema,
 } from "./request_schema";
 import { BadRequestError } from "../../errors/bad_request_error";
+import { RequestValidationError } from "../../errors/request_validation_error";
 import { NotFoundError } from "../../errors/not_found_error";
 import { carBucketName } from "../../utils/constants";
 import {
   approveListingById,
   checkCarExistanceByListingId,
   deleteListingDetails,
+  findCarReferencesByListingId,
+  findInvalidCarReferences,
   findListingById,
+  type CarReferenceField,
+  type CarReferenceIds,
   findListingCarId,
   findListings,
   getListingDetailsById,
@@ -43,6 +48,28 @@ export const saveListing = async (
   return await insertListing(title, description, userId);
 };
 
+const invalidReferenceMessages: Record<CarReferenceField, string> = {
+  makeId: "Car make does not exist",
+  modelId: "Car model does not exist for the selected make",
+  carburantId: "Carburant does not exist",
+  originId: "Origin does not exist",
+  stateId: "State does not exist",
+  cityId: "City does not exist",
+};
+
+const assertCarReferencesExist = async (ids: CarReferenceIds) => {
+  const invalidFields = await findInvalidCarReferences(ids);
+  if (invalidFields.length > 0) {
+    throw new RequestValidationError(
+      invalidFields.map((field) => ({
+        code: "custom",
+        message: invalidReferenceMessages[field],
+        path: [field],
+      })),
+    );
+  }
+};
+
 const buildCarMediaName = (originalName: string) => {
   const extension = originalName.substring(originalName.lastIndexOf(".") + 1);
   return `car-${generateToken(16)}.${extension.toLowerCase()}`;
@@ -65,6 +92,7 @@ export const attachCarToListing = async (
   }
 
   const { files, ...carDetails } = data;
+  await assertCarReferencesExist(carDetails);
   const filenamesPromises = files.map((file) => {
     const filename = buildCarMediaName(file.name);
     return new Promise<{
@@ -145,8 +173,25 @@ export const updateListing = async (
     throw new NotFoundError("Listing was not found");
   }
 
-  if (changes.car && !(await checkCarExistanceByListingId(listingId))) {
-    throw new BadRequestError("Attach a car to this listing before editing it");
+  if (changes.car) {
+    const currentCar = await findCarReferencesByListingId(listingId);
+    if (!currentCar) {
+      throw new BadRequestError(
+        "Attach a car to this listing before editing it",
+      );
+    }
+
+    const { makeId, modelId } = changes.car;
+    await assertCarReferencesExist({
+      ...changes.car,
+      // a changed make or model must stay consistent with the stored one
+      ...(makeId !== undefined || modelId !== undefined
+        ? {
+            makeId: makeId ?? currentCar.makeId ?? undefined,
+            modelId: modelId ?? currentCar.modelId ?? undefined,
+          }
+        : {}),
+    });
   }
 
   return await updateListingAndMarkPending(listingId, changes);

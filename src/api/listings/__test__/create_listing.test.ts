@@ -237,3 +237,73 @@ it("should reject duplicate file names when attaching a car", async () => {
   expect(response.statusCode).toBe(400);
   expect(response.body.errors[0].message).toBe("File names must be unique.");
 });
+
+describe("car reference validation", () => {
+  const validCar = {
+    makeId: 449,
+    modelId: 2085,
+    carburantId: 3,
+    originId: 4,
+    stateId: 6,
+    price: 500000,
+    year: 2025,
+    ownersCount: 0,
+    cityId: 1,
+    distance: "60km",
+    transmission: "automatic",
+    fiscalPower: 8,
+    doorsNumber: 5,
+    files: [{ name: "file1.png", isPrimary: true }],
+  };
+
+  const createListing = async () => {
+    await signupUserWithVerification({ userType: "seller" });
+    const authUser = await signinUser();
+    const created = await request(app)
+      .post("/api/listings")
+      .send({ title: "A black car", description: "A brand new black Ford" })
+      .auth(authUser.accessToken, { type: "bearer" });
+    return { authUser, listingId: created.body.listing.id };
+  };
+
+  it("should return 400 when referenced ids do not exist", async () => {
+    const { authUser, listingId } = await createListing();
+    const response = await request(app)
+      .post(`/api/listings/${listingId}/car`)
+      .send({ ...validCar, carburantId: 99999, cityId: 99999 })
+      .auth(authUser.accessToken, { type: "bearer" });
+
+    expect(response.statusCode).toBe(400);
+    const fields = response.body.errors.map(
+      (error: { field: string }) => error.field,
+    );
+    expect(fields.sort()).toEqual(["carburantId", "cityId"]);
+  });
+
+  it("should return 400 when the model does not belong to the make", async () => {
+    const { authUser, listingId } = await createListing();
+    const response = await request(app)
+      .post(`/api/listings/${listingId}/car`)
+      .send({ ...validCar, makeId: 440 })
+      .auth(authUser.accessToken, { type: "bearer" });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.errors[0].field).toBe("modelId");
+  });
+
+  it("should return 400 on update when a referenced id does not exist", async () => {
+    const { authUser, listingId } = await createListing();
+    await request(app)
+      .post(`/api/listings/${listingId}/car`)
+      .send(validCar)
+      .auth(authUser.accessToken, { type: "bearer" });
+
+    const response = await request(app)
+      .patch(`/api/listings/${listingId}`)
+      .send({ car: { cityId: 99999 } })
+      .auth(authUser.accessToken, { type: "bearer" });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.errors[0].field).toBe("cityId");
+  });
+});
