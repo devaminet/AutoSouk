@@ -51,7 +51,10 @@ export const findUserById = async (id: number) => {
   return user ?? null;
 };
 
-export const createUser = async (user: z.infer<typeof registerSchema>) => {
+export const createUser = async (
+  user: z.infer<typeof registerSchema>,
+  imageName: string | null = null,
+) => {
   const { email, password, cityId, firstName, lastName, phone, userType } =
     user;
   const roleId = await findRoleIdByName(userType);
@@ -72,6 +75,7 @@ export const createUser = async (user: z.infer<typeof registerSchema>) => {
       lastName,
       phone,
       roleId,
+      pendingImageName: imageName,
     })
     .returning({ id: usersTable.id });
 
@@ -262,4 +266,20 @@ export const updateUserPasswordById = async (
     .where(eq(usersTable.id, userId));
 
   return result.rowCount;
+};
+
+export const updateUserProfileImage = async (
+  userId: number,
+  values: { imageName?: string | null; pendingImageName: string | null },
+) => {
+  const [updated] = await db
+    .update(usersTable)
+    .set(values)
+    .where(eq(usersTable.id, userId))
+    .returning({
+      imageName: usersTable.imageName,
+      pendingImageName: usersTable.pendingImageName,
+    });
+
+  return updated ?? null;
 };

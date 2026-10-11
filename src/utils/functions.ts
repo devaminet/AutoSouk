@@ -8,6 +8,7 @@ import Mail, { Attachment } from "nodemailer/lib/mailer";
 import { minioClient } from "../file_storage/minio";
 import { JwtPayload, sign, verify } from "jsonwebtoken";
 import { usersTable } from "../db/schema/user";
+import { defaultProfileImageName, usersBucketName } from "./constants";
 
 const iterations = 100000;
 const keyLength = 64;
@@ -17,6 +18,7 @@ const pbkdf2 = promisify(crypto.pbkdf2);
 
 const imageTypes = ["jpg", "jpeg", "png", "webp"];
 const videoTypes = ["mp4"];
+export const allowedImageTypes = imageTypes.join(", ");
 export const allowedFileTypes = [...imageTypes, ...videoTypes].join(", ");
 
 export const generateToken = (size = 32) => {
@@ -102,6 +104,37 @@ export const generatePresignedUrl = async (
   return minioClient.presignedPutObject(bucketName, filename, expires);
 };
 
+export const generateImagePostPolicy = async (
+  bucketName: string,
+  filename: string,
+  maxSizeBytes: number,
+  expirySeconds: number,
+) => {
+  const policy = minioClient.newPostPolicy();
+  policy.setBucket(bucketName);
+  policy.setKey(filename);
+  policy.setContentTypeStartsWith("image/");
+  policy.setContentLengthRange(1, maxSizeBytes);
+  policy.setExpires(new Date(Date.now() + expirySeconds * 1000));
+  return minioClient.presignedPostPolicy(policy);
+};
+
+export const findObjectStat = async (bucketName: string, filename: string) => {
+  try {
+    return await minioClient.statObject(bucketName, filename);
+  } catch (error) {
+    const code = (error as { code?: string }).code;
+    if (code === "NotFound" || code === "NoSuchKey") {
+      return null;
+    }
+    throw error;
+  }
+};
+
+export const removeObject = async (bucketName: string, filename: string) => {
+  await minioClient.removeObject(bucketName, filename);
+};
+
 export const generateGetPresignedUrl = async (
   bucketName: string,
   filename: string,
@@ -140,6 +173,13 @@ export const generatePresignedUrls = async (
     }
     return prev;
   }, new Map());
+};
+
+export const getProfileImageUrl = (imageName: string | null) => {
+  return generateGetPresignedUrl(
+    usersBucketName,
+    imageName ?? defaultProfileImageName,
+  );
 };
 
 export const getFileType = (file: string) => {
@@ -204,24 +244,20 @@ type UserWithRole = typeof usersTable.$inferSelect & {
 
 export type SanitizedUser = Pick<
   typeof usersTable.$inferSelect,
-  | "id"
-  | "firstName"
-  | "lastName"
-  | "email"
-  | "cityId"
-  | "imageUrl"
-  | "isVerified"
-  | "phone"
-> & { role: string };
+  "id" | "firstName" | "lastName" | "email" | "cityId" | "isVerified" | "phone"
+> & { role: string; imageUrl: string };
 
-export const sanitizeUser = (user: UserWithRole): SanitizedUser => {
+export const sanitizeUser = async (
+  user: UserWithRole,
+): Promise<SanitizedUser> => {
+  const imageUrl = await getProfileImageUrl(user.imageName);
   return {
     id: user.id,
     firstName: user.firstName,
     lastName: user.lastName,
     email: user.email,
     cityId: user.cityId,
-    imageUrl: user.imageUrl,
+    imageUrl,
     isVerified: user.isVerified,
     phone: user.phone,
     role: user.role.name,

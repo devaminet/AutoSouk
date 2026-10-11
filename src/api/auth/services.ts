@@ -6,9 +6,13 @@ import {
 } from "./request_schema";
 import {
   generateJWT,
+  findObjectStat,
+  generateImagePostPolicy,
   generateToken,
+  getProfileImageUrl,
   hashPassword,
   readTemplateFile,
+  removeObject,
   sanitizeUser,
   sendMail,
   verifyJWT,
@@ -33,12 +37,125 @@ import {
   insertUserRefreshToken,
   insertVerificationToken,
   updateRefreshToken,
+  updateUserProfileImage,
   updateUserPassword,
   updateUserPasswordById,
   verifyUserById,
 } from "./db";
-import { tokenExpirationMinutes } from "../../utils/constants";
+import {
+  maxProfileImageSizeBytes,
+  profileImageUploadExpirationSeconds,
+  tokenExpirationMinutes,
+  usersBucketName,
+} from "../../utils/constants";
 import { InternalServerError } from "../../errors/internal_server_error";
+
+const buildProfileImageName = (originalName: string) => {
+  const extension = originalName.substring(originalName.lastIndexOf(".") + 1);
+  return `profile-${generateToken(16)}.${extension.toLowerCase()}`;
+};
+
+const getProfileImageUpload = async (imageName: string) => {
+  try {
+    const { postURL, formData } = await generateImagePostPolicy(
+      usersBucketName,
+      imageName,
+      maxProfileImageSizeBytes,
+      profileImageUploadExpirationSeconds,
+    );
+    return { url: postURL, fields: formData };
+  } catch (error) {
+    console.error("Error generating profile image upload URL:", error);
+    throw new InternalServerError("Could not generate profile image URL");
+  }
+};
+
+type PendingImageUser = {
+  id: number;
+  imageName: string | null;
+  pendingImageName: string | null;
+};
+
+const discardObject = async (filename: string) => {
+  try {
+    await removeObject(usersBucketName, filename);
+  } catch (error) {
+    console.error("Error removing profile image:", error);
+  }
+};
+
+// Promote a pending image once the upload reached MinIO, otherwise keep the
+// current image. A missing upload is not an error: the user keeps the previous
+// (or default) image and can request a new upload url.
+export const resolvePendingProfileImage = async (user: PendingImageUser) => {
+  const { id, imageName, pendingImageName } = user;
+  if (!pendingImageName) {
+    return { imageName, uploaded: false };
+  }
+
+  const stat = await findObjectStat(usersBucketName, pendingImageName);
+  if (!stat) {
+    return { imageName, uploaded: false };
+  }
+
+  const contentType = stat.metaData?.["content-type"] ?? "";
+  if (
+    stat.size > maxProfileImageSizeBytes ||
+    !contentType.startsWith("image/")
+  ) {
+    await discardObject(pendingImageName);
+    await updateUserProfileImage(id, { pendingImageName: null });
+    return { imageName, uploaded: false };
+  }
+
+  await updateUserProfileImage(id, {
+    imageName: pendingImageName,
+    pendingImageName: null,
+  });
+  if (imageName) {
+    await discardObject(imageName);
+  }
+
+  return { imageName: pendingImageName, uploaded: true };
+};
+
+export const confirmProfileImage = async (userId: number) => {
+  const user = await findUserById(userId);
+  if (!user) {
+    throw new NotAuthorizedError();
+  }
+  if (!user.pendingImageName) {
+    throw new BadRequestError("No profile image upload is pending");
+  }
+
+  const { imageName, uploaded } = await resolvePendingProfileImage(user);
+  if (!uploaded) {
+    throw new BadRequestError(
+      "Profile image was not uploaded or is invalid, request a new upload url and retry",
+    );
+  }
+
+  return { imageUrl: await getProfileImageUrl(imageName) };
+};
+
+export const requestProfileImageUpload = async (
+  userId: number,
+  originalName: string,
+) => {
+  const user = await findUserById(userId);
+  if (!user) {
+    throw new NotAuthorizedError();
+  }
+
+  if (user.pendingImageName) {
+    await discardObject(user.pendingImageName);
+  }
+
+  const pendingImageName = buildProfileImageName(originalName);
+  await updateUserProfileImage(userId, { pendingImageName });
+
+  return { imageUpload: await getProfileImageUpload(pendingImageName) };
+};
 
 export const setupUser = async (user: z.infer<typeof registerSchema>) => {
   const { firstName, email } = user;
@@ -54,7 +171,10 @@ export const setupUser = async (user: z.infer<typeof registerSchema>) => {
     throw new BadRequestError("Email in use");
   }
 
-  const createdUser = await createUser(user);
+  const imageName = user.imageName
+    ? buildProfileImageName(user.imageName)
+    : null;
+  const createdUser = await createUser(user, imageName);
   const expiresAt = new Date(Date.now() + 1000 * 60 * tokenExpirationMinutes);
   const token = generateToken();
 
@@ -70,7 +190,11 @@ export const setupUser = async (user: z.infer<typeof registerSchema>) => {
     html: registerHTML,
   });
 
-  return token;
+  const imageUpload = imageName
+    ? await getProfileImageUpload(imageName)
+    : undefined;
+
+  return { token, imageUpload };
 };
 
 export const resetPassword = async (
@@ -123,6 +247,9 @@ export const loginUser = async (data: { email: string; password: string }) => {
     throw new NotAuthorizedError("Email or password is not correct");
   }
 
+  const { imageName } = await resolvePendingProfileImage(foundUser);
+  foundUser.imageName = imageName;
+
   const accessToken = await generateJWT(
     {
       id: user.id,
@@ -147,11 +274,12 @@ export const loginUser = async (data: { email: string; password: string }) => {
   }
 
   await insertUserRefreshToken(user.id, refreshToken);
+  const sanitizedUser = await sanitizeUser(foundUser);
 
   return {
     accessToken,
     refreshToken,
-    user: sanitizeUser(foundUser),
+    user: sanitizedUser,
   };
 };
 
@@ -260,11 +388,13 @@ export const refreshTokens = async (token: string) => {
     throw new InternalServerError("An error occurred");
   }
   await updateRefreshToken(decoded.id, token, refreshToken);
+  const sanitizedUser = await sanitizeUser(user);
+
   return {
     success: true,
     refreshToken,
     accessToken,
-    user: sanitizeUser(user),
+    user: sanitizedUser,
   };
 };
 
