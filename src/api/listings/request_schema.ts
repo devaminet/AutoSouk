@@ -130,7 +130,16 @@ export const createCarSchema = z.object(
       .refine((files) => files.filter((file) => file.isPrimary).length === 1, {
         message: "Exactly one file must be designated as primary.",
         path: [],
-      }),
+      })
+      .refine(
+        (files) =>
+          new Set(files.map((file) => file.name.toLowerCase())).size ===
+          files.length,
+        {
+          message: "File names must be unique.",
+          path: [],
+        },
+      ),
   },
   {
     required_error: "Car details are required",

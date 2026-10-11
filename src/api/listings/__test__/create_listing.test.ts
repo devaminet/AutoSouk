@@ -202,3 +202,38 @@ it("should reject out of range car values when attaching a car", async () => {
     ].sort(),
   );
 });
+
+it("should reject duplicate file names when attaching a car", async () => {
+  await signupUserWithVerification({ userType: "seller" });
+  const authUser = await signinUser();
+  const created = await request(app)
+    .post("/api/listings")
+    .send({ title: "A black car", description: "A brand new black Ford" })
+    .auth(authUser.accessToken, { type: "bearer" });
+
+  const response = await request(app)
+    .post(`/api/listings/${created.body.listing.id}/car`)
+    .send({
+      makeId: 449,
+      modelId: 2085,
+      carburantId: 3,
+      originId: 4,
+      stateId: 6,
+      price: 500000,
+      year: 2025,
+      ownersCount: 0,
+      cityId: 1,
+      distance: "60km",
+      transmission: "automatic",
+      fiscalPower: 8,
+      doorsNumber: 5,
+      files: [
+        { name: "file1.png", isPrimary: true },
+        { name: "FILE1.png", isPrimary: false },
+      ],
+    })
+    .auth(authUser.accessToken, { type: "bearer" });
+
+  expect(response.statusCode).toBe(400);
+  expect(response.body.errors[0].message).toBe("File names must be unique.");
+});
