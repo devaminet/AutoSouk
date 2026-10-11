@@ -291,6 +291,7 @@ export const checkCarExistanceByListingId = async (listingId: number) => {
 };
 
 // Returns null when the listing already has a car (unique listing_id).
+// Attaching a car sends the listing to admin approval.
 export const saveCarAndMedia = async (args: {
   carDetails: Omit<z.infer<typeof createCarSchema>, "files">;
   carMedia: { isPrimary: boolean; filename: string }[];
@@ -323,6 +324,15 @@ export const saveCarAndMedia = async (args: {
     }));
 
     await tx.insert(carMediaTable).values(carMediaValues);
+    await tx
+      .update(listingTable)
+      .set({
+        status: "pending",
+        approvedAt: null,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(listingTable.id, listingId));
+
     return newCar;
   });
 };

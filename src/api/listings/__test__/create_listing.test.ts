@@ -148,6 +148,9 @@ it("should attach car to a listing", async () => {
   expect(carMedia[0].upload.fields.policy).toBeDefined();
   expect(carMedia[0].filename).toMatch(/^car-[a-f0-9]+\.png$/);
   expect(carMedia[0].filename).not.toBe(carMedia[1].filename);
+
+  const details = await request(app).get(`/api/listings/${listingId}`);
+  expect(details.body.listing.status).toBe("pending");
 });
 
 it("should fail when a non seller tries to attach a car to a listing", async () => {

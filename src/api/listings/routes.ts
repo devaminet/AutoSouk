@@ -165,7 +165,7 @@ listingRouter.post(
  *                     isPrimary: { type: boolean }
  *     responses:
  *       201:
- *         description: Car attached to listing. Each carMedia item holds the stored filename, the originalName sent by the client, and upload ({ url, fields }), a presigned POST policy. Send a multipart/form-data POST to upload.url with every fields entry first and the file last as field \"file\". Images max 10MB (image/*), videos max 50MB (video/*), valid for 15 minutes.
+ *         description: Car attached to listing, which is now pending approval. Each carMedia item holds the stored filename, the originalName sent by the client, and upload ({ url, fields }), a presigned POST policy. Send a multipart/form-data POST to upload.url with every fields entry first and the file last as field \"file\". Images max 10MB (image/*), videos max 50MB (video/*), valid for 15 minutes.
  *       400:
  *         description: Validation error
  *       401:
