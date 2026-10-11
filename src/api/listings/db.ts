@@ -274,7 +274,7 @@ export const checkCarExistanceByListingId = async (listingId: number) => {
 
 export const saveCarAndMedia = async (args: {
   carDetails: Omit<z.infer<typeof createCarSchema>, "files">;
-  carMedia: { signedUrl: string; isPrimary: boolean; filename: string }[];
+  carMedia: { isPrimary: boolean; filename: string }[];
   listingId: number;
   userId: number;
 }) => {

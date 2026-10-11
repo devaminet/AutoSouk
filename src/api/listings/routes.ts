@@ -164,7 +164,7 @@ listingRouter.post(
  *                     isPrimary: { type: boolean }
  *     responses:
  *       201:
- *         description: Car attached to listing
+ *         description: Car attached to listing. carMedia items hold the stored filename, the originalName sent by the client, and the signedUrl to upload to.
  *       400:
  *         description: Validation error
  *       401:

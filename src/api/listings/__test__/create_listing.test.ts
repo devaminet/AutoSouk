@@ -140,6 +140,11 @@ it("should attach car to a listing", async () => {
     .auth(authUser.accessToken, { type: "bearer" });
 
   expect(attachCarResponse.statusCode).toBe(201);
+  const { carMedia } = attachCarResponse.body;
+  expect(carMedia).toHaveLength(2);
+  expect(carMedia[0].originalName).toBe("file1.png");
+  expect(carMedia[0].filename).toMatch(/^car-[a-f0-9]+\.png$/);
+  expect(carMedia[0].filename).not.toBe(carMedia[1].filename);
 });
 
 it("should fail when a non seller tries to attach a car to a listing", async () => {
@@ -152,4 +157,48 @@ it("should fail when a non seller tries to attach a car to a listing", async () 
     .auth(authUser.accessToken, { type: "bearer" });
 
   expect(response.statusCode).toBe(403);
+});
+
+it("should reject out of range car values when attaching a car", async () => {
+  await signupUserWithVerification({ userType: "seller" });
+  const authUser = await signinUser();
+  const created = await request(app)
+    .post("/api/listings")
+    .send({ title: "A black car", description: "A brand new black Ford" })
+    .auth(authUser.accessToken, { type: "bearer" });
+
+  const response = await request(app)
+    .post(`/api/listings/${created.body.listing.id}/car`)
+    .send({
+      makeId: 449,
+      modelId: 2085,
+      carburantId: 3,
+      originId: 4,
+      stateId: 6,
+      price: -1,
+      year: 1800,
+      ownersCount: -2,
+      cityId: 1,
+      distance: "  ",
+      transmission: "automatic",
+      fiscalPower: 0,
+      doorsNumber: 12,
+      files: [{ name: "file1.png", isPrimary: true }],
+    })
+    .auth(authUser.accessToken, { type: "bearer" });
+
+  expect(response.statusCode).toBe(400);
+  const fields = response.body.errors.map(
+    (error: { field: string }) => error.field,
+  );
+  expect(fields.sort()).toEqual(
+    [
+      "distance",
+      "doorsNumber",
+      "fiscalPower",
+      "ownersCount",
+      "price",
+      "year",
+    ].sort(),
+  );
 });

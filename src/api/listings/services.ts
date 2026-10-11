@@ -3,6 +3,7 @@ import {
   getProfileImageUrl,
   generateGetPresignedUrls,
   generatePresignedUrl,
+  generateToken,
 } from "../../utils/functions";
 import {
   createCarSchema,
@@ -42,6 +43,11 @@ export const saveListing = async (
   return await insertListing(title, description, userId);
 };
 
+const buildCarMediaName = (originalName: string) => {
+  const extension = originalName.substring(originalName.lastIndexOf(".") + 1);
+  return `car-${generateToken(16)}.${extension.toLowerCase()}`;
+};
+
 export const attachCarToListing = async (
   data: z.infer<typeof createCarSchema>,
   listingId: number,
@@ -60,17 +66,20 @@ export const attachCarToListing = async (
 
   const { files, ...carDetails } = data;
   const filenamesPromises = files.map((file) => {
+    const filename = buildCarMediaName(file.name);
     return new Promise<{
       signedUrl: string;
       isPrimary: boolean;
       filename: string;
+      originalName: string;
     }>((resolve, reject) => {
-      generatePresignedUrl(carBucketName, file.name)
+      generatePresignedUrl(carBucketName, filename)
         .then((value) =>
           resolve({
             signedUrl: value,
             isPrimary: file.isPrimary,
-            filename: file.name,
+            filename,
+            originalName: file.name,
           }),
         )
         .catch((err) => {
