@@ -42,12 +42,8 @@ import {
   updateUserPasswordById,
   verifyUserById,
 } from "./db";
-import {
-  maxProfileImageSizeBytes,
-  profileImageUploadExpirationSeconds,
-  tokenExpirationMinutes,
-  usersBucketName,
-} from "../../utils/constants";
+import { usersBucketName } from "../../utils/constants";
+import { getSetting } from "../../settings/store";
 import { InternalServerError } from "../../errors/internal_server_error";
 
 const buildProfileImageName = (originalName: string) => {
@@ -60,8 +56,8 @@ const getProfileImageUpload = async (imageName: string) => {
     const { postURL, formData } = await generateImagePostPolicy(
       usersBucketName,
       imageName,
-      maxProfileImageSizeBytes,
-      profileImageUploadExpirationSeconds,
+      getSetting("uploads.profileImage.maxSizeBytes"),
+      getSetting("uploads.profileImage.uploadExpirySeconds"),
     );
     return { url: postURL, fields: formData };
   } catch (error) {
@@ -100,7 +96,7 @@ export const resolvePendingProfileImage = async (user: PendingImageUser) => {
 
   const contentType = stat.metaData?.["content-type"] ?? "";
   if (
-    stat.size > maxProfileImageSizeBytes ||
+    stat.size > getSetting("uploads.profileImage.maxSizeBytes") ||
     !contentType.startsWith("image/")
   ) {
     await discardObject(pendingImageName);
@@ -175,6 +171,7 @@ export const setupUser = async (user: z.infer<typeof registerSchema>) => {
     ? buildProfileImageName(user.imageName)
     : null;
   const createdUser = await createUser(user, imageName);
+  const tokenExpirationMinutes = getSetting("auth.emailTokenExpirationMinutes");
   const expiresAt = new Date(Date.now() + 1000 * 60 * tokenExpirationMinutes);
   const token = generateToken();
 
@@ -289,12 +286,7 @@ export const verifyUser = async (token: string) => {
     throw new BadRequestError("Invalid token");
   }
   const { expiresAt } = tokenResponse;
-  const difference =
-    (expiresAt.getTime() - new Date().getTime()) /
-    1000 /
-    60 /
-    tokenExpirationMinutes;
-  if (difference <= 0) {
+  if (expiresAt.getTime() <= Date.now()) {
     await deleteVerificationToken(token);
     throw new BadRequestError("Link has been expired");
   }
@@ -320,6 +312,7 @@ export const resendVerificationEmail = async (email: string) => {
     throw new BadRequestError("User is already verified");
   }
 
+  const tokenExpirationMinutes = getSetting("auth.emailTokenExpirationMinutes");
   const expiresAt = new Date(Date.now() + 1000 * 60 * tokenExpirationMinutes);
   const token = generateToken();
 
@@ -405,6 +398,7 @@ export const sendForgotPasswordLink = async (email: string) => {
     throw new NotFoundError("No account was registered with this email");
   }
   const token = generateToken();
+  const tokenExpirationMinutes = getSetting("auth.emailTokenExpirationMinutes");
   const expiresAt = new Date(Date.now() + 1000 * 60 * tokenExpirationMinutes);
 
   await insertPasswordResetToken(foundUser.id, token, expiresAt);
@@ -420,7 +414,7 @@ export const sendForgotPasswordLink = async (email: string) => {
     html: forgotPasswordHTML,
   });
 
-  return { success: true };
+  return { success: true, expirationMinutes: tokenExpirationMinutes };
 };
 
 export const verifyForgotPasswordToken = async (

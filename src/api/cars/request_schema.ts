@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { allowedFileTypes, getFileType } from "../../utils/functions";
+import { describeAllowedExtensions, getFileType } from "../../utils/functions";
 
 export const createCarSchema = z.object(
   {
@@ -62,7 +62,7 @@ export const createCarSchema = z.object(
         },
         (filename) => {
           return {
-            message: `${filename} has an invalid file type, allowed type: ${allowedFileTypes}`,
+            message: `${filename} has an invalid file type, allowed type: ${describeAllowedExtensions()}`,
           };
         },
       ),

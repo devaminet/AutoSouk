@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { allowedFileTypes, getFileType } from "../../utils/functions";
+import { describeAllowedExtensions, getFileType } from "../../utils/functions";
+import { getSetting } from "../../settings/store";
 
 export const createListingSchema = z.object(
   {
@@ -15,7 +16,35 @@ export const createListingSchema = z.object(
   { required_error: "Body with title and description is required" },
 );
 
-const minCarYear = 1950;
+// Bounds come from admin settings and are read on every validation, so a
+// change applies without a restart.
+const validateCarYear = (year: number, ctx: z.RefinementCtx) => {
+  const minYear = getSetting("listings.car.minYear");
+  const maxYear =
+    new Date().getFullYear() + getSetting("listings.car.maxYearsAhead");
+  if (year < minYear) {
+    ctx.addIssue({
+      code: "custom",
+      message: `Year must be ${minYear} or later`,
+    });
+  } else if (year > maxYear) {
+    ctx.addIssue({
+      code: "custom",
+      message: `Year must be ${maxYear} or earlier`,
+    });
+  }
+};
+
+const validateDoorsNumber = (doors: number, ctx: z.RefinementCtx) => {
+  const minDoors = getSetting("listings.car.minDoors");
+  const maxDoors = getSetting("listings.car.maxDoors");
+  if (doors < minDoors || doors > maxDoors) {
+    ctx.addIssue({
+      code: "custom",
+      message: `Doors number must be between ${minDoors} and ${maxDoors}`,
+    });
+  }
+};
 
 export const createCarSchema = z.object(
   {
@@ -67,10 +96,7 @@ export const createCarSchema = z.object(
         invalid_type_error: "Year must be a number",
       })
       .int("Year must be a whole number")
-      .min(minCarYear, `Year must be ${minCarYear} or later`)
-      .refine((year) => year <= new Date().getFullYear() + 1, {
-        message: "Year cannot be in the future",
-      }),
+      .superRefine(validateCarYear),
     ownersCount: z
       .number({
         required_error: "Owners count is required",
@@ -108,15 +134,14 @@ export const createCarSchema = z.object(
         invalid_type_error: "Doors number must be a number",
       })
       .int("Doors number must be a whole number")
-      .min(1, "Doors number must be at least 1")
-      .max(9, "Doors number must be 9 or less"),
+      .superRefine(validateDoorsNumber),
     files: z
       .array(
         z.object({
           name: z.string().refine(
             (name) => !!getFileType(name),
             (filename) => ({
-              message: `${filename} has an invalid file type, allowed type: ${allowedFileTypes}`,
+              message: `${filename} has an invalid file type, allowed type: ${describeAllowedExtensions()}`,
             }),
           ),
           isPrimary: z.boolean(),

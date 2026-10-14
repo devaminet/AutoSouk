@@ -16,12 +16,8 @@ import {
 import { BadRequestError } from "../../errors/bad_request_error";
 import { RequestValidationError } from "../../errors/request_validation_error";
 import { NotFoundError } from "../../errors/not_found_error";
-import {
-  carBucketName,
-  carMediaUploadExpirationSeconds,
-  maxCarImageSizeBytes,
-  maxCarVideoSizeBytes,
-} from "../../utils/constants";
+import { carBucketName } from "../../utils/constants";
+import { getSetting } from "../../settings/store";
 import {
   approveListingById,
   checkCarExistanceByListingId,
@@ -81,12 +77,18 @@ const assertCarReferencesExist = async (ids: CarReferenceIds) => {
   }
 };
 
-const carMediaUploadLimits = {
-  image: { maxSizeBytes: maxCarImageSizeBytes, contentTypePrefix: "image/" },
-  video: { maxSizeBytes: maxCarVideoSizeBytes, contentTypePrefix: "video/" },
-} as const;
+type CarMediaType = "image" | "video";
 
-type CarMediaType = keyof typeof carMediaUploadLimits;
+const getCarMediaUploadLimits = (type: CarMediaType) =>
+  type === "image"
+    ? {
+        maxSizeBytes: getSetting("uploads.carImage.maxSizeBytes"),
+        contentTypePrefix: "image/",
+      }
+    : {
+        maxSizeBytes: getSetting("uploads.carVideo.maxSizeBytes"),
+        contentTypePrefix: "video/",
+      };
 
 const createCarMediaUploadPolicy = async (
   filename: string,
@@ -96,8 +98,8 @@ const createCarMediaUploadPolicy = async (
     carBucketName,
     filename,
     {
-      ...carMediaUploadLimits[type],
-      expirySeconds: carMediaUploadExpirationSeconds,
+      ...getCarMediaUploadLimits(type),
+      expirySeconds: getSetting("uploads.carMedia.uploadExpirySeconds"),
     },
   );
 
@@ -171,7 +173,7 @@ const isValidUploadedMedia = (
   stat: { size: number; metaData?: Record<string, string> },
   type: CarMediaType,
 ) => {
-  const { maxSizeBytes, contentTypePrefix } = carMediaUploadLimits[type];
+  const { maxSizeBytes, contentTypePrefix } = getCarMediaUploadLimits(type);
   const contentType = stat.metaData?.["content-type"] ?? "";
   return stat.size <= maxSizeBytes && contentType.startsWith(contentTypePrefix);
 };

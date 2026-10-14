@@ -27,7 +27,6 @@ import {
   verifyUser,
 } from "./services";
 import { InternalServerError } from "../../errors/internal_server_error";
-import { tokenExpirationMinutes } from "../../utils/constants";
 
 const authRouter = Router();
 
@@ -236,7 +235,7 @@ authRouter.post("/forgot-password", async (req, res, next) => {
     throw new InternalServerError("Could not send forgot password email");
   }
   res.status(200).json({
-    message: `Password reset email sent successfully. The reset link expires in ${tokenExpirationMinutes} minutes`,
+    message: `Password reset email sent successfully. The reset link expires in ${result.expirationMinutes} minutes`,
   });
 });
 

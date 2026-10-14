@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { allowedImageTypes, getFileType } from "../../utils/functions";
+import { describeAllowedExtensions, getFileType } from "../../utils/functions";
 
 const passwordShema = (options?: {
   requiredError?: string;
@@ -28,9 +28,12 @@ export const registrationRoleSchema = z.enum(["buyer", "seller", "mechanic"], {
 
 export const profileImageNameSchema = z
   .string({ invalid_type_error: "Image name must be a text" })
-  .refine((name) => getFileType(name) === "image", {
-    message: `Profile image must be one of: ${allowedImageTypes}`,
-  });
+  .refine(
+    (name) => getFileType(name) === "image",
+    () => ({
+      message: `Profile image must be one of: ${describeAllowedExtensions("image")}`,
+    }),
+  );
 
 export const profileImageUploadSchema = z.object({
   imageName: profileImageNameSchema,

@@ -9,17 +9,13 @@ import { minioClient } from "../file_storage/minio";
 import { JwtPayload, sign, verify } from "jsonwebtoken";
 import { usersTable } from "../db/schema/user";
 import { defaultProfileImageName, usersBucketName } from "./constants";
+import { getSetting } from "../settings/store";
 
 const iterations = 100000;
 const keyLength = 64;
 const digest = "sha512";
 
 const pbkdf2 = promisify(crypto.pbkdf2);
-
-const imageTypes = ["jpg", "jpeg", "png", "webp"];
-const videoTypes = ["mp4"];
-export const allowedImageTypes = imageTypes.join(", ");
-export const allowedFileTypes = [...imageTypes, ...videoTypes].join(", ");
 
 export const generateToken = (size = 32) => {
   return crypto.randomBytes(size).toString("hex");
@@ -199,14 +195,26 @@ export const getProfileImageUrl = (imageName: string | null) => {
 };
 
 export const getFileType = (file: string) => {
-  const extenstion = file.substring(file.lastIndexOf(".") + 1);
-  if (imageTypes.includes(extenstion)) {
+  const extension = file.substring(file.lastIndexOf(".") + 1);
+  if (getSetting("uploads.allowedImageExtensions").includes(extension)) {
     return "image";
   }
-  if (videoTypes.includes(extenstion)) {
+  if (getSetting("uploads.allowedVideoExtensions").includes(extension)) {
     return "video";
   }
   return null;
+};
+
+export const describeAllowedExtensions = (type?: "image" | "video") => {
+  const images = getSetting("uploads.allowedImageExtensions");
+  const videos = getSetting("uploads.allowedVideoExtensions");
+  const extensions =
+    type === "image"
+      ? images
+      : type === "video"
+        ? videos
+        : [...images, ...videos];
+  return extensions.join(", ");
 };
 
 export const generatePassword = async (password: string, salt: string) => {

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { allowedFileTypes, getFileType } from "../../utils/functions";
+import { describeAllowedExtensions, getFileType } from "../../utils/functions";
 
 export const createMechanicSchema = z.object(
   {
@@ -73,7 +73,7 @@ export const addGarageImagesSchema = z.object({
     z.string().refine(
       (filename) => getFileType(filename) === "image",
       (filename) => ({
-        message: `${filename} has an invalid image type, allowed types: ${allowedFileTypes}`,
+        message: `${filename} has an invalid image type, allowed types: ${describeAllowedExtensions("image")}`,
       }),
     ),
   ),

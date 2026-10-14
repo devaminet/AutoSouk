@@ -8,6 +8,7 @@ import { db, pool } from "../db";
 import { hashPassword } from "../utils/functions";
 import { seeds } from "../db/seeds";
 import { findRoleIdByName, insertUserWithRoleId } from "../api/auth/db";
+import { loadSettings } from "../settings/store";
 
 jest.mock("../utils/functions", () => {
   const originalModule = jest.requireActual("../utils/functions");
@@ -27,6 +28,7 @@ beforeAll(async () => {
     migrationsFolder: path.join(path.resolve(), "/drizzle"),
   });
   await seeds();
+  await loadSettings();
 });
 
 beforeEach(async () => {
@@ -57,6 +59,9 @@ afterEach(async () => {
   jest.resetAllMocks();
   readTemplateFileMock.mockResolvedValue("<html></html>");
 
+  // settings changed by a test fall back to defaults for the next one
+  await db.execute("DELETE FROM app_settings");
+  await loadSettings();
   await db.execute("DELETE FROM inspections");
   await db.execute("DELETE FROM cars");
   await db.execute("DELETE FROM listings");
