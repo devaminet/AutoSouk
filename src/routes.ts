@@ -8,6 +8,7 @@ import favoriteListingRouter from "./api/favorite_listings/routes";
 import mechanicsRouter from "./api/mechanics/routes";
 import mechanicReviewsRouter from "./api/mechanic_reviews/routes";
 import inspectionsRouter from "./api/inspections/routes";
+import equipmentRouter from "./api/equipment/routes";
 
 const router = express.Router();
 
@@ -20,5 +21,6 @@ router.use("/api/favorite_listings", favoriteListingRouter);
 router.use("/api/mechanics", mechanicsRouter);
 router.use("/api/mechanics", mechanicReviewsRouter);
 router.use("/api/inspections", inspectionsRouter);
+router.use("/api/equipment", equipmentRouter);
 
 export default router;
