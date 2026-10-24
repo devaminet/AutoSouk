@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import { ZodIssue } from "zod";
 import { NotFoundError } from "../../errors/not_found_error";
 import { PreconditionFailedError } from "../../errors/precondition_failed_error";
@@ -10,6 +11,8 @@ import {
   type SettingKey,
 } from "../../settings/definitions";
 import {
+  getPublicSettings,
+  getSettings,
   mergeOverrides,
   refreshAndPublishSettings,
   resolveSettings,
@@ -171,4 +174,33 @@ export const resetSetting = async (
     await refreshAndPublishSettings();
   }
   return listSettings();
+};
+
+type PublicSettingsPayload = {
+  settings: ReturnType<typeof getPublicSettings>;
+  entityTag: string;
+};
+
+// Keyed by the frozen snapshot, so the hash is computed once per settings
+// change rather than once per request.
+const publicPayloadCache = new WeakMap<object, PublicSettingsPayload>();
+
+// The tag hashes the content, not the version: code defaults can change in a
+// deploy without a settings write, and the tag must change with them. Equal
+// content gives the same tag on every instance.
+export const getPublicSettingsPayload = (): PublicSettingsPayload => {
+  const snapshot = getSettings();
+  const cached = publicPayloadCache.get(snapshot);
+  if (cached) {
+    return cached;
+  }
+
+  const settings = getPublicSettings();
+  const hash = createHash("sha256")
+    .update(JSON.stringify(settings))
+    .digest("base64url")
+    .slice(0, 27);
+  const payload = { settings, entityTag: `"${hash}"` };
+  publicPayloadCache.set(snapshot, payload);
+  return payload;
 };

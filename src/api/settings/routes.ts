@@ -2,13 +2,17 @@ import { Request, Response, Router } from "express";
 import isAuthenticated from "../../middlewares/is_authenticated";
 import { isAdmin } from "../../middlewares/is_admin";
 import { RequestValidationError } from "../../errors/request_validation_error";
-import { getPublicSettings } from "../../settings/store";
 import {
   ifMatchHeaderSchema,
   settingKeyParamSchema,
   updateSettingsSchema,
 } from "./request_schema";
-import { listSettings, resetSetting, updateSettings } from "./services";
+import {
+  getPublicSettingsPayload,
+  listSettings,
+  resetSetting,
+  updateSettings,
+} from "./services";
 
 const settingsRouter = Router();
 
@@ -41,7 +45,13 @@ const sendSettings = (
  *   get:
  *     tags: [Settings]
  *     summary: Get client-facing settings (upload limits, allowed file types, car bounds)
- *     description: Values the frontend should use for client-side checks. The backend enforces the same values.
+ *     description: Values the frontend should use for client-side checks. The backend enforces the same values. Responses carry an ETag and Cache-Control no-cache; send the ETag back as If-None-Match to get a 304 when nothing changed.
+ *     parameters:
+ *       - in: header
+ *         name: If-None-Match
+ *         required: false
+ *         description: ETag from a previous response
+ *         schema: { type: string }
  *     responses:
  *       200:
  *         description: Public settings keyed by setting name
@@ -56,10 +66,21 @@ const sendSettings = (
  *                   example:
  *                     uploads.carImage.maxSizeBytes: 10485760
  *                     uploads.allowedImageExtensions: [jpg, jpeg, png, webp]
+ *         headers:
+ *           ETag:
+ *             description: Hash of the public settings content
+ *             schema: { type: string }
+ *       304:
+ *         description: Public settings unchanged since the ETag sent in If-None-Match
  */
 settingsRouter.get("/public", (req: Request, res: Response) => {
-  res.set("Cache-Control", "public, max-age=60");
-  res.status(200).json({ settings: getPublicSettings() });
+  const { settings, entityTag } = getPublicSettingsPayload();
+  // Cacheable anywhere, but revalidated on every use: a 304 is cheap and
+  // clients never validate uploads against outdated limits.
+  res.set("Cache-Control", "public, no-cache");
+  res.set("ETag", entityTag);
+  // Express answers 304 itself when If-None-Match matches the ETag.
+  res.status(200).json({ settings });
 });
 
 /**

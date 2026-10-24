@@ -23,13 +23,72 @@ describe("GET /api/settings/public", () => {
   it("should return only public settings without authentication", async () => {
     const response = await request(app).get("/api/settings/public").expect(200);
 
-    expect(response.headers["cache-control"]).toBe("public, max-age=60");
+    expect(response.headers["cache-control"]).toBe("public, no-cache");
     expect(response.body.settings["uploads.carImage.maxSizeBytes"]).toBe(
       10 * 1024 * 1024,
     );
     expect(response.body.settings).not.toHaveProperty(
       "auth.emailTokenExpirationMinutes",
     );
+  });
+});
+
+describe("GET /api/settings/public revalidation", () => {
+  it("should return a strong ETag that is stable while nothing changes", async () => {
+    const first = await request(app).get("/api/settings/public").expect(200);
+    const second = await request(app).get("/api/settings/public").expect(200);
+
+    expect(first.headers.etag).toMatch(/^"[A-Za-z0-9_-]+"$/);
+    expect(second.headers.etag).toBe(first.headers.etag);
+  });
+
+  it("should answer 304 without a body when If-None-Match matches", async () => {
+    const { etag } = (await request(app).get("/api/settings/public")).headers;
+
+    const response = await request(app)
+      .get("/api/settings/public")
+      .set("If-None-Match", etag)
+      .expect(304);
+
+    expect(response.text).toBe("");
+    expect(response.headers.etag).toBe(etag);
+  });
+
+  it("should match a weak tag, as If-None-Match uses weak comparison", async () => {
+    const { etag } = (await request(app).get("/api/settings/public")).headers;
+
+    await request(app)
+      .get("/api/settings/public")
+      .set("If-None-Match", `W/${etag}`)
+      .expect(304);
+  });
+
+  it("should return new content and a new ETag after a public setting changes", async () => {
+    const { etag } = (await request(app).get("/api/settings/public")).headers;
+    await patchSettings({ "uploads.carImage.maxSizeBytes": 5 * 1024 * 1024 });
+
+    const response = await request(app)
+      .get("/api/settings/public")
+      .set("If-None-Match", etag)
+      .expect(200);
+
+    expect(response.headers.etag).not.toBe(etag);
+    expect(response.body.settings["uploads.carImage.maxSizeBytes"]).toBe(
+      5 * 1024 * 1024,
+    );
+  });
+
+  it("should keep the ETag when only a private setting changes", async () => {
+    const { etag } = (await request(app).get("/api/settings/public")).headers;
+    const update = await patchSettings({
+      "auth.emailTokenExpirationMinutes": 15,
+    });
+    expect(update.statusCode).toBe(200);
+
+    await request(app)
+      .get("/api/settings/public")
+      .set("If-None-Match", etag)
+      .expect(304);
   });
 });
 
