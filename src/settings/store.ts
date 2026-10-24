@@ -1,5 +1,10 @@
-import { z } from "zod";
-import { findAllSettingOverrides } from "../api/settings/db";
+import { findSettingsState } from "../api/settings/db";
+import type {
+  SettingsBus,
+  SettingsBusEvent,
+  SettingsSnapshot,
+  Unsubscribe,
+} from "./bus";
 import {
   findRuleViolations,
   getDefaultSettings,
@@ -19,9 +24,6 @@ const deepFreeze = <T>(value: T): T => {
   }
   return value;
 };
-
-let snapshot: Readonly<SettingValues> = deepFreeze(getDefaultSettings());
-let refreshTimer: NodeJS.Timeout | null = null;
 
 // Merges overrides over the defaults, skipping unknown keys and values that
 // fail their schema. Cross-setting rules are not applied here.
@@ -64,42 +66,177 @@ export const resolveSettings = (
   return values;
 };
 
-export const getSettings = (): Readonly<SettingValues> => snapshot;
+type SettingsState = { version: number; overrides: SettingOverride[] };
+
+type LocalSnapshot = {
+  version: number;
+  // Raw overrides are kept so this instance can republish them as is.
+  overrides: Readonly<Record<string, unknown>>;
+  values: Readonly<SettingValues>;
+};
+
+const describeError = (error: unknown) =>
+  error instanceof Error ? error.message : String(error);
+
+// Holds the settings an instance validates against. Postgres is the source
+// of truth: it is read at boot and after local writes. The bus only spreads
+// changes between instances, and versions decide which copy is newer, so
+// late, duplicate or replayed messages never roll settings back.
+export const createSettingsStore = (
+  loadState: () => Promise<SettingsState>,
+) => {
+  let current: LocalSnapshot = deepFreeze({
+    version: 0,
+    overrides: {},
+    values: getDefaultSettings(),
+  });
+  let bus: SettingsBus | null = null;
+  let unsubscribe: Unsubscribe | null = null;
+
+  // A copy from Postgres may replace one with the same version (the database
+  // wins); a copy from the bus must be strictly newer.
+  const apply = (state: SettingsState, allowSameVersion: boolean) => {
+    const isNewer = allowSameVersion
+      ? state.version >= current.version
+      : state.version > current.version;
+    if (!isNewer) {
+      return false;
+    }
+    current = deepFreeze({
+      version: state.version,
+      overrides: Object.fromEntries(
+        state.overrides.map(({ key, value }) => [key, value]),
+      ),
+      values: resolveSettings(state.overrides),
+    });
+    return true;
+  };
+
+  const load = async () => {
+    apply(await loadState(), true);
+  };
+
+  // Best effort: the change is already committed in Postgres, and other
+  // instances resync when they next connect to the bus.
+  const publish = async () => {
+    if (!bus || current.version === 0) {
+      return false;
+    }
+    try {
+      return await bus.publish({
+        version: current.version,
+        overrides: { ...current.overrides },
+      });
+    } catch (error) {
+      console.error(`Could not publish settings: ${describeError(error)}`);
+      return false;
+    }
+  };
+
+  const toState = (snapshot: SettingsSnapshot): SettingsState => ({
+    version: snapshot.version,
+    overrides: Object.entries(snapshot.overrides).map(([key, value]) => ({
+      key,
+      value,
+    })),
+  });
+
+  // Another instance announced a version: take it from the shared copy, or
+  // from the source of truth when the shared copy is missing or older.
+  const syncChanged = async (activeBus: SettingsBus, version: number) => {
+    const latest = await activeBus.readLatest();
+    if (latest && latest.version >= version) {
+      apply(toState(latest), false);
+    } else {
+      await load();
+    }
+  };
+
+  // Changes may have been missed while disconnected, and their writer may be
+  // gone, so reload from Postgres. Then repair the shared copy if it is
+  // behind, e.g. after Redis lost its data or a publish failed.
+  const syncConnected = async (activeBus: SettingsBus) => {
+    await load();
+    const latest = await activeBus.readLatest();
+    if ((latest?.version ?? 0) < current.version) {
+      await publish();
+    }
+  };
+
+  const handleEvent = async (
+    activeBus: SettingsBus,
+    event: SettingsBusEvent,
+  ) => {
+    try {
+      if (event.type === "connected") {
+        await syncConnected(activeBus);
+      } else if (event.version > current.version) {
+        await syncChanged(activeBus, event.version);
+      }
+    } catch (error) {
+      console.error(`Could not sync settings: ${describeError(error)}`);
+      if (event.type === "changed") {
+        await load().catch((loadError: unknown) =>
+          console.error(
+            `Could not reload settings: ${describeError(loadError)}`,
+          ),
+        );
+      }
+    }
+  };
+
+  const startSync = async (nextBus: SettingsBus) => {
+    await stopSync();
+    bus = nextBus;
+    unsubscribe = await nextBus.subscribe((event) => {
+      void handleEvent(nextBus, event);
+    });
+  };
+
+  const stopSync = async () => {
+    const stop = unsubscribe;
+    bus = null;
+    unsubscribe = null;
+    if (stop) {
+      await stop();
+    }
+  };
+
+  return {
+    getValues: (): Readonly<SettingValues> => current.values,
+    getVersion: () => current.version,
+    load,
+    publish,
+    startSync,
+    stopSync,
+  };
+};
+
+const settingsStore = createSettingsStore(findSettingsState);
+
+export const getSettings = (): Readonly<SettingValues> =>
+  settingsStore.getValues();
 
 export const getSetting = <K extends SettingKey>(key: K): SettingValues[K] =>
-  snapshot[key];
+  settingsStore.getValues()[key];
 
-export const getPublicSettings = (): Partial<SettingValues> =>
-  Object.fromEntries(
+export const getPublicSettings = (): Partial<SettingValues> => {
+  const values = settingsStore.getValues();
+  return Object.fromEntries(
     settingKeys
       .filter((key) => settingDefinitions[key].isPublic)
-      .map((key) => [key, snapshot[key]]),
+      .map((key) => [key, values[key]]),
   );
-
-export const loadSettings = async () => {
-  snapshot = deepFreeze(resolveSettings(await findAllSettingOverrides()));
 };
 
-const refreshIntervalSchema = z.coerce.number().int().min(5).max(3600);
+// Replaces the local copy with what Postgres holds.
+export const loadSettings = settingsStore.load;
 
-// Picks up changes made by other instances. A failed refresh keeps the last
-// good snapshot.
-export const startSettingsRefresh = (
-  rawIntervalSeconds = process.env.SETTINGS_REFRESH_INTERVAL_SECONDS ?? "30",
-) => {
-  const intervalSeconds = refreshIntervalSchema.parse(rawIntervalSeconds);
-  stopSettingsRefresh();
-  refreshTimer = setInterval(() => {
-    loadSettings().catch((error) =>
-      console.error("Could not refresh settings:", error),
-    );
-  }, intervalSeconds * 1000);
-  refreshTimer.unref();
+// Reloads from Postgres after a local write, then tells other instances.
+export const refreshAndPublishSettings = async () => {
+  await settingsStore.load();
+  await settingsStore.publish();
 };
 
-export const stopSettingsRefresh = () => {
-  if (refreshTimer) {
-    clearInterval(refreshTimer);
-    refreshTimer = null;
-  }
-};
+export const startSettingsSync = settingsStore.startSync;
+export const stopSettingsSync = settingsStore.stopSync;

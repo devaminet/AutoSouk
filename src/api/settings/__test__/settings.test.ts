@@ -3,12 +3,7 @@ import { app } from "../../../app";
 import { db } from "../../../db";
 import { appSettingsTable } from "../../../db/schema/app_settings";
 import { signinUser, signupUserWithVerification } from "../../../test/helpers";
-import {
-  getSetting,
-  loadSettings,
-  startSettingsRefresh,
-  stopSettingsRefresh,
-} from "../../../settings/store";
+import { getSetting, loadSettings } from "../../../settings/store";
 
 const signinAdmin = () =>
   signinUser({ email: "admin@autosouk.com", password: "Admin_@@789" });
@@ -257,17 +252,5 @@ describe("settings store", () => {
   it("should not allow mutating the settings snapshot", () => {
     const extensions = getSetting("uploads.allowedImageExtensions") as string[];
     expect(() => extensions.push("exe")).toThrow();
-  });
-});
-
-describe("settings refresh", () => {
-  afterEach(() => stopSettingsRefresh());
-
-  it("should reject an out of range refresh interval", () => {
-    expect(() => startSettingsRefresh("1")).toThrow();
-  });
-
-  it("should start with a valid refresh interval", () => {
-    expect(() => startSettingsRefresh("30")).not.toThrow();
   });
 });

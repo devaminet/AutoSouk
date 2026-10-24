@@ -9,8 +9,8 @@ import {
   type SettingKey,
 } from "../../settings/definitions";
 import {
-  loadSettings,
   mergeOverrides,
+  refreshAndPublishSettings,
   resolveSettings,
 } from "../../settings/store";
 import {
@@ -93,7 +93,7 @@ export const updateSettings = async (
   }
 
   await upsertSettingOverrides(parsed, adminId);
-  await loadSettings();
+  await refreshAndPublishSettings();
 
   return listSettings();
 };
@@ -116,8 +116,10 @@ export const resetSetting = async (key: string) => {
     );
   }
 
-  await deleteSettingOverride(key);
-  await loadSettings();
+  const version = await deleteSettingOverride(key);
+  if (version !== null) {
+    await refreshAndPublishSettings();
+  }
 
   return listSettings();
 };

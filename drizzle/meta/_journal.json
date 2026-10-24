@@ -190,6 +190,13 @@
       "when": 1791746562684,
       "tag": "0027_create_app_settings_table",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1792019056777,
+      "tag": "0028_create_app_settings_version_table",
+      "breakpoints": true
     }
   ]
 }

@@ -2,16 +2,17 @@ import "dotenv/config";
 import type { Server } from "http";
 import { app } from "./app";
 import { pool } from "./db";
-import {
-  connectRedis,
-  disconnectRedis,
-  getRedisClients,
-} from "./cache/redis";
+import { connectRedis, disconnectRedis, getRedisClients } from "./cache/redis";
 import "./file_storage/minio";
 import { seeds } from "./db/seeds";
 import { ensureDefaultProfileImage } from "./file_storage/default_profile_image";
 import { createBucket } from "./utils/functions";
-import { loadSettings, startSettingsRefresh } from "./settings/store";
+import {
+  loadSettings,
+  startSettingsSync,
+  stopSettingsSync,
+} from "./settings/store";
+import { createRedisSettingsBus } from "./settings/redis_bus";
 import {
   carBucketName,
   inspectionReportsBucketName,
@@ -40,6 +41,7 @@ const registerGracefulShutdown = (server: Server) => {
 
     try {
       await closeServer(server);
+      await stopSettingsSync();
       await disconnectRedis();
       await pool.end();
       process.exit(0);
@@ -63,7 +65,7 @@ const main = async () => {
   );
   await seeds();
   await loadSettings();
-  startSettingsRefresh();
+  await startSettingsSync(createRedisSettingsBus(getRedisClients()));
   await createBucket(carBucketName);
   await createBucket(mechanicsBucketName);
   await createBucket(inspectionReportsBucketName);
