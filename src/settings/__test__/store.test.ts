@@ -348,14 +348,15 @@ describe("settings API publishing", () => {
       .auth(admin.accessToken, { type: "bearer" })
       .expect(200);
 
+    // Reset keeps the row and sets it back to the default.
     await expect(bus.readLatest()).resolves.toEqual({
       version: startVersion + 2,
-      overrides: {},
+      overrides: { "listings.car.minYear": 1950 },
     });
     expect(getSetting("listings.car.minYear")).toBe(1950);
   });
 
-  it("should not bump the version when resetting a setting without override", async () => {
+  it("should not bump the version when resetting a setting already at its default", async () => {
     const bus = createInMemorySettingsBus();
     await startSettingsSync(bus);
     const admin = await signinUser({

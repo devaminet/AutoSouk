@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { db } from "../../db";
 import {
   appSettingsTable,
@@ -87,13 +87,16 @@ const createSettingsWriter = (tx: Transaction, version: number) => ({
         },
       });
   },
-  // Returns false when the setting had no override.
-  deleteOverride: async (key: string) => {
-    const deleted = await tx
-      .delete(appSettingsTable)
-      .where(eq(appSettingsTable.key, key))
+  insertMissing: async (rows: { key: string; value: unknown }[]) => {
+    if (rows.length === 0) {
+      return 0;
+    }
+    const inserted = await tx
+      .insert(appSettingsTable)
+      .values(rows)
+      .onConflictDoNothing({ target: appSettingsTable.key })
       .returning({ key: appSettingsTable.key });
-    return deleted.length > 0;
+    return inserted.length;
   },
   bumpVersion: (floor?: number) => bumpSettingsVersion(tx, floor),
 });
@@ -108,5 +111,20 @@ export const withSettingsWriteLock = async <T>(
   return await db.transaction(async (tx) => {
     const version = await lockSettingsVersion(tx);
     return await callback(createSettingsWriter(tx, version));
+  });
+};
+
+// Inserts a row for every setting that has none, leaving existing rows (and
+// so admin changes) untouched. Bumps the version only when rows were added.
+// Returns the number of rows inserted.
+export const insertMissingSettingDefaults = async (
+  defaults: { key: string; value: unknown }[],
+) => {
+  return await withSettingsWriteLock(async (writer) => {
+    const inserted = await writer.insertMissing(defaults);
+    if (inserted > 0) {
+      await writer.bumpVersion();
+    }
+    return inserted;
   });
 };

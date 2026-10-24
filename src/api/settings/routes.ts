@@ -212,7 +212,14 @@ settingsRouter.delete(
       throw new RequestValidationError(validation.error.errors);
     }
     const precondition = parseIfMatch(req);
-    sendSettings(res, await resetSetting(validation.data.key, precondition));
+    sendSettings(
+      res,
+      await resetSetting(
+        validation.data.key,
+        req.currentUser?.id!,
+        precondition,
+      ),
+    );
   },
 );
 

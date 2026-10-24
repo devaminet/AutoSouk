@@ -1,3 +1,4 @@
+import { generateAppSettingsData } from "./app_settings_seed";
 import { generateCarCarburantData } from "./car_carburants_seed";
 import { generateCarOriginsData } from "./car_origins_seed";
 import { generateCarStatesData } from "./car_states_seed";
@@ -13,6 +14,7 @@ export const seeds = async () => {
     generateCarCarburantData(),
     generateCitiesData(),
     generateRolesData(),
+    generateAppSettingsData(),
   ]);
   const success = results.every((result) => {
     if (result.status === "rejected") {

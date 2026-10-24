@@ -11,8 +11,10 @@ import {
 } from "drizzle-orm/pg-core";
 import { usersTable } from "./user";
 
-// Stores admin overrides only. Settings without a row use the default from
-// src/settings/definitions.ts, so new settings need no migration or seed.
+// One row per setting. The seed inserts code defaults from
+// src/settings/definitions.ts for missing keys and never overwrites a row, so
+// admin changes survive. A setting without a row (or with an invalid value)
+// uses its code default.
 export const appSettingsTable = pgTable("app_settings", {
   key: varchar({ length: 100 }).primaryKey(),
   value: jsonb().notNull(),

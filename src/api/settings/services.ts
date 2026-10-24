@@ -1,4 +1,5 @@
 import { createHash } from "crypto";
+import { isDeepStrictEqual } from "util";
 import { ZodIssue } from "zod";
 import { NotFoundError } from "../../errors/not_found_error";
 import { PreconditionFailedError } from "../../errors/precondition_failed_error";
@@ -39,7 +40,8 @@ const describeSettings = (overrides: SettingOverrideRow[]) => {
       key,
       value: values[key],
       defaultValue,
-      isDefault: !override,
+      // Rows exist for seeded defaults too, so compare values, not presence.
+      isDefault: isDeepStrictEqual(values[key], defaultValue),
       isPublic,
       description,
       updatedBy: override?.updatedBy ?? null,
@@ -141,6 +143,7 @@ export const updateSettings = async (
 
 export const resetSetting = async (
   key: string,
+  adminId: number,
   precondition?: VersionPrecondition,
 ) => {
   if (!isSettingKey(key)) {
@@ -164,10 +167,14 @@ export const resetSetting = async (
       );
     }
 
-    // Nothing to reset: leave the version alone.
-    if (!(await writer.deleteOverride(key))) {
+    // The row is kept and set back to the default, so the table always
+    // lists every seeded setting. Already at the default: nothing changes.
+    const { defaultValue } = settingDefinitions[key];
+    const row = current.find((override) => override.key === key);
+    if (!row || isDeepStrictEqual(row.value, defaultValue)) {
       return false;
     }
+    await writer.upsertOverrides([{ key, value: defaultValue }], adminId);
     await writer.bumpVersion();
     return true;
   });
