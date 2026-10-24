@@ -1,0 +1,119 @@
+[
+  {
+    "slug": "safety",
+    "name": "Safety",
+    "equipment": [
+      { "slug": "abs", "name": "ABS" },
+      { "slug": "esp", "name": "ESP" },
+      { "slug": "front_airbags", "name": "Front airbags" },
+      { "slug": "side_airbags", "name": "Side airbags" },
+      { "slug": "curtain_airbags", "name": "Curtain airbags" },
+      { "slug": "knee_airbag", "name": "Knee airbag" },
+      { "slug": "isofix", "name": "ISOFIX" },
+      {
+        "slug": "tire_pressure_monitoring",
+        "name": "Tire pressure monitoring"
+      },
+      { "slug": "emergency_braking", "name": "Emergency braking" },
+      { "slug": "alarm", "name": "Alarm" },
+      { "slug": "immobilizer", "name": "Immobilizer" },
+      { "slug": "central_locking", "name": "Central locking" },
+      { "slug": "remote_locking", "name": "Remote locking" }
+    ]
+  },
+  {
+    "slug": "driving_assistance",
+    "name": "Driving assistance",
+    "equipment": [
+      { "slug": "cruise_control", "name": "Cruise control" },
+      { "slug": "adaptive_cruise_control", "name": "Adaptive cruise control" },
+      { "slug": "speed_limiter", "name": "Speed limiter" },
+      { "slug": "lane_departure_warning", "name": "Lane departure warning" },
+      { "slug": "lane_keep_assist", "name": "Lane keep assist" },
+      { "slug": "blind_spot_monitoring", "name": "Blind spot monitoring" },
+      {
+        "slug": "traffic_sign_recognition",
+        "name": "Traffic sign recognition"
+      },
+      { "slug": "hill_start_assist", "name": "Hill start assist" },
+      { "slug": "front_parking_sensors", "name": "Front parking sensors" },
+      { "slug": "rear_parking_sensors", "name": "Rear parking sensors" },
+      { "slug": "rear_camera", "name": "Rear camera" },
+      { "slug": "camera_360", "name": "360° camera" },
+      { "slug": "self_parking", "name": "Self-parking" },
+      { "slug": "start_stop", "name": "Start-stop" },
+      { "slug": "rain_sensor", "name": "Rain sensor" },
+      { "slug": "light_sensor", "name": "Light sensor" }
+    ]
+  },
+  {
+    "slug": "comfort",
+    "name": "Comfort",
+    "equipment": [
+      { "slug": "manual_air_conditioning", "name": "Manual air conditioning" },
+      {
+        "slug": "automatic_climate_control",
+        "name": "Automatic climate control"
+      },
+      {
+        "slug": "dual_zone_climate_control",
+        "name": "Dual-zone climate control"
+      },
+      { "slug": "front_power_windows", "name": "Front power windows" },
+      { "slug": "rear_power_windows", "name": "Rear power windows" },
+      { "slug": "power_mirrors", "name": "Power mirrors" },
+      { "slug": "heated_mirrors", "name": "Heated mirrors" },
+      { "slug": "folding_mirrors", "name": "Folding mirrors" },
+      { "slug": "power_steering", "name": "Power steering" },
+      { "slug": "leather_seats", "name": "Leather seats" },
+      { "slug": "heated_seats", "name": "Heated seats" },
+      { "slug": "ventilated_seats", "name": "Ventilated seats" },
+      { "slug": "power_seats", "name": "Power seats" },
+      { "slug": "memory_seats", "name": "Memory seats" },
+      { "slug": "armrest", "name": "Armrest" },
+      { "slug": "heated_steering_wheel", "name": "Heated steering wheel" },
+      { "slug": "keyless_entry", "name": "Keyless entry" },
+      { "slug": "push_button_start", "name": "Push-button start" },
+      { "slug": "power_tailgate", "name": "Power tailgate" },
+      { "slug": "sunroof", "name": "Sunroof" },
+      { "slug": "panoramic_roof", "name": "Panoramic roof" }
+    ]
+  },
+  {
+    "slug": "multimedia",
+    "name": "Multimedia",
+    "equipment": [
+      { "slug": "radio", "name": "Radio" },
+      { "slug": "cd_dvd_player", "name": "CD/DVD player" },
+      { "slug": "bluetooth", "name": "Bluetooth" },
+      { "slug": "usb_aux", "name": "USB/AUX" },
+      { "slug": "gps_navigation", "name": "GPS navigation" },
+      { "slug": "touchscreen", "name": "Touchscreen" },
+      { "slug": "apple_carplay", "name": "Apple CarPlay" },
+      { "slug": "android_auto", "name": "Android Auto" },
+      { "slug": "premium_sound_system", "name": "Premium sound system" },
+      { "slug": "wireless_charging", "name": "Wireless charging" },
+      {
+        "slug": "digital_instrument_cluster",
+        "name": "Digital instrument cluster"
+      },
+      { "slug": "head_up_display", "name": "Head-up display" },
+      { "slug": "rear_entertainment", "name": "Rear entertainment" }
+    ]
+  },
+  {
+    "slug": "exterior",
+    "name": "Exterior",
+    "equipment": [
+      { "slug": "led_headlights", "name": "LED headlights" },
+      { "slug": "xenon_headlights", "name": "Xenon headlights" },
+      { "slug": "fog_lights", "name": "Fog lights" },
+      { "slug": "daytime_running_lights", "name": "Daytime running lights" },
+      { "slug": "alloy_wheels", "name": "Alloy wheels" },
+      { "slug": "roof_rails", "name": "Roof rails" },
+      { "slug": "tow_hitch", "name": "Tow hitch" },
+      { "slug": "tinted_windows", "name": "Tinted windows" },
+      { "slug": "spare_wheel", "name": "Spare wheel" }
+    ]
+  }
+]

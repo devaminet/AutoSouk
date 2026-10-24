@@ -16,6 +16,7 @@ import * as mechanics from "./mechanic";
 import * as mechanicGarageImages from "./mechanic_garage_image";
 import * as mechanicReviews from "./mechanic_review";
 import * as inspections from "./inspection";
+import * as equipment from "./equipment";
 
 export const schema = {
   ...cars,
@@ -36,4 +37,5 @@ export const schema = {
   ...mechanicGarageImages,
   ...mechanicReviews,
   ...inspections,
+  ...equipment,
 };

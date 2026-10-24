@@ -183,6 +183,13 @@
       "when": 1791731885314,
       "tag": "0026_add_car_media_is_uploaded",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1792855821030,
+      "tag": "0027_add_car_equipment_tables",
+      "breakpoints": true
     }
   ]
 }

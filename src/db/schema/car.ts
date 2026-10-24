@@ -9,6 +9,7 @@ import { carStateTable } from "./state";
 import { listingTable } from "./listing";
 import { carMediaTable } from "./car_media";
 import { cityTable } from "./city";
+import { carEquipmentTable } from "./equipment";
 
 export const carTable = pgTable(
   "cars",
@@ -114,4 +115,5 @@ export const carRelations = relations(carTable, ({ one, many }) => ({
     fields: [carTable.cityId],
     references: [cityTable.id],
   }),
+  equipment: many(carEquipmentTable),
 }));
