@@ -158,8 +158,17 @@ export const createSettingsStore = (
   const syncConnected = async (activeBus: SettingsBus) => {
     await load();
     const latest = await activeBus.readLatest();
-    if ((latest?.version ?? 0) < current.version) {
+    const sharedVersion = latest?.version ?? 0;
+    if (sharedVersion < current.version) {
       await publish();
+    } else if (sharedVersion > current.version) {
+      // Only a database restored to an older version leaves the shared copy
+      // ahead: new writes can't be published until it is replaced.
+      console.warn(
+        `Shared settings copy (version ${sharedVersion}) is ahead of the ` +
+          `database (version ${current.version}). If the database was ` +
+          "restored, call POST /api/settings/republish.",
+      );
     }
   };
 
@@ -202,8 +211,18 @@ export const createSettingsStore = (
     }
   };
 
+  // Throws when the bus is not running or can't be read.
+  const readSharedVersion = async () => {
+    if (!bus) {
+      throw new Error("Settings sync is not running");
+    }
+    const latest = await bus.readLatest();
+    return latest?.version ?? 0;
+  };
+
   return {
     getValues: (): Readonly<SettingValues> => current.values,
+    readSharedVersion,
     getVersion: () => current.version,
     load,
     publish,
@@ -233,10 +252,15 @@ export const getPublicSettings = (): Partial<SettingValues> => {
 export const loadSettings = settingsStore.load;
 
 // Reloads from Postgres after a local write, then tells other instances.
+// Resolves to whether the change was published.
 export const refreshAndPublishSettings = async () => {
   await settingsStore.load();
-  await settingsStore.publish();
+  return await settingsStore.publish();
 };
+
+// Version of the shared copy on the bus (0 when empty). Throws when the bus
+// is not running or unreachable.
+export const readSharedSettingsVersion = settingsStore.readSharedVersion;
 
 export const startSettingsSync = settingsStore.startSync;
 export const stopSettingsSync = settingsStore.stopSync;

@@ -36,13 +36,16 @@ export const findSettingsState = async () => {
   );
 };
 
-const bumpSettingsVersion = async (tx: Transaction) => {
+// The new version is above both the current one and the given floor.
+const bumpSettingsVersion = async (tx: Transaction, floor = 0) => {
   const [row] = await tx
     .insert(appSettingsVersionTable)
-    .values({ id: 1, version: 1 })
+    .values({ id: 1, version: floor + 1 })
     .onConflictDoUpdate({
       target: appSettingsVersionTable.id,
-      set: { version: sql`${appSettingsVersionTable.version} + 1` },
+      set: {
+        version: sql`greatest(${appSettingsVersionTable.version}, ${floor}) + 1`,
+      },
     })
     .returning({ version: appSettingsVersionTable.version });
 
@@ -92,7 +95,7 @@ const createSettingsWriter = (tx: Transaction, version: number) => ({
       .returning({ key: appSettingsTable.key });
     return deleted.length > 0;
   },
-  bumpVersion: () => bumpSettingsVersion(tx),
+  bumpVersion: (floor?: number) => bumpSettingsVersion(tx, floor),
 });
 
 export type SettingsWriter = ReturnType<typeof createSettingsWriter>;

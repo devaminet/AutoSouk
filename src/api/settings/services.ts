@@ -2,6 +2,7 @@ import { createHash } from "crypto";
 import { ZodIssue } from "zod";
 import { NotFoundError } from "../../errors/not_found_error";
 import { PreconditionFailedError } from "../../errors/precondition_failed_error";
+import { ServiceUnavailableError } from "../../errors/service_unavailable_error";
 import { RequestValidationError } from "../../errors/request_validation_error";
 import {
   findRuleViolations,
@@ -14,6 +15,7 @@ import {
   getPublicSettings,
   getSettings,
   mergeOverrides,
+  readSharedSettingsVersion,
   refreshAndPublishSettings,
   resolveSettings,
 } from "../../settings/store";
@@ -172,6 +174,34 @@ export const resetSetting = async (
 
   if (changed) {
     await refreshAndPublishSettings();
+  }
+  return listSettings();
+};
+
+const republishUnavailable = () =>
+  new ServiceUnavailableError(
+    "Settings could not be published. Check that Redis is reachable and try again.",
+  );
+
+// Repairs the shared copy and every instance from Postgres. Normal sync
+// already heals most gaps; this is for cases it can't, such as a database
+// restored to an older version than the one Redis and the instances hold.
+// The new version is set above both copies, so every instance accepts it.
+export const republishSettings = async () => {
+  let sharedVersion: number;
+  try {
+    sharedVersion = await readSharedSettingsVersion();
+  } catch (error) {
+    console.error("Could not read the shared settings version:", error);
+    throw republishUnavailable();
+  }
+
+  await withSettingsWriteLock((writer) =>
+    writer.bumpVersion(Math.max(writer.version, sharedVersion)),
+  );
+
+  if (!(await refreshAndPublishSettings())) {
+    throw republishUnavailable();
   }
   return listSettings();
 };

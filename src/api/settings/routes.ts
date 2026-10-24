@@ -10,6 +10,7 @@ import {
 import {
   getPublicSettingsPayload,
   listSettings,
+  republishSettings,
   resetSetting,
   updateSettings,
 } from "./services";
@@ -212,6 +213,37 @@ settingsRouter.delete(
     }
     const precondition = parseIfMatch(req);
     sendSettings(res, await resetSetting(validation.data.key, precondition));
+  },
+);
+
+/**
+ * @openapi
+ * /api/settings/republish:
+ *   post:
+ *     tags: [Settings]
+ *     summary: Push the settings stored in Postgres to Redis and every instance
+ *     description: Repair tool for cases normal sync can't fix, such as a database restored to an older settings version. Bumps the settings version above the copy in Redis, then publishes. Instances already resync on their own after a Redis outage or data loss.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Published. Body is the list of all settings.
+ *         headers:
+ *           ETag:
+ *             $ref: '#/components/headers/SettingsETag'
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not an admin
+ *       503:
+ *         description: Redis is unreachable, nothing was published
+ */
+settingsRouter.post(
+  "/republish",
+  isAuthenticated,
+  isAdmin,
+  async (req: Request, res: Response) => {
+    sendSettings(res, await republishSettings());
   },
 );
 

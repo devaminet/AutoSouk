@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import { createClient, type RedisClientType } from "redis";
 import request from "supertest";
 import { app } from "../../app";
 import { db } from "../../db";
@@ -274,6 +275,43 @@ describe("settings store over redis", () => {
 
     await waitFor(() => reader.getVersion() === 1);
     expect(reader.getValues()["listings.car.maxDoors"]).toBe(12);
+  });
+});
+
+describe("settings store with Redis down at boot", () => {
+  it("should serve the database copy and keep running", async () => {
+    jest.spyOn(console, "error").mockImplementation(() => undefined);
+    const unreachable = (): RedisClientType =>
+      createClient({
+        url: "redis://127.0.0.1:1",
+        disableOfflineQueue: true,
+        socket: { reconnectStrategy: 50 },
+      });
+    const command = unreachable();
+    const subscriber = unreachable();
+    command.on("error", () => undefined);
+    subscriber.on("error", () => undefined);
+    command.connect().catch(() => undefined);
+    subscriber.connect().catch(() => undefined);
+
+    const database = createDatabase({
+      version: 2,
+      overrides: [{ key: "listings.car.minYear", value: 1990 }],
+    });
+    const bus = createRedisSettingsBus({
+      command,
+      subscriber,
+      prefix: `test-${randomUUID()}`,
+    });
+
+    const store = await createInstance(database, bus);
+
+    expect(store.getVersion()).toBe(2);
+    expect(store.getValues()["listings.car.minYear"]).toBe(1990);
+    await expect(store.publish()).resolves.toBe(false);
+
+    command.destroy();
+    subscriber.destroy();
   });
 });
 
