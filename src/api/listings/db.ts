@@ -26,6 +26,7 @@ import { carOriginTable } from "../../db/schema/car_origin";
 import { carStateTable } from "../../db/schema/state";
 import { cityTable } from "../../db/schema/city";
 import { getFileType } from "../../utils/functions";
+import { carEquipmentTable, equipmentTable } from "../../db/schema/equipment";
 
 export const findListings = async (
   options: z.infer<typeof getListingsQuerySchema>,
@@ -293,12 +294,13 @@ export const checkCarExistanceByListingId = async (listingId: number) => {
 // Returns null when the listing already has a car (unique listing_id).
 // Attaching a car sends the listing to admin approval.
 export const saveCarAndMedia = async (args: {
-  carDetails: Omit<z.infer<typeof createCarSchema>, "files">;
+  carDetails: Omit<z.infer<typeof createCarSchema>, "files" | "equipmentIds">;
   carMedia: { isPrimary: boolean; filename: string }[];
+  equipmentIds: number[];
   listingId: number;
   userId: number;
 }) => {
-  const { carDetails, carMedia, listingId, userId } = args;
+  const { carDetails, carMedia, equipmentIds, listingId, userId } = args;
 
   return await db.transaction(async (tx) => {
     const [newCar] = await tx
@@ -324,6 +326,14 @@ export const saveCarAndMedia = async (args: {
     }));
 
     await tx.insert(carMediaTable).values(carMediaValues);
+    if (equipmentIds.length > 0) {
+      await tx.insert(carEquipmentTable).values(
+        equipmentIds.map((equipmentId) => ({
+          carId: newCar.id,
+          equipmentId,
+        })),
+      );
+    }
     await tx
       .update(listingTable)
       .set({
@@ -468,6 +478,21 @@ export const findInvalidCarReferences = async (
 
   const results = await Promise.all(checks.map(([, exists]) => exists));
   return checks.filter((_, index) => !results[index]).map(([field]) => field);
+};
+
+// Returns the given equipment ids that are not in the catalog.
+export const findMissingEquipmentIds = async (ids: number[]) => {
+  if (ids.length === 0) {
+    return [];
+  }
+
+  const rows = await db
+    .select({ id: equipmentTable.id })
+    .from(equipmentTable)
+    .where(inArray(equipmentTable.id, ids));
+  const found = new Set(rows.map(({ id }) => id));
+
+  return ids.filter((id) => !found.has(id));
 };
 
 export const findCarReferencesByListingId = async (listingId: number) => {

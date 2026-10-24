@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { allowedFileTypes, getFileType } from "../../utils/functions";
+import { maxCarEquipmentCount } from "../../utils/constants";
 
 export const createListingSchema = z.object(
   {
@@ -110,6 +111,22 @@ export const createCarSchema = z.object(
       .int("Doors number must be a whole number")
       .min(1, "Doors number must be at least 1")
       .max(9, "Doors number must be 9 or less"),
+    equipmentIds: z
+      .array(
+        z
+          .number({ invalid_type_error: "Equipment id must be a number" })
+          .int("Equipment id must be a whole number")
+          .positive("Equipment id must be a valid ID"),
+        { invalid_type_error: "Equipment ids must be a list of numbers" },
+      )
+      .max(
+        maxCarEquipmentCount,
+        `A car can have at most ${maxCarEquipmentCount} equipment items`,
+      )
+      .refine((ids) => new Set(ids).size === ids.length, {
+        message: "Equipment ids must be unique",
+      })
+      .optional(),
     files: z
       .array(
         z.object({
@@ -179,7 +196,10 @@ export const updateListingSchema = z
       .string({ invalid_type_error: "Description must be a text" })
       .min(1, "Description cannot be empty")
       .optional(),
-    car: createCarSchema.omit({ files: true }).partial().optional(),
+    car: createCarSchema
+      .omit({ files: true, equipmentIds: true })
+      .partial()
+      .optional(),
   })
   .refine(
     (data) =>
