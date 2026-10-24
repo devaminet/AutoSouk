@@ -3,10 +3,37 @@ import isAuthenticated from "../../middlewares/is_authenticated";
 import { isAdmin } from "../../middlewares/is_admin";
 import { RequestValidationError } from "../../errors/request_validation_error";
 import { getPublicSettings } from "../../settings/store";
-import { settingKeyParamSchema, updateSettingsSchema } from "./request_schema";
+import {
+  ifMatchHeaderSchema,
+  settingKeyParamSchema,
+  updateSettingsSchema,
+} from "./request_schema";
 import { listSettings, resetSetting, updateSettings } from "./services";
 
 const settingsRouter = Router();
+
+const toEntityTag = (version: number) => `"${version}"`;
+
+const parseIfMatch = (req: Request) => {
+  const validation = ifMatchHeaderSchema.safeParse(req.get("If-Match"));
+  if (!validation.success) {
+    throw new RequestValidationError(
+      validation.error.errors.map((issue) => ({
+        ...issue,
+        path: ["if-match"],
+      })),
+    );
+  }
+  return validation.data;
+};
+
+const sendSettings = (
+  res: Response,
+  { version, settings }: Awaited<ReturnType<typeof listSettings>>,
+) => {
+  res.set("ETag", toEntityTag(version));
+  res.status(200).json({ settings });
+};
 
 /**
  * @openapi
@@ -46,6 +73,9 @@ settingsRouter.get("/public", (req: Request, res: Response) => {
  *     responses:
  *       200:
  *         description: Every setting with value, defaultValue, isDefault, isPublic, description, updatedBy, updatedAt
+ *         headers:
+ *           ETag:
+ *             $ref: '#/components/headers/SettingsETag'
  *       401:
  *         description: Not authenticated
  *       403:
@@ -56,7 +86,7 @@ settingsRouter.get(
   isAuthenticated,
   isAdmin,
   async (req: Request, res: Response) => {
-    res.status(200).json({ settings: await listSettings() });
+    sendSettings(res, await listSettings());
   },
 );
 
@@ -66,9 +96,11 @@ settingsRouter.get(
  *   patch:
  *     tags: [Settings]
  *     summary: Override one or more settings
- *     description: All values are validated, including rules across settings, before anything is saved. Changes apply immediately on this instance and within the refresh interval on others.
+ *     description: All values are validated, including rules across settings, before anything is saved. Concurrent updates are applied one at a time. Changes apply immediately on every instance. Send the ETag from GET /api/settings as If-Match to avoid overwriting someone else's change.
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/SettingsIfMatch'
  *     requestBody:
  *       required: true
  *       content:
@@ -86,12 +118,17 @@ settingsRouter.get(
  *     responses:
  *       200:
  *         description: Updated list of all settings
+ *         headers:
+ *           ETag:
+ *             $ref: '#/components/headers/SettingsETag'
  *       400:
- *         description: Unknown setting, invalid value, or broken rule (field is the setting key)
+ *         description: Unknown setting, invalid value, broken rule (field is the setting key), or malformed If-Match (field is if-match)
  *       401:
  *         description: Not authenticated
  *       403:
  *         description: Not an admin
+ *       412:
+ *         description: If-Match does not match the current settings version
  */
 settingsRouter.patch(
   "/",
@@ -102,11 +139,13 @@ settingsRouter.patch(
     if (!validation.success) {
       throw new RequestValidationError(validation.error.errors);
     }
-    const settings = await updateSettings(
+    const precondition = parseIfMatch(req);
+    const result = await updateSettings(
       validation.data.values,
       req.currentUser?.id!,
+      precondition,
     );
-    res.status(200).json({ settings });
+    sendSettings(res, result);
   },
 );
 
@@ -119,6 +158,7 @@ settingsRouter.patch(
  *     security:
  *       - bearerAuth: []
  *     parameters:
+ *       - $ref: '#/components/parameters/SettingsIfMatch'
  *       - in: path
  *         name: key
  *         required: true
@@ -126,14 +166,19 @@ settingsRouter.patch(
  *     responses:
  *       200:
  *         description: Updated list of all settings
+ *         headers:
+ *           ETag:
+ *             $ref: '#/components/headers/SettingsETag'
  *       400:
- *         description: Resetting would break a rule across settings
+ *         description: Resetting would break a rule across settings, or malformed If-Match
  *       401:
  *         description: Not authenticated
  *       403:
  *         description: Not an admin
  *       404:
  *         description: Unknown setting
+ *       412:
+ *         description: If-Match does not match the current settings version
  */
 settingsRouter.delete(
   "/:key",
@@ -144,9 +189,25 @@ settingsRouter.delete(
     if (!validation.success) {
       throw new RequestValidationError(validation.error.errors);
     }
-    const settings = await resetSetting(validation.data.key);
-    res.status(200).json({ settings });
+    const precondition = parseIfMatch(req);
+    sendSettings(res, await resetSetting(validation.data.key, precondition));
   },
 );
+
+/**
+ * @openapi
+ * components:
+ *   headers:
+ *     SettingsETag:
+ *       description: Current settings version as a strong entity tag
+ *       schema: { type: string, example: '"7"' }
+ *   parameters:
+ *     SettingsIfMatch:
+ *       in: header
+ *       name: If-Match
+ *       required: false
+ *       description: ETag from GET /api/settings. The write is refused with 412 if settings changed since. "*" or no header skips the check.
+ *       schema: { type: string, example: '"7"' }
+ */
 
 export default settingsRouter;
