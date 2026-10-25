@@ -5,6 +5,7 @@ import {
   updateListingSchema,
 } from "./request_schema";
 import {
+  type SQL,
   and,
   asc,
   count,
@@ -38,6 +39,14 @@ const listingIdsWithAllEquipment = (equipmentIds: number[]) =>
     .groupBy(carTable.listingId)
     .having(eq(count(), equipmentIds.length));
 
+// The id breaks ties so pages stay stable when the sort key is equal.
+const listingsOrderBy = {
+  price_asc: [asc(carTable.price), asc(listingTable.id)],
+  price_desc: [desc(carTable.price), desc(listingTable.id)],
+  oldest: [asc(listingTable.createdAt), asc(listingTable.id)],
+  newest: [desc(listingTable.createdAt), desc(listingTable.id)],
+} satisfies Record<z.infer<typeof getListingsQuerySchema>["sort"], SQL[]>;
+
 export const findListings = async (
   options: z.infer<typeof getListingsQuerySchema>,
 ) => {
@@ -66,18 +75,32 @@ export const findListings = async (
     );
   }
 
-  let orderByClause;
-  if (sort === "price_asc") {
-    orderByClause = asc(carTable.price);
-  } else if (sort === "price_desc") {
-    orderByClause = desc(carTable.price);
-  } else if (sort === "oldest") {
-    orderByClause = asc(listingTable.createdAt);
-  } else {
-    orderByClause = desc(listingTable.createdAt);
+  const orderBy = listingsOrderBy[sort];
+
+  // Filters and sorting use car columns, so the page of ids comes from a
+  // plain join: a relational findMany would rewrite those columns onto the
+  // listings alias and fail.
+  const pageRows = await db
+    .select({ id: listingTable.id })
+    .from(listingTable)
+    .innerJoin(carTable, eq(listingTable.id, carTable.listingId))
+    .where(and(...conditions))
+    .orderBy(...orderBy)
+    .limit(limit)
+    .offset((page - 1) * limit);
+  const pageIds = pageRows.map(({ id }) => id);
+
+  const totalCountResult = await db
+    .select({ count: count() })
+    .from(listingTable)
+    .innerJoin(carTable, eq(listingTable.id, carTable.listingId))
+    .where(and(...conditions));
+
+  if (pageIds.length === 0) {
+    return { listings: [], totalCountResult };
   }
 
-  const listings = await db.query.listingTable.findMany({
+  const found = await db.query.listingTable.findMany({
     columns: {
       id: true,
       title: true,
@@ -115,17 +138,13 @@ export const findListings = async (
         },
       },
     },
-    where: and(...conditions),
-    orderBy: orderByClause,
-    limit,
-    offset: (page - 1) * limit,
+    where: inArray(listingTable.id, pageIds),
   });
 
-  const totalCountResult = await db
-    .select({ count: count() })
-    .from(listingTable)
-    .innerJoin(carTable, eq(listingTable.id, carTable.listingId))
-    .where(and(...conditions));
+  const position = new Map(pageIds.map((id, index) => [id, index]));
+  const listings = found.sort(
+    (a, b) => (position.get(a.id) ?? 0) - (position.get(b.id) ?? 0),
+  );
 
   return { listings, totalCountResult };
 };
