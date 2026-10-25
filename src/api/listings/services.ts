@@ -19,6 +19,8 @@ import { NotFoundError } from "../../errors/not_found_error";
 import {
   carBucketName,
   carMediaUploadExpirationSeconds,
+  maxCarMediaCount,
+  minCarImageCount,
   maxCarImageSizeBytes,
   maxCarVideoSizeBytes,
 } from "../../utils/constants";
@@ -27,9 +29,12 @@ import {
   checkCarExistanceByListingId,
   deleteListingDetails,
   deleteCarMediaByIds,
+  deleteCarMediaKeepingMinimum,
+  setPrimaryCarMedia,
   findCarMediaByListing,
   findCarReferencesByListingId,
   markCarMediaUploaded,
+  insertCarMediaWithinLimit,
   findInvalidCarReferences,
   findMissingEquipmentIds,
   findListingById,
@@ -197,6 +202,157 @@ const isValidUploadedMedia = (
   return stat.size <= maxSizeBytes && contentType.startsWith(contentTypePrefix);
 };
 
+// Returns an upload policy per new file. The media becomes visible once the
+// client uploads it and calls confirmListingMedia.
+export const addListingMedia = async (
+  listingId: number,
+  userId: number,
+  files: { name: string }[],
+) => {
+  const listing = await getUserListing(listingId, userId);
+  if (!listing) {
+    throw new NotFoundError("Listing was not found");
+  }
+
+  let uploads: Awaited<ReturnType<typeof buildCarMediaUpload>>[] = [];
+  try {
+    uploads = await Promise.all(
+      files.map((file) => buildCarMediaUpload({ ...file, isPrimary: false })),
+    );
+  } catch (error) {
+    console.error("Error generating car media upload policies:", error);
+    throw new InternalServerError("Could not generate urls for images");
+  }
+
+  const result = await insertCarMediaWithinLimit(
+    listingId,
+    uploads.map((upload) => upload.filename),
+    maxCarMediaCount,
+  );
+  if (result.status === "no_car") {
+    throw new BadRequestError(
+      "Attach a car to this listing before adding media",
+    );
+  }
+  if (result.status === "over_limit") {
+    throw new RequestValidationError([
+      {
+        code: "custom",
+        message: `A car can have at most ${maxCarMediaCount} files.`,
+        path: ["files"],
+      },
+    ]);
+  }
+
+  const ids = new Map(result.media.map(({ id, link }) => [link, id]));
+  return uploads.map(({ filename, originalName, upload }) => ({
+    id: ids.get(filename),
+    filename,
+    originalName,
+    upload,
+  }));
+};
+
+const withMediaUrls = async <T extends { link: string }>(media: T[]) => {
+  const urlsMap = await generateGetPresignedUrls(
+    carBucketName,
+    media.map(({ link }) => link),
+  );
+  return media.map((item) => ({
+    ...item,
+    link: urlsMap.get(item.link) || "",
+  }));
+};
+
+const removeStoredCarMedia = async (filenames: string[]) => {
+  for (const filename of filenames) {
+    try {
+      await removeObject(carBucketName, filename);
+    } catch (error) {
+      console.error("Error removing deleted car media:", error);
+    }
+  }
+};
+
+// Deletes media from the seller's car while it keeps at least the minimum
+// number of uploaded images. Storage objects are removed after the database
+// commit, so a storage failure never brings the deleted rows back.
+export const deleteListingMedia = async (
+  listingId: number,
+  userId: number,
+  mediaIds: number[],
+) => {
+  const listing = await getUserListing(listingId, userId);
+  if (!listing) {
+    throw new NotFoundError("Listing was not found");
+  }
+
+  const result = await deleteCarMediaKeepingMinimum(
+    listingId,
+    mediaIds,
+    minCarImageCount,
+  );
+  if (result.status === "no_car") {
+    throw new BadRequestError("Attach a car to this listing before editing it");
+  }
+  if (result.status === "unknown_media") {
+    throw new RequestValidationError(
+      result.mediaIds.map((id) => ({
+        code: "custom",
+        message: `Media ${id} does not exist for this car`,
+        path: ["mediaIds"],
+      })),
+    );
+  }
+  if (result.status === "below_minimum") {
+    throw new RequestValidationError([
+      {
+        code: "custom",
+        message: `A car needs at least ${minCarImageCount} images.`,
+        path: ["mediaIds"],
+      },
+    ]);
+  }
+
+  await removeStoredCarMedia(result.deleted.map(({ link }) => link));
+
+  return {
+    deleted: result.deleted.map(({ id }) => id),
+    carMedias: await withMediaUrls(result.remaining),
+  };
+};
+
+// Changing the primary image only reorders reviewed media, so the listing
+// keeps its approval status.
+export const setListingPrimaryMedia = async (
+  listingId: number,
+  userId: number,
+  mediaId: number,
+) => {
+  const listing = await getUserListing(listingId, userId);
+  if (!listing) {
+    throw new NotFoundError("Listing was not found");
+  }
+
+  const result = await setPrimaryCarMedia(listingId, mediaId);
+  switch (result.status) {
+    case "no_car":
+      throw new BadRequestError(
+        "Attach a car to this listing before editing it",
+      );
+    case "not_found":
+      throw new NotFoundError("Media was not found for this car");
+    case "not_image":
+      throw new BadRequestError("Only an image can be the primary media");
+    case "not_uploaded":
+      throw new BadRequestError(
+        "Upload and confirm this image before making it primary",
+      );
+    case "updated":
+      return { carMedias: await withMediaUrls(result.media) };
+  }
+};
+
 // Marks uploaded media as visible, drops invalid objects, and returns a new
 // upload policy for media that never reached storage so the client can retry.
 export const confirmListingMedia = async (
@@ -223,8 +379,11 @@ export const confirmListingMedia = async (
     }
   }
 
-  await markCarMediaUploaded(uploadedIds);
-  await deleteCarMediaByIds(rejected.map((item) => item.id));
+  await markCarMediaUploaded(listingId, uploadedIds);
+  await deleteCarMediaByIds(
+    listingId,
+    rejected.map((item) => item.id),
+  );
   for (const item of rejected) {
     try {
       await removeObject(carBucketName, item.filename);

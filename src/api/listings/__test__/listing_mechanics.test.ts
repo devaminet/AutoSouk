@@ -4,7 +4,11 @@ import {
   insertMechanicGarageImage,
   updateMechanicActiveStatus,
 } from "../../mechanics/db";
-import { signinUser, signupUserWithVerification } from "../../../test/helpers";
+import {
+  carImageFiles,
+  signinUser,
+  signupUserWithVerification,
+} from "../../../test/helpers";
 import * as fileUtils from "../../../utils/functions";
 
 const carPayload = {
@@ -21,7 +25,7 @@ const carPayload = {
   transmission: "automatic",
   fiscalPower: 8,
   doorsNumber: 5,
-  files: [{ name: "car.png", isPrimary: true, type: "image" }],
+  files: carImageFiles(),
 };
 
 const createMechanicProfile = async (

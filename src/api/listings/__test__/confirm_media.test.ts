@@ -3,7 +3,11 @@ import { app } from "../../../app";
 import { minioClient } from "../../../file_storage/minio";
 import { carBucketName } from "../../../utils/constants";
 import { createBucket } from "../../../utils/functions";
-import { signinUser, signupUserWithVerification } from "../../../test/helpers";
+import {
+  carImageFiles,
+  signinUser,
+  signupUserWithVerification,
+} from "../../../test/helpers";
 
 const carPayload = {
   makeId: 449,
@@ -19,10 +23,7 @@ const carPayload = {
   transmission: "automatic",
   fiscalPower: 8,
   doorsNumber: 5,
-  files: [
-    { name: "photo.png", isPrimary: true },
-    { name: "second.png", isPrimary: false },
-  ],
+  files: carImageFiles(),
 };
 
 type CarMediaItem = { filename: string; originalName: string };
@@ -71,7 +72,7 @@ it("should return new upload policies for media still missing", async () => {
 
   expect(response.statusCode).toBe(200);
   expect(response.body.uploaded).toHaveLength(0);
-  expect(response.body.pending).toHaveLength(2);
+  expect(response.body.pending).toHaveLength(3);
   expect(
     response.body.pending.map((item: CarMediaItem) => item.filename).sort(),
   ).toEqual(carMedia.map((item) => item.filename).sort());
@@ -90,10 +91,45 @@ it("should show media once it is uploaded and confirmed", async () => {
 
   const response = await confirm(listingId, authUser.accessToken);
   expect(response.body.uploaded).toEqual([carMedia[0].filename]);
-  expect(response.body.pending).toHaveLength(1);
+  expect(response.body.pending).toHaveLength(2);
 
   const details = await request(app).get(`/api/listings/${listingId}`);
-  expect(details.body.listing.car.carMedias).toHaveLength(1);
+  expect(details.body.listing.car.carMedias).toEqual([
+    {
+      id: expect.any(Number),
+      link: expect.stringContaining(carMedia[0].filename),
+      type: "image",
+      isPrimary: true,
+    },
+  ]);
+});
+
+it("should list uploaded media primary first, then in upload order", async () => {
+  const { authUser, listingId, carMedia } = await createListingWithCar();
+  for (const item of [...carMedia].reverse()) {
+    await minioClient.putObject(
+      carBucketName,
+      item.filename,
+      Buffer.from("img"),
+      3,
+      { "Content-Type": "image/png" },
+    );
+  }
+  await confirm(listingId, authUser.accessToken);
+
+  const details = await request(app).get(`/api/listings/${listingId}`);
+  const medias: { id: number; link: string; isPrimary: boolean }[] =
+    details.body.listing.car.carMedias;
+
+  expect(medias.map(({ isPrimary }) => isPrimary)).toEqual([
+    true,
+    false,
+    false,
+  ]);
+  expect(medias.map(({ id }) => id)).toEqual(
+    [...medias.map(({ id }) => id)].sort((a, b) => a - b),
+  );
+  expect(medias[0].link).toContain(carMedia[0].filename);
 });
 
 it("should reject and remove uploaded media with a wrong content type", async () => {
@@ -110,6 +146,6 @@ it("should reject and remove uploaded media with a wrong content type", async ()
   expect(response.body.rejected).toEqual([carMedia[0].filename]);
 
   const again = await confirm(listingId, authUser.accessToken);
-  expect(again.body.pending).toHaveLength(1);
+  expect(again.body.pending).toHaveLength(2);
   expect(again.body.rejected).toHaveLength(0);
 });

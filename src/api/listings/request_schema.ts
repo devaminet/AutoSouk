@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { allowedFileTypes, getFileType } from "../../utils/functions";
-import { maxCarEquipmentCount } from "../../utils/constants";
+import {
+  maxCarEquipmentCount,
+  maxCarMediaCount,
+  minCarImageCount,
+} from "../../utils/constants";
 
 export const createListingSchema = z.object(
   {
@@ -17,6 +21,16 @@ export const createListingSchema = z.object(
 );
 
 const minCarYear = 1950;
+
+const carMediaNameSchema = z.string().refine(
+  (name) => !!getFileType(name),
+  (filename) => ({
+    message: `${filename} has an invalid file type, allowed type: ${allowedFileTypes}`,
+  }),
+);
+
+const hasUniqueNames = (files: { name: string }[]) =>
+  new Set(files.map((file) => file.name.toLowerCase())).size === files.length;
 
 export const createCarSchema = z.object(
   {
@@ -130,12 +144,7 @@ export const createCarSchema = z.object(
     files: z
       .array(
         z.object({
-          name: z.string().refine(
-            (name) => !!getFileType(name),
-            (filename) => ({
-              message: `${filename} has an invalid file type, allowed type: ${allowedFileTypes}`,
-            }),
-          ),
+          name: carMediaNameSchema,
           isPrimary: z.boolean(),
         }),
         {
@@ -144,19 +153,34 @@ export const createCarSchema = z.object(
             "Files must be a list of objects in the format: { name: string, isPrimary: boolean }.",
         },
       )
+      .max(
+        maxCarMediaCount,
+        `A car can have at most ${maxCarMediaCount} files.`,
+      )
+      .refine(
+        (files) =>
+          files.filter((file) => getFileType(file.name) === "image").length >=
+          minCarImageCount,
+        {
+          message: `A car needs at least ${minCarImageCount} images.`,
+          path: [],
+        },
+      )
       .refine((files) => files.filter((file) => file.isPrimary).length === 1, {
         message: "Exactly one file must be designated as primary.",
         path: [],
       })
       .refine(
         (files) =>
-          new Set(files.map((file) => file.name.toLowerCase())).size ===
-          files.length,
-        {
-          message: "File names must be unique.",
-          path: [],
-        },
-      ),
+          files.every(
+            (file) => !file.isPrimary || getFileType(file.name) === "image",
+          ),
+        { message: "The primary file must be an image.", path: [] },
+      )
+      .refine(hasUniqueNames, {
+        message: "File names must be unique.",
+        path: [],
+      }),
   },
   {
     required_error: "Car details are required",
@@ -210,6 +234,52 @@ export const getListingsQuerySchema = z.object({
     .default("newest"),
 });
 
+export const addCarMediaSchema = z.object(
+  {
+    files: z
+      .array(z.object({ name: carMediaNameSchema }), {
+        required_error: "At least one file is required.",
+        invalid_type_error:
+          "Files must be a list of objects in the format: { name: string }.",
+      })
+      .min(1, "At least one file is required.")
+      .max(
+        maxCarMediaCount,
+        `A car can have at most ${maxCarMediaCount} files.`,
+      )
+      .refine(hasUniqueNames, {
+        message: "File names must be unique.",
+        path: [],
+      }),
+  },
+  { required_error: "Body with files is required" },
+);
+
+export const deleteCarMediaSchema = z.object(
+  {
+    mediaIds: z
+      .array(
+        z
+          .number({ invalid_type_error: "Media id must be a number" })
+          .int("Media id must be a whole number")
+          .positive("Media id must be a valid ID"),
+        {
+          required_error: "At least one media id is required.",
+          invalid_type_error: "Media ids must be a list of numbers",
+        },
+      )
+      .min(1, "At least one media id is required.")
+      .max(
+        maxCarMediaCount,
+        `Delete at most ${maxCarMediaCount} media at once.`,
+      )
+      .refine((ids) => new Set(ids).size === ids.length, {
+        message: "Media ids must be unique",
+      }),
+  },
+  { required_error: "Body with mediaIds is required" },
+);
+
 export const attachListingParamSchema = z.object({
   id: z.coerce
     .number({
@@ -218,6 +288,16 @@ export const attachListingParamSchema = z.object({
     })
     .int()
     .positive("listingId must be a positive number"),
+});
+
+export const listingMediaParamSchema = attachListingParamSchema.extend({
+  mediaId: z.coerce
+    .number({
+      required_error: "mediaId is required",
+      invalid_type_error: "mediaId must be a number",
+    })
+    .int()
+    .positive("mediaId must be a positive number"),
 });
 
 export const updateListingSchema = z

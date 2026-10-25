@@ -15,6 +15,7 @@ import {
   ilike,
   inArray,
   lte,
+  sql,
 } from "drizzle-orm";
 import { listingTable } from "../../db/schema/listing";
 import { carTable } from "../../db/schema/car";
@@ -211,11 +212,13 @@ export const getListingDetailsById = async (id: number) => {
           },
           carMedias: {
             columns: {
+              id: true,
               link: true,
               type: true,
               isPrimary: true,
             },
             where: eq(carMediaTable.isUploaded, true),
+            orderBy: [desc(carMediaTable.isPrimary), asc(carMediaTable.id)],
           },
           make: {
             columns: {
@@ -419,6 +422,17 @@ export const getUserListing = async (
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
+// Locks the listing's car so concurrent changes to its equipment or media
+// run one after the other.
+const lockListingCar = async (tx: Transaction, listingId: number) => {
+  const [car] = await tx
+    .select({ id: carTable.id })
+    .from(carTable)
+    .where(eq(carTable.listingId, listingId))
+    .for("update");
+  return car ?? null;
+};
+
 // Replaces the whole equipment set of the listing's car. The car row is
 // locked first so concurrent replacements run one after the other instead
 // of colliding on the car_equipment primary key.
@@ -427,11 +441,7 @@ const replaceCarEquipment = async (
   listingId: number,
   equipmentIds: number[],
 ) => {
-  const [car] = await tx
-    .select({ id: carTable.id })
-    .from(carTable)
-    .where(eq(carTable.listingId, listingId))
-    .for("update");
+  const car = await lockListingCar(tx, listingId);
   if (!car) {
     return;
   }
@@ -613,19 +623,259 @@ export const findCarMediaByListing = async (
     );
 };
 
-export const markCarMediaUploaded = async (mediaIds: number[]) => {
+// Newly visible media has not been reviewed, so the listing goes back to
+// admin approval, like any other listing edit.
+export const markCarMediaUploaded = async (
+  listingId: number,
+  mediaIds: number[],
+) => {
   if (mediaIds.length === 0) {
     return;
   }
-  await db
-    .update(carMediaTable)
-    .set({ isUploaded: true })
-    .where(inArray(carMediaTable.id, mediaIds));
+  await db.transaction(async (tx) => {
+    await tx
+      .update(carMediaTable)
+      .set({ isUploaded: true })
+      .where(inArray(carMediaTable.id, mediaIds));
+    await tx
+      .update(listingTable)
+      .set({
+        status: "pending",
+        approvedAt: null,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(listingTable.id, listingId));
+  });
 };
 
-export const deleteCarMediaByIds = async (mediaIds: number[]) => {
+export type AddCarMediaResult =
+  | { status: "no_car" }
+  | { status: "over_limit" }
+  | { status: "added"; media: { id: number; link: string }[] };
+
+// Adds not yet uploaded media to the listing's car unless the car would end
+// up with more than maxCount files. Pending uploads count towards the limit.
+export const insertCarMediaWithinLimit = async (
+  listingId: number,
+  filenames: string[],
+  maxCount: number,
+): Promise<AddCarMediaResult> => {
+  return await db.transaction(async (tx) => {
+    const car = await lockListingCar(tx, listingId);
+    if (!car) {
+      return { status: "no_car" };
+    }
+
+    const [{ total }] = await tx
+      .select({ total: count() })
+      .from(carMediaTable)
+      .where(eq(carMediaTable.carId, car.id));
+    if (total + filenames.length > maxCount) {
+      return { status: "over_limit" };
+    }
+
+    const media = await tx
+      .insert(carMediaTable)
+      .values(
+        filenames.map((filename) => ({
+          carId: car.id,
+          link: filename,
+          type: getFileType(filename) as "image" | "video",
+          isPrimary: false,
+          isUploaded: false,
+        })),
+      )
+      .returning({ id: carMediaTable.id, link: carMediaTable.link });
+
+    return { status: "added", media };
+  });
+};
+
+// Gives the car a primary image again after its primary was deleted:
+// the oldest uploaded image, or the oldest image still waiting for upload.
+const ensureCarPrimaryImage = async (tx: Transaction, carId: number) => {
+  const [primary] = await tx
+    .select({ id: carMediaTable.id })
+    .from(carMediaTable)
+    .where(
+      and(eq(carMediaTable.carId, carId), eq(carMediaTable.isPrimary, true)),
+    );
+  if (primary) {
+    return;
+  }
+
+  const [next] = await tx
+    .select({ id: carMediaTable.id })
+    .from(carMediaTable)
+    .where(and(eq(carMediaTable.carId, carId), eq(carMediaTable.type, "image")))
+    .orderBy(desc(carMediaTable.isUploaded), asc(carMediaTable.id))
+    .limit(1);
+  if (next) {
+    await tx
+      .update(carMediaTable)
+      .set({ isPrimary: true })
+      .where(eq(carMediaTable.id, next.id));
+  }
+};
+
+// Removes media that failed upload validation, keeping a primary image.
+export const deleteCarMediaByIds = async (
+  listingId: number,
+  mediaIds: number[],
+) => {
   if (mediaIds.length === 0) {
     return;
   }
-  await db.delete(carMediaTable).where(inArray(carMediaTable.id, mediaIds));
+  await db.transaction(async (tx) => {
+    const car = await lockListingCar(tx, listingId);
+    if (!car) {
+      return;
+    }
+    await tx
+      .delete(carMediaTable)
+      .where(
+        and(
+          eq(carMediaTable.carId, car.id),
+          inArray(carMediaTable.id, mediaIds),
+        ),
+      );
+    await ensureCarPrimaryImage(tx, car.id);
+  });
+};
+
+type UploadedCarMedia = {
+  id: number;
+  link: string;
+  type: "image" | "video";
+  isPrimary: boolean;
+};
+
+// The car's visible media, primary first, then in upload order.
+const findUploadedCarMedia = async (
+  tx: Transaction,
+  carId: number,
+): Promise<UploadedCarMedia[]> => {
+  return await tx
+    .select({
+      id: carMediaTable.id,
+      link: carMediaTable.link,
+      type: carMediaTable.type,
+      isPrimary: carMediaTable.isPrimary,
+    })
+    .from(carMediaTable)
+    .where(
+      and(eq(carMediaTable.carId, carId), eq(carMediaTable.isUploaded, true)),
+    )
+    .orderBy(desc(carMediaTable.isPrimary), asc(carMediaTable.id));
+};
+
+export type DeleteCarMediaResult =
+  | { status: "no_car" }
+  | { status: "unknown_media"; mediaIds: number[] }
+  | { status: "below_minimum" }
+  | {
+      status: "deleted";
+      deleted: { id: number; link: string }[];
+      remaining: UploadedCarMedia[];
+    };
+
+// Deletes media from the listing's car unless fewer than minImages uploaded
+// images would remain. Media that is not uploaded yet can always be deleted.
+export const deleteCarMediaKeepingMinimum = async (
+  listingId: number,
+  mediaIds: number[],
+  minImages: number,
+): Promise<DeleteCarMediaResult> => {
+  return await db.transaction(async (tx) => {
+    const car = await lockListingCar(tx, listingId);
+    if (!car) {
+      return { status: "no_car" };
+    }
+
+    const media = await tx
+      .select({
+        id: carMediaTable.id,
+        link: carMediaTable.link,
+        type: carMediaTable.type,
+        isPrimary: carMediaTable.isPrimary,
+        isUploaded: carMediaTable.isUploaded,
+      })
+      .from(carMediaTable)
+      .where(eq(carMediaTable.carId, car.id))
+      .orderBy(desc(carMediaTable.isPrimary), asc(carMediaTable.id));
+
+    const carMediaIds = new Set(media.map(({ id }) => id));
+    const unknownIds = mediaIds.filter((id) => !carMediaIds.has(id));
+    if (unknownIds.length > 0) {
+      return { status: "unknown_media", mediaIds: unknownIds };
+    }
+
+    const toDelete = new Set(mediaIds);
+    const remainingImages = media.filter(
+      (item) =>
+        !toDelete.has(item.id) && item.isUploaded && item.type === "image",
+    );
+    if (remainingImages.length < minImages) {
+      return { status: "below_minimum" };
+    }
+
+    await tx.delete(carMediaTable).where(inArray(carMediaTable.id, mediaIds));
+    await ensureCarPrimaryImage(tx, car.id);
+
+    const remaining = await findUploadedCarMedia(tx, car.id);
+
+    return {
+      status: "deleted",
+      deleted: media
+        .filter((item) => toDelete.has(item.id))
+        .map(({ id, link }) => ({ id, link })),
+      remaining,
+    };
+  });
+};
+
+export type SetPrimaryCarMediaResult =
+  | { status: "no_car" }
+  | { status: "not_found" }
+  | { status: "not_image" }
+  | { status: "not_uploaded" }
+  | { status: "updated"; media: UploadedCarMedia[] };
+
+// Makes an uploaded image of the listing's car its only primary media.
+export const setPrimaryCarMedia = async (
+  listingId: number,
+  mediaId: number,
+): Promise<SetPrimaryCarMediaResult> => {
+  return await db.transaction(async (tx) => {
+    const car = await lockListingCar(tx, listingId);
+    if (!car) {
+      return { status: "no_car" };
+    }
+
+    const [target] = await tx
+      .select({
+        type: carMediaTable.type,
+        isUploaded: carMediaTable.isUploaded,
+      })
+      .from(carMediaTable)
+      .where(
+        and(eq(carMediaTable.id, mediaId), eq(carMediaTable.carId, car.id)),
+      );
+    if (!target) {
+      return { status: "not_found" };
+    }
+    if (target.type !== "image") {
+      return { status: "not_image" };
+    }
+    if (!target.isUploaded) {
+      return { status: "not_uploaded" };
+    }
+
+    await tx
+      .update(carMediaTable)
+      .set({ isPrimary: sql`${carMediaTable.id} = ${mediaId}` })
+      .where(eq(carMediaTable.carId, car.id));
+
+    return { status: "updated", media: await findUploadedCarMedia(tx, car.id) };
+  });
 };

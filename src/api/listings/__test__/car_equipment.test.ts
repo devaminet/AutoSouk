@@ -6,7 +6,11 @@ import {
   carEquipmentTable,
   equipmentTable,
 } from "../../../db/schema/equipment";
-import { signinUser, signupUserWithVerification } from "../../../test/helpers";
+import {
+  carImageFiles,
+  signinUser,
+  signupUserWithVerification,
+} from "../../../test/helpers";
 
 const validCar = {
   makeId: 449,
@@ -22,7 +26,7 @@ const validCar = {
   transmission: "automatic",
   fiscalPower: 8,
   doorsNumber: 5,
-  files: [{ name: "file1.png", isPrimary: true }],
+  files: carImageFiles(),
 };
 
 const findEquipmentIds = async (slugs: string[]) => {
