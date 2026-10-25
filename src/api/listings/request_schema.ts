@@ -163,6 +163,39 @@ export const createCarSchema = z.object(
   },
 );
 
+// Accepts equipmentIds=3,7 as well as equipmentIds=3&equipmentIds=7.
+const splitIdList = (value: unknown) => {
+  if (value === undefined) {
+    return undefined;
+  }
+  const parts = Array.isArray(value) ? value : [value];
+  return parts.flatMap((part) =>
+    typeof part === "string"
+      ? part
+          .split(",")
+          .map((id) => id.trim())
+          .filter((id) => id !== "")
+      : part,
+  );
+};
+
+const equipmentIdsQuerySchema = z.preprocess(
+  splitIdList,
+  z
+    .array(
+      z.coerce
+        .number({ invalid_type_error: "Equipment id must be a number" })
+        .int("Equipment id must be a whole number")
+        .positive("Equipment id must be a valid ID"),
+    )
+    .max(
+      maxCarEquipmentCount,
+      `Filter by at most ${maxCarEquipmentCount} equipment items`,
+    )
+    .transform((ids) => [...new Set(ids)])
+    .optional(),
+);
+
 export const getListingsQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(10),
@@ -171,6 +204,7 @@ export const getListingsQuerySchema = z.object({
   cityId: z.coerce.number().int().positive().optional(),
   minPrice: z.coerce.number().nonnegative().optional(),
   maxPrice: z.coerce.number().nonnegative().optional(),
+  equipmentIds: equipmentIdsQuerySchema,
   sort: z
     .enum(["price_asc", "price_desc", "newest", "oldest"])
     .default("newest"),

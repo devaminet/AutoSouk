@@ -28,11 +28,30 @@ import { cityTable } from "../../db/schema/city";
 import { getFileType } from "../../utils/functions";
 import { carEquipmentTable, equipmentTable } from "../../db/schema/equipment";
 
+// Listing ids whose car has every one of the given (distinct) equipment ids.
+const listingIdsWithAllEquipment = (equipmentIds: number[]) =>
+  db
+    .select({ listingId: carTable.listingId })
+    .from(carEquipmentTable)
+    .innerJoin(carTable, eq(carTable.id, carEquipmentTable.carId))
+    .where(inArray(carEquipmentTable.equipmentId, equipmentIds))
+    .groupBy(carTable.listingId)
+    .having(eq(count(), equipmentIds.length));
+
 export const findListings = async (
   options: z.infer<typeof getListingsQuerySchema>,
 ) => {
-  const { page, limit, makeId, modelId, cityId, minPrice, maxPrice, sort } =
-    options;
+  const {
+    page,
+    limit,
+    makeId,
+    modelId,
+    cityId,
+    minPrice,
+    maxPrice,
+    equipmentIds,
+    sort,
+  } = options;
 
   const conditions = [eq(listingTable.status, "approved")];
 
@@ -41,6 +60,11 @@ export const findListings = async (
   if (cityId) conditions.push(eq(carTable.cityId, cityId));
   if (minPrice !== undefined) conditions.push(gte(carTable.price, minPrice));
   if (maxPrice !== undefined) conditions.push(lte(carTable.price, maxPrice));
+  if (equipmentIds && equipmentIds.length > 0) {
+    conditions.push(
+      inArray(listingTable.id, listingIdsWithAllEquipment(equipmentIds)),
+    );
+  }
 
   let orderByClause;
   if (sort === "price_asc") {

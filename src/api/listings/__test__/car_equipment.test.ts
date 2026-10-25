@@ -309,3 +309,109 @@ describe("car equipment on listing details", () => {
     expect(details.body.listing.car.equipment).toEqual([]);
   });
 });
+
+describe("filter listings by equipment", () => {
+  let seller: Awaited<ReturnType<typeof signinUser>>;
+  let admin: Awaited<ReturnType<typeof signinUser>>;
+
+  const publishCar = async (slugs: string[]) => {
+    const created = await request(app)
+      .post("/api/listings")
+      .send({ title: "A black car", description: "A brand new black Ford" })
+      .auth(seller.accessToken, { type: "bearer" })
+      .expect(201);
+    const listingId: number = created.body.listing.id;
+    await request(app)
+      .post(`/api/listings/${listingId}/car`)
+      .send({
+        ...validCar,
+        equipmentIds: await findEquipmentIds(slugs),
+      })
+      .auth(seller.accessToken, { type: "bearer" })
+      .expect(201);
+    await request(app)
+      .patch(`/api/listings/${listingId}/approve`)
+      .auth(admin.accessToken, { type: "bearer" })
+      .expect(200);
+    return listingId;
+  };
+
+  const listedIds = (body: { listings: { id: number }[] }) =>
+    body.listings.map(({ id }) => id).sort((a, b) => a - b);
+
+  let withBoth: number;
+  let withAbsOnly: number;
+  let withNone: number;
+  let absId: number;
+  let roofId: number;
+
+  beforeEach(async () => {
+    await signupUserWithVerification({ userType: "seller" });
+    seller = await signinUser();
+    admin = await signinUser({
+      email: "admin@autosouk.com",
+      password: "Admin_@@789",
+    });
+    withBoth = await publishCar(["abs", "panoramic_roof"]);
+    withAbsOnly = await publishCar(["abs"]);
+    withNone = await publishCar([]);
+    [absId] = await findEquipmentIds(["abs"]);
+    [roofId] = await findEquipmentIds(["panoramic_roof"]);
+  });
+
+  it("returns only listings that have every requested item", async () => {
+    const response = await request(app)
+      .get(`/api/listings?equipmentIds=${absId},${roofId}`)
+      .expect(200);
+
+    expect(listedIds(response.body)).toEqual([withBoth]);
+    expect(response.body.meta.total).toBe(1);
+  });
+
+  it("accepts repeated query parameters", async () => {
+    const response = await request(app)
+      .get(`/api/listings?equipmentIds=${absId}&equipmentIds=${roofId}`)
+      .expect(200);
+
+    expect(listedIds(response.body)).toEqual([withBoth]);
+  });
+
+  it("matches a single item and ignores duplicates", async () => {
+    const response = await request(app)
+      .get(`/api/listings?equipmentIds=${absId},${absId}`)
+      .expect(200);
+
+    expect(listedIds(response.body)).toEqual(
+      [withBoth, withAbsOnly].sort((a, b) => a - b),
+    );
+  });
+
+  it("counts filtered listings across pages", async () => {
+    const response = await request(app)
+      .get(`/api/listings?equipmentIds=${absId}&limit=1`)
+      .expect(200);
+
+    expect(response.body.listings).toHaveLength(1);
+    expect(response.body.meta).toMatchObject({ total: 2, totalPages: 2 });
+  });
+
+  it("does not filter when the list is empty", async () => {
+    const response = await request(app)
+      .get("/api/listings?equipmentIds=")
+      .expect(200);
+
+    expect(listedIds(response.body)).toEqual(
+      [withBoth, withAbsOnly, withNone].sort((a, b) => a - b),
+    );
+  });
+
+  it("returns 400 for ids that are not whole positive numbers", async () => {
+    const response = await request(app)
+      .get("/api/listings?equipmentIds=abs,-1")
+      .expect(400);
+
+    expect(
+      response.body.errors.map((error: { field: string }) => error.field),
+    ).toEqual(["equipmentIds.0", "equipmentIds.1"]);
+  });
+});

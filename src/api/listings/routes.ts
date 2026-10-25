@@ -54,6 +54,15 @@ const listingRouter = Router();
  *         name: maxPrice
  *         schema: { type: number }
  *       - in: query
+ *         name: equipmentIds
+ *         description: Only cars that have all of these equipment ids from GET /api/equipment. Comma separated (equipmentIds=3,7) or repeated (equipmentIds=3&equipmentIds=7), at most 100.
+ *         style: form
+ *         explode: false
+ *         schema:
+ *           type: array
+ *           maxItems: 100
+ *           items: { type: integer }
+ *       - in: query
  *         name: sort
  *         schema:
  *           type: string
