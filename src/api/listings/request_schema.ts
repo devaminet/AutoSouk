@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { allowedFileTypes, getFileType } from "../../utils/functions";
-import { maxCarEquipmentCount } from "../../utils/constants";
+import {
+  maxCarEquipmentCount,
+  maxCarMediaCount,
+  minCarImageCount,
+} from "../../utils/constants";
 
 export const createListingSchema = z.object(
   {
@@ -144,10 +148,30 @@ export const createCarSchema = z.object(
             "Files must be a list of objects in the format: { name: string, isPrimary: boolean }.",
         },
       )
+      .max(
+        maxCarMediaCount,
+        `A car can have at most ${maxCarMediaCount} files.`,
+      )
+      .refine(
+        (files) =>
+          files.filter((file) => getFileType(file.name) === "image").length >=
+          minCarImageCount,
+        {
+          message: `A car needs at least ${minCarImageCount} images.`,
+          path: [],
+        },
+      )
       .refine((files) => files.filter((file) => file.isPrimary).length === 1, {
         message: "Exactly one file must be designated as primary.",
         path: [],
       })
+      .refine(
+        (files) =>
+          files.every(
+            (file) => !file.isPrimary || getFileType(file.name) === "image",
+          ),
+        { message: "The primary file must be an image.", path: [] },
+      )
       .refine(
         (files) =>
           new Set(files.map((file) => file.name.toLowerCase())).size ===

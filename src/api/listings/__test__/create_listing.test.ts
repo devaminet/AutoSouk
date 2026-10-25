@@ -1,6 +1,10 @@
 import request from "supertest";
 import { app } from "../../../app";
-import { signinUser, signupUserWithVerification } from "../../../test/helpers";
+import {
+  carImageFiles,
+  signinUser,
+  signupUserWithVerification,
+} from "../../../test/helpers";
 
 it("should fail if the user who want to create a listing is not logged in", () => {
   return request(app).post("/api/listings").expect(401);
@@ -132,17 +136,14 @@ it("should attach car to a listing", async () => {
       transmission: "automatic",
       fiscalPower: 8,
       doorsNumber: 5,
-      files: [
-        { name: "file1.png", isPrimary: true, type: "image" },
-        { name: "file2.png", isPrimary: false, type: "image" },
-      ],
+      files: carImageFiles(),
     })
     .auth(authUser.accessToken, { type: "bearer" });
 
   expect(attachCarResponse.statusCode).toBe(201);
   const { carMedia } = attachCarResponse.body;
-  expect(carMedia).toHaveLength(2);
-  expect(carMedia[0].originalName).toBe("file1.png");
+  expect(carMedia).toHaveLength(3);
+  expect(carMedia[0].originalName).toBe("photo-1.png");
   expect(carMedia[0].upload.url).toContain("/cars");
   expect(carMedia[0].upload.fields.key).toBe(carMedia[0].filename);
   expect(carMedia[0].upload.fields.policy).toBeDefined();
@@ -189,7 +190,7 @@ it("should reject out of range car values when attaching a car", async () => {
       transmission: "automatic",
       fiscalPower: 0,
       doorsNumber: 12,
-      files: [{ name: "file1.png", isPrimary: true }],
+      files: carImageFiles(),
     })
     .auth(authUser.accessToken, { type: "bearer" });
 
@@ -233,10 +234,7 @@ it("should reject duplicate file names when attaching a car", async () => {
       transmission: "automatic",
       fiscalPower: 8,
       doorsNumber: 5,
-      files: [
-        { name: "file1.png", isPrimary: true },
-        { name: "FILE1.png", isPrimary: false },
-      ],
+      files: [...carImageFiles(), { name: "PHOTO-1.png", isPrimary: false }],
     })
     .auth(authUser.accessToken, { type: "bearer" });
 
@@ -259,7 +257,7 @@ describe("car reference validation", () => {
     transmission: "automatic",
     fiscalPower: 8,
     doorsNumber: 5,
-    files: [{ name: "file1.png", isPrimary: true }],
+    files: carImageFiles(),
   };
 
   const createListing = async () => {
@@ -340,7 +338,7 @@ it("should return 400 instead of 500 when two cars are attached at the same time
         transmission: "automatic",
         fiscalPower: 8,
         doorsNumber: 5,
-        files: [{ name: "file1.png", isPrimary: true }],
+        files: carImageFiles(),
       })
       .auth(authUser.accessToken, { type: "bearer" });
 
@@ -374,17 +372,14 @@ it("should restrict car media uploads by size and content type", async () => {
       transmission: "automatic",
       fiscalPower: 8,
       doorsNumber: 5,
-      files: [
-        { name: "photo.png", isPrimary: true },
-        { name: "walkaround.mp4", isPrimary: false },
-      ],
+      files: [...carImageFiles(), { name: "walkaround.mp4", isPrimary: false }],
     })
     .auth(authUser.accessToken, { type: "bearer" });
   expect(response.statusCode).toBe(201);
 
   const decode = (policy: string) =>
     JSON.parse(Buffer.from(policy, "base64").toString("utf8")).conditions;
-  const [image, video] = response.body.carMedia.map(
+  const [image, , , video] = response.body.carMedia.map(
     (media: { upload: { fields: { policy: string } } }) =>
       decode(media.upload.fields.policy),
   );
@@ -393,4 +388,84 @@ it("should restrict car media uploads by size and content type", async () => {
   expect(image).toContainEqual(["starts-with", "$Content-Type", "image/"]);
   expect(video).toContainEqual(["content-length-range", 1, 50 * 1024 * 1024]);
   expect(video).toContainEqual(["starts-with", "$Content-Type", "video/"]);
+});
+
+describe("car media limits on attach", () => {
+  const car = {
+    makeId: 449,
+    modelId: 2085,
+    carburantId: 3,
+    originId: 4,
+    stateId: 6,
+    price: 500000,
+    year: 2025,
+    ownersCount: 0,
+    cityId: 1,
+    distance: "60km",
+    transmission: "automatic",
+    fiscalPower: 8,
+    doorsNumber: 5,
+  };
+
+  const attachWithFiles = async (files: unknown[]) => {
+    await signupUserWithVerification({ userType: "seller" });
+    const authUser = await signinUser();
+    const created = await request(app)
+      .post("/api/listings")
+      .send({ title: "A black car", description: "A brand new black Ford" })
+      .auth(authUser.accessToken, { type: "bearer" });
+    return await request(app)
+      .post(`/api/listings/${created.body.listing.id}/car`)
+      .send({ ...car, files })
+      .auth(authUser.accessToken, { type: "bearer" });
+  };
+
+  it("requires at least 3 images", async () => {
+    const response = await attachWithFiles(carImageFiles(2));
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.errors).toEqual([
+      { message: "A car needs at least 3 images.", field: "files" },
+    ]);
+  });
+
+  it("does not count videos towards the image minimum", async () => {
+    const response = await attachWithFiles([
+      ...carImageFiles(2),
+      { name: "walkaround.mp4", isPrimary: false },
+    ]);
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.errors[0].message).toBe(
+      "A car needs at least 3 images.",
+    );
+  });
+
+  it("accepts up to 20 files", async () => {
+    const response = await attachWithFiles(carImageFiles(20));
+
+    expect(response.statusCode).toBe(201);
+    expect(response.body.carMedia).toHaveLength(20);
+  });
+
+  it("rejects more than 20 files", async () => {
+    const response = await attachWithFiles(carImageFiles(21));
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.errors).toEqual([
+      { message: "A car can have at most 20 files.", field: "files" },
+    ]);
+  });
+
+  it("requires the primary file to be an image", async () => {
+    const response = await attachWithFiles([
+      ...carImageFiles(3).map((file) => ({ ...file, isPrimary: false })),
+      { name: "walkaround.mp4", isPrimary: true },
+    ]);
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.errors).toEqual([
+      { message: "The primary file must be an image.", field: "files" },
+    ]);
+  });
 });

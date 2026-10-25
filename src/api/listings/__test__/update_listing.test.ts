@@ -1,6 +1,10 @@
 import request from "supertest";
 import { app } from "../../../app";
-import { signinUser, signupUserWithVerification } from "../../../test/helpers";
+import {
+  carImageFiles,
+  signinUser,
+  signupUserWithVerification,
+} from "../../../test/helpers";
 
 const carPayload = {
   makeId: 449,
@@ -16,7 +20,7 @@ const carPayload = {
   transmission: "automatic",
   fiscalPower: 8,
   doorsNumber: 5,
-  files: [{ name: "file1.png", isPrimary: true }],
+  files: carImageFiles(),
 };
 
 const createListingWithCar = async () => {

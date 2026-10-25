@@ -3,7 +3,11 @@ import { ne } from "drizzle-orm";
 import { app } from "../../../app";
 import { db } from "../../../db";
 import { carModelTable } from "../../../db/schema/car_model";
-import { signinUser, signupUserWithVerification } from "../../../test/helpers";
+import {
+  carImageFiles,
+  signinUser,
+  signupUserWithVerification,
+} from "../../../test/helpers";
 
 const baseCar = {
   makeId: 449,
@@ -19,7 +23,7 @@ const baseCar = {
   transmission: "automatic",
   fiscalPower: 8,
   doorsNumber: 5,
-  files: [{ name: "file1.png", isPrimary: true }],
+  files: carImageFiles(),
 };
 
 let seller: Awaited<ReturnType<typeof signinUser>>;

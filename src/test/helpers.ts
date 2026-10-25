@@ -4,8 +4,16 @@ import request from "supertest";
 import { app } from "../app";
 import { registrationRoleSchema } from "../api/auth/request_schema";
 import { readTemplateFile } from "../utils/functions";
+import { minCarImageCount } from "../utils/constants";
 
 type TestUserRole = z.infer<typeof registrationRoleSchema>;
+
+// Car image files for attach requests; the first one is primary.
+export const carImageFiles = (count = minCarImageCount) =>
+  Array.from({ length: count }, (_, index) => ({
+    name: `photo-${index + 1}.png`,
+    isPrimary: index === 0,
+  }));
 
 export const testUserCredentials = {
   email: "user@example.com",

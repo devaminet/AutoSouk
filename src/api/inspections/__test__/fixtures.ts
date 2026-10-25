@@ -1,6 +1,10 @@
 import request from "supertest";
 import { app } from "../../../app";
-import { signinUser, signupUserWithVerification } from "../../../test/helpers";
+import {
+  carImageFiles,
+  signinUser,
+  signupUserWithVerification,
+} from "../../../test/helpers";
 import { updateMechanicActiveStatus } from "../../mechanics/db";
 import * as fileUtils from "../../../utils/functions";
 
@@ -18,7 +22,7 @@ export const carPayload = {
   transmission: "automatic" as const,
   fiscalPower: 8,
   doorsNumber: 5,
-  files: [{ name: "car.png", isPrimary: true, type: "image" }],
+  files: carImageFiles(),
 };
 
 export const createApprovedCar = async (sellerEmail: string) => {

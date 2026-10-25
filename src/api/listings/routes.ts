@@ -173,6 +173,8 @@ listingRouter.post(
  *                 items: { type: integer }
  *               files:
  *                 type: array
+ *                 description: At least 3 images and at most 20 files (images and videos). File names must be unique, and exactly one file is primary, which must be an image.
+ *                 maxItems: 20
  *                 items:
  *                   type: object
  *                   properties:

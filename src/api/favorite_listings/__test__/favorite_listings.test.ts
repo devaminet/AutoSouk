@@ -1,6 +1,10 @@
 import request from "supertest";
 import { app } from "../../../app";
-import { signinUser, signupUserWithVerification } from "../../../test/helpers";
+import {
+  carImageFiles,
+  signinUser,
+  signupUserWithVerification,
+} from "../../../test/helpers";
 import { createBucket, readTemplateFile } from "../../../utils/functions";
 import { minioClient } from "../../../file_storage/minio";
 import { carBucketName } from "../../../utils/constants";
@@ -44,10 +48,7 @@ const createListing = async () => {
       distance: "180000KM",
       fiscalPower: 7,
       doorsNumber: 5,
-      files: [
-        { name: "file1.png", type: "image", isPrimary: true },
-        { name: "file2.png", type: "image", isPrimary: false },
-      ],
+      files: carImageFiles(),
     })
     .auth(authUser.accessToken, { type: "bearer" });
 
