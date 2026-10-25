@@ -196,10 +196,7 @@ export const updateListingSchema = z
       .string({ invalid_type_error: "Description must be a text" })
       .min(1, "Description cannot be empty")
       .optional(),
-    car: createCarSchema
-      .omit({ files: true, equipmentIds: true })
-      .partial()
-      .optional(),
+    car: createCarSchema.omit({ files: true }).partial().optional(),
   })
   .refine(
     (data) =>

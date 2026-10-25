@@ -141,3 +141,124 @@ describe("car equipment on attach", () => {
     ]);
   });
 });
+
+describe("car equipment on update", () => {
+  const attachCarWithEquipment = async (slugs: string[]) => {
+    const { authUser, listingId } = await createListing();
+    const equipmentIds = await findEquipmentIds(slugs);
+    const attached = await request(app)
+      .post(`/api/listings/${listingId}/car`)
+      .send({ ...validCar, equipmentIds })
+      .auth(authUser.accessToken, { type: "bearer" });
+    return { authUser, listingId, carId: attached.body.id as number };
+  };
+
+  const updateCar = (
+    listingId: number,
+    accessToken: string,
+    car: Record<string, unknown>,
+  ) =>
+    request(app)
+      .patch(`/api/listings/${listingId}`)
+      .send({ car })
+      .auth(accessToken, { type: "bearer" });
+
+  it("replaces the whole equipment set", async () => {
+    const { authUser, listingId, carId } = await attachCarWithEquipment([
+      "abs",
+      "cruise_control",
+    ]);
+    const equipmentIds = await findEquipmentIds(["abs", "panoramic_roof"]);
+
+    const response = await updateCar(listingId, authUser.accessToken, {
+      equipmentIds,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.listing.status).toBe("pending");
+    expect(await findSavedEquipmentIds(carId)).toEqual(equipmentIds);
+  });
+
+  it("clears the equipment set with an empty list", async () => {
+    const { authUser, listingId, carId } = await attachCarWithEquipment([
+      "abs",
+    ]);
+
+    const response = await updateCar(listingId, authUser.accessToken, {
+      equipmentIds: [],
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(await findSavedEquipmentIds(carId)).toEqual([]);
+  });
+
+  it("keeps the equipment set when the field is omitted", async () => {
+    const { authUser, listingId, carId } = await attachCarWithEquipment([
+      "abs",
+      "bluetooth",
+    ]);
+
+    const response = await updateCar(listingId, authUser.accessToken, {
+      price: 450000,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(await findSavedEquipmentIds(carId)).toEqual(
+      await findEquipmentIds(["abs", "bluetooth"]),
+    );
+  });
+
+  it("sends an approved listing back to pending", async () => {
+    const { authUser, listingId } = await attachCarWithEquipment(["abs"]);
+    const admin = await signinUser({
+      email: "admin@autosouk.com",
+      password: "Admin_@@789",
+    });
+    await request(app)
+      .patch(`/api/listings/${listingId}/approve`)
+      .auth(admin.accessToken, { type: "bearer" })
+      .expect(200);
+
+    const response = await updateCar(listingId, authUser.accessToken, {
+      equipmentIds: await findEquipmentIds(["sunroof"]),
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.listing.status).toBe("pending");
+    expect(response.body.listing.approvedAt).toBeNull();
+  });
+
+  it("returns 400 and keeps the current set for unknown equipment", async () => {
+    const { authUser, listingId, carId } = await attachCarWithEquipment([
+      "abs",
+    ]);
+
+    const response = await updateCar(listingId, authUser.accessToken, {
+      equipmentIds: [99999],
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.errors).toEqual([
+      { message: "Equipment 99999 does not exist", field: "equipmentIds" },
+    ]);
+    expect(await findSavedEquipmentIds(carId)).toEqual(
+      await findEquipmentIds(["abs"]),
+    );
+  });
+
+  it("applies concurrent replacements one after the other", async () => {
+    const { authUser, listingId, carId } = await attachCarWithEquipment([
+      "abs",
+    ]);
+    const first = await findEquipmentIds(["abs", "sunroof", "radio"]);
+    const second = await findEquipmentIds(["abs", "sunroof", "bluetooth"]);
+
+    const responses = await Promise.all([
+      updateCar(listingId, authUser.accessToken, { equipmentIds: first }),
+      updateCar(listingId, authUser.accessToken, { equipmentIds: second }),
+    ]);
+
+    expect(responses.map(({ statusCode }) => statusCode)).toEqual([200, 200]);
+    expect([first, second]).toContainEqual(await findSavedEquipmentIds(carId));
+  });
+});

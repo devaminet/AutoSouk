@@ -361,18 +361,51 @@ export const getUserListing = async (
   return listing.length > 0 ? listing[0] : null;
 };
 
+type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+// Replaces the whole equipment set of the listing's car. The car row is
+// locked first so concurrent replacements run one after the other instead
+// of colliding on the car_equipment primary key.
+const replaceCarEquipment = async (
+  tx: Transaction,
+  listingId: number,
+  equipmentIds: number[],
+) => {
+  const [car] = await tx
+    .select({ id: carTable.id })
+    .from(carTable)
+    .where(eq(carTable.listingId, listingId))
+    .for("update");
+  if (!car) {
+    return;
+  }
+
+  await tx.delete(carEquipmentTable).where(eq(carEquipmentTable.carId, car.id));
+  if (equipmentIds.length > 0) {
+    await tx
+      .insert(carEquipmentTable)
+      .values(
+        equipmentIds.map((equipmentId) => ({ carId: car.id, equipmentId })),
+      );
+  }
+};
+
 export const updateListingAndMarkPending = async (
   listingId: number,
   changes: z.infer<typeof updateListingSchema>,
 ) => {
   const { car, ...listingChanges } = changes;
+  const { equipmentIds, ...carChanges } = car ?? {};
 
   return await db.transaction(async (tx) => {
-    if (car && Object.keys(car).length > 0) {
+    if (Object.keys(carChanges).length > 0) {
       await tx
         .update(carTable)
-        .set(car)
+        .set(carChanges)
         .where(eq(carTable.listingId, listingId));
+    }
+    if (equipmentIds !== undefined) {
+      await replaceCarEquipment(tx, listingId, equipmentIds);
     }
 
     const updated = await tx

@@ -97,10 +97,6 @@ const throwIfIssues = (issues: ZodIssue[]) => {
   }
 };
 
-const assertCarReferencesExist = async (ids: CarReferenceIds) => {
-  throwIfIssues(await findCarReferenceIssues(ids));
-};
-
 const carMediaUploadLimits = {
   image: { maxSizeBytes: maxCarImageSizeBytes, contentTypePrefix: "image/" },
   video: { maxSizeBytes: maxCarVideoSizeBytes, contentTypePrefix: "video/" },
@@ -293,17 +289,22 @@ export const updateListing = async (
       );
     }
 
-    const { makeId, modelId } = changes.car;
-    await assertCarReferencesExist({
-      ...changes.car,
-      // a changed make or model must stay consistent with the stored one
-      ...(makeId !== undefined || modelId !== undefined
-        ? {
-            makeId: makeId ?? currentCar.makeId ?? undefined,
-            modelId: modelId ?? currentCar.modelId ?? undefined,
-          }
-        : {}),
-    });
+    const { equipmentIds, ...carReferences } = changes.car;
+    const { makeId, modelId } = carReferences;
+    const [referenceIssues, equipmentIssues] = await Promise.all([
+      findCarReferenceIssues({
+        ...carReferences,
+        // a changed make or model must stay consistent with the stored one
+        ...(makeId !== undefined || modelId !== undefined
+          ? {
+              makeId: makeId ?? currentCar.makeId ?? undefined,
+              modelId: modelId ?? currentCar.modelId ?? undefined,
+            }
+          : {}),
+      }),
+      findEquipmentIssues(equipmentIds ?? []),
+    ]);
+    throwIfIssues([...referenceIssues, ...equipmentIssues]);
   }
 
   return await updateListingAndMarkPending(listingId, changes);

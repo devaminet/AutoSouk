@@ -355,6 +355,12 @@ listingRouter.get(
  *                   transmission: { type: string, enum: [manual, automatic] }
  *                   fiscalPower: { type: integer }
  *                   doorsNumber: { type: integer }
+ *                   equipmentIds:
+ *                     type: array
+ *                     description: Replaces the car's whole equipment set with these ids from GET /api/equipment. Send an empty array to clear it; omit it to keep the current set. Unique, at most 100.
+ *                     maxItems: 100
+ *                     uniqueItems: true
+ *                     items: { type: integer }
  *     responses:
  *       200:
  *         description: Listing updated, status set to pending
