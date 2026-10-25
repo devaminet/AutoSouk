@@ -22,6 +22,16 @@ export const createListingSchema = z.object(
 
 const minCarYear = 1950;
 
+const carMediaNameSchema = z.string().refine(
+  (name) => !!getFileType(name),
+  (filename) => ({
+    message: `${filename} has an invalid file type, allowed type: ${allowedFileTypes}`,
+  }),
+);
+
+const hasUniqueNames = (files: { name: string }[]) =>
+  new Set(files.map((file) => file.name.toLowerCase())).size === files.length;
+
 export const createCarSchema = z.object(
   {
     makeId: z
@@ -134,12 +144,7 @@ export const createCarSchema = z.object(
     files: z
       .array(
         z.object({
-          name: z.string().refine(
-            (name) => !!getFileType(name),
-            (filename) => ({
-              message: `${filename} has an invalid file type, allowed type: ${allowedFileTypes}`,
-            }),
-          ),
+          name: carMediaNameSchema,
           isPrimary: z.boolean(),
         }),
         {
@@ -172,15 +177,10 @@ export const createCarSchema = z.object(
           ),
         { message: "The primary file must be an image.", path: [] },
       )
-      .refine(
-        (files) =>
-          new Set(files.map((file) => file.name.toLowerCase())).size ===
-          files.length,
-        {
-          message: "File names must be unique.",
-          path: [],
-        },
-      ),
+      .refine(hasUniqueNames, {
+        message: "File names must be unique.",
+        path: [],
+      }),
   },
   {
     required_error: "Car details are required",
@@ -233,6 +233,27 @@ export const getListingsQuerySchema = z.object({
     .enum(["price_asc", "price_desc", "newest", "oldest"])
     .default("newest"),
 });
+
+export const addCarMediaSchema = z.object(
+  {
+    files: z
+      .array(z.object({ name: carMediaNameSchema }), {
+        required_error: "At least one file is required.",
+        invalid_type_error:
+          "Files must be a list of objects in the format: { name: string }.",
+      })
+      .min(1, "At least one file is required.")
+      .max(
+        maxCarMediaCount,
+        `A car can have at most ${maxCarMediaCount} files.`,
+      )
+      .refine(hasUniqueNames, {
+        message: "File names must be unique.",
+        path: [],
+      }),
+  },
+  { required_error: "Body with files is required" },
+);
 
 export const attachListingParamSchema = z.object({
   id: z.coerce

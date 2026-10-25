@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import {
+  addCarMediaSchema,
   attachListingParamSchema,
   createCarSchema,
   createListingSchema,
@@ -17,6 +18,7 @@ import {
   deleteListing,
   attachCarToListing,
   confirmListingMedia,
+  addListingMedia,
   updateListing,
 } from "./services";
 import { getMechanicsForListing } from "../mechanics/services";
@@ -219,11 +221,96 @@ listingRouter.post(
 
 /**
  * @openapi
+ * /api/listings/{id}/media:
+ *   post:
+ *     tags: [Listings]
+ *     summary: Add media to a listing's car
+ *     description: Returns a presigned POST policy per file, like attaching a car. Upload each file, then call POST /api/listings/{id}/media/confirm; confirmed media sends the listing back to pending approval. Files that are not uploaded yet count towards the 20 file limit until they are confirmed or deleted.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [files]
+ *             properties:
+ *               files:
+ *                 type: array
+ *                 minItems: 1
+ *                 maxItems: 20
+ *                 description: File names must be unique within the request.
+ *                 items:
+ *                   type: object
+ *                   required: [name]
+ *                   properties:
+ *                     name: { type: string, example: side.png }
+ *     responses:
+ *       201:
+ *         description: Media created and waiting for upload
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 carMedia:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id: { type: integer }
+ *                       filename: { type: string }
+ *                       originalName: { type: string }
+ *                       upload:
+ *                         type: object
+ *                         properties:
+ *                           url: { type: string }
+ *                           fields: { type: object, additionalProperties: { type: string } }
+ *       400:
+ *         description: Validation error, more than 20 files on the car, or no car attached
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not a seller
+ *       404:
+ *         description: Listing not found for this seller
+ */
+// Add media to a listing's car
+listingRouter.post(
+  "/:id/media",
+  isAuthenticated,
+  isSeller,
+  async (req: Request, res: Response) => {
+    const paramValidation = attachListingParamSchema.safeParse(req.params);
+    if (!paramValidation.success) {
+      throw new RequestValidationError(paramValidation.error.errors);
+    }
+    const bodyValidation = addCarMediaSchema.safeParse(req.body);
+    if (!bodyValidation.success) {
+      throw new RequestValidationError(bodyValidation.error.errors);
+    }
+    const carMedia = await addListingMedia(
+      paramValidation.data.id,
+      req.currentUser?.id!,
+      bodyValidation.data.files,
+    );
+    res.status(201).json({ carMedia });
+  },
+);
+
+/**
+ * @openapi
  * /api/listings/{id}/media/confirm:
  *   post:
  *     tags: [Listings]
  *     summary: Confirm car media uploads for a listing
- *     description: Marks media found in storage as uploaded so it shows on the listing, removes invalid files, and returns fresh upload policies for files that are still missing so the client can retry.
+ *     description: Marks media found in storage as uploaded so it shows on the listing, removes invalid files, and returns fresh upload policies for files that are still missing so the client can retry. Newly uploaded media sends the listing back to pending approval.
  *     security:
  *       - bearerAuth: []
  *     parameters:

@@ -421,6 +421,17 @@ export const getUserListing = async (
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
+// Locks the listing's car so concurrent changes to its equipment or media
+// run one after the other.
+const lockListingCar = async (tx: Transaction, listingId: number) => {
+  const [car] = await tx
+    .select({ id: carTable.id })
+    .from(carTable)
+    .where(eq(carTable.listingId, listingId))
+    .for("update");
+  return car ?? null;
+};
+
 // Replaces the whole equipment set of the listing's car. The car row is
 // locked first so concurrent replacements run one after the other instead
 // of colliding on the car_equipment primary key.
@@ -429,11 +440,7 @@ const replaceCarEquipment = async (
   listingId: number,
   equipmentIds: number[],
 ) => {
-  const [car] = await tx
-    .select({ id: carTable.id })
-    .from(carTable)
-    .where(eq(carTable.listingId, listingId))
-    .for("update");
+  const car = await lockListingCar(tx, listingId);
   if (!car) {
     return;
   }
@@ -615,14 +622,72 @@ export const findCarMediaByListing = async (
     );
 };
 
-export const markCarMediaUploaded = async (mediaIds: number[]) => {
+// Newly visible media has not been reviewed, so the listing goes back to
+// admin approval, like any other listing edit.
+export const markCarMediaUploaded = async (
+  listingId: number,
+  mediaIds: number[],
+) => {
   if (mediaIds.length === 0) {
     return;
   }
-  await db
-    .update(carMediaTable)
-    .set({ isUploaded: true })
-    .where(inArray(carMediaTable.id, mediaIds));
+  await db.transaction(async (tx) => {
+    await tx
+      .update(carMediaTable)
+      .set({ isUploaded: true })
+      .where(inArray(carMediaTable.id, mediaIds));
+    await tx
+      .update(listingTable)
+      .set({
+        status: "pending",
+        approvedAt: null,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(listingTable.id, listingId));
+  });
+};
+
+export type AddCarMediaResult =
+  | { status: "no_car" }
+  | { status: "over_limit" }
+  | { status: "added"; media: { id: number; link: string }[] };
+
+// Adds not yet uploaded media to the listing's car unless the car would end
+// up with more than maxCount files. Pending uploads count towards the limit.
+export const insertCarMediaWithinLimit = async (
+  listingId: number,
+  filenames: string[],
+  maxCount: number,
+): Promise<AddCarMediaResult> => {
+  return await db.transaction(async (tx) => {
+    const car = await lockListingCar(tx, listingId);
+    if (!car) {
+      return { status: "no_car" };
+    }
+
+    const [{ total }] = await tx
+      .select({ total: count() })
+      .from(carMediaTable)
+      .where(eq(carMediaTable.carId, car.id));
+    if (total + filenames.length > maxCount) {
+      return { status: "over_limit" };
+    }
+
+    const media = await tx
+      .insert(carMediaTable)
+      .values(
+        filenames.map((filename) => ({
+          carId: car.id,
+          link: filename,
+          type: getFileType(filename) as "image" | "video",
+          isPrimary: false,
+          isUploaded: false,
+        })),
+      )
+      .returning({ id: carMediaTable.id, link: carMediaTable.link });
+
+    return { status: "added", media };
+  });
 };
 
 export const deleteCarMediaByIds = async (mediaIds: number[]) => {
