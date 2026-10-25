@@ -26,12 +26,32 @@ import { carOriginTable } from "../../db/schema/car_origin";
 import { carStateTable } from "../../db/schema/state";
 import { cityTable } from "../../db/schema/city";
 import { getFileType } from "../../utils/functions";
+import { carEquipmentTable, equipmentTable } from "../../db/schema/equipment";
+
+// Listing ids whose car has every one of the given (distinct) equipment ids.
+const listingIdsWithAllEquipment = (equipmentIds: number[]) =>
+  db
+    .select({ listingId: carTable.listingId })
+    .from(carEquipmentTable)
+    .innerJoin(carTable, eq(carTable.id, carEquipmentTable.carId))
+    .where(inArray(carEquipmentTable.equipmentId, equipmentIds))
+    .groupBy(carTable.listingId)
+    .having(eq(count(), equipmentIds.length));
 
 export const findListings = async (
   options: z.infer<typeof getListingsQuerySchema>,
 ) => {
-  const { page, limit, makeId, modelId, cityId, minPrice, maxPrice, sort } =
-    options;
+  const {
+    page,
+    limit,
+    makeId,
+    modelId,
+    cityId,
+    minPrice,
+    maxPrice,
+    equipmentIds,
+    sort,
+  } = options;
 
   const conditions = [eq(listingTable.status, "approved")];
 
@@ -40,6 +60,11 @@ export const findListings = async (
   if (cityId) conditions.push(eq(carTable.cityId, cityId));
   if (minPrice !== undefined) conditions.push(gte(carTable.price, minPrice));
   if (maxPrice !== undefined) conditions.push(lte(carTable.price, maxPrice));
+  if (equipmentIds && equipmentIds.length > 0) {
+    conditions.push(
+      inArray(listingTable.id, listingIdsWithAllEquipment(equipmentIds)),
+    );
+  }
 
   let orderByClause;
   if (sort === "price_asc") {
@@ -198,6 +223,19 @@ export const getListingDetailsById = async (id: number) => {
               name: true,
             },
           },
+          equipment: {
+            columns: {},
+            with: {
+              equipment: {
+                columns: { id: true, slug: true, name: true, position: true },
+                with: {
+                  category: {
+                    columns: { slug: true, name: true, position: true },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -293,12 +331,13 @@ export const checkCarExistanceByListingId = async (listingId: number) => {
 // Returns null when the listing already has a car (unique listing_id).
 // Attaching a car sends the listing to admin approval.
 export const saveCarAndMedia = async (args: {
-  carDetails: Omit<z.infer<typeof createCarSchema>, "files">;
+  carDetails: Omit<z.infer<typeof createCarSchema>, "files" | "equipmentIds">;
   carMedia: { isPrimary: boolean; filename: string }[];
+  equipmentIds: number[];
   listingId: number;
   userId: number;
 }) => {
-  const { carDetails, carMedia, listingId, userId } = args;
+  const { carDetails, carMedia, equipmentIds, listingId, userId } = args;
 
   return await db.transaction(async (tx) => {
     const [newCar] = await tx
@@ -324,6 +363,14 @@ export const saveCarAndMedia = async (args: {
     }));
 
     await tx.insert(carMediaTable).values(carMediaValues);
+    if (equipmentIds.length > 0) {
+      await tx.insert(carEquipmentTable).values(
+        equipmentIds.map((equipmentId) => ({
+          carId: newCar.id,
+          equipmentId,
+        })),
+      );
+    }
     await tx
       .update(listingTable)
       .set({
@@ -351,18 +398,51 @@ export const getUserListing = async (
   return listing.length > 0 ? listing[0] : null;
 };
 
+type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+// Replaces the whole equipment set of the listing's car. The car row is
+// locked first so concurrent replacements run one after the other instead
+// of colliding on the car_equipment primary key.
+const replaceCarEquipment = async (
+  tx: Transaction,
+  listingId: number,
+  equipmentIds: number[],
+) => {
+  const [car] = await tx
+    .select({ id: carTable.id })
+    .from(carTable)
+    .where(eq(carTable.listingId, listingId))
+    .for("update");
+  if (!car) {
+    return;
+  }
+
+  await tx.delete(carEquipmentTable).where(eq(carEquipmentTable.carId, car.id));
+  if (equipmentIds.length > 0) {
+    await tx
+      .insert(carEquipmentTable)
+      .values(
+        equipmentIds.map((equipmentId) => ({ carId: car.id, equipmentId })),
+      );
+  }
+};
+
 export const updateListingAndMarkPending = async (
   listingId: number,
   changes: z.infer<typeof updateListingSchema>,
 ) => {
   const { car, ...listingChanges } = changes;
+  const { equipmentIds, ...carChanges } = car ?? {};
 
   return await db.transaction(async (tx) => {
-    if (car && Object.keys(car).length > 0) {
+    if (Object.keys(carChanges).length > 0) {
       await tx
         .update(carTable)
-        .set(car)
+        .set(carChanges)
         .where(eq(carTable.listingId, listingId));
+    }
+    if (equipmentIds !== undefined) {
+      await replaceCarEquipment(tx, listingId, equipmentIds);
     }
 
     const updated = await tx
@@ -468,6 +548,21 @@ export const findInvalidCarReferences = async (
 
   const results = await Promise.all(checks.map(([, exists]) => exists));
   return checks.filter((_, index) => !results[index]).map(([field]) => field);
+};
+
+// Returns the given equipment ids that are not in the catalog.
+export const findMissingEquipmentIds = async (ids: number[]) => {
+  if (ids.length === 0) {
+    return [];
+  }
+
+  const rows = await db
+    .select({ id: equipmentTable.id })
+    .from(equipmentTable)
+    .where(inArray(equipmentTable.id, ids));
+  const found = new Set(rows.map(({ id }) => id));
+
+  return ids.filter((id) => !found.has(id));
 };
 
 export const findCarReferencesByListingId = async (listingId: number) => {

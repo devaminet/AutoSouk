@@ -54,6 +54,15 @@ const listingRouter = Router();
  *         name: maxPrice
  *         schema: { type: number }
  *       - in: query
+ *         name: equipmentIds
+ *         description: Only cars that have all of these equipment ids from GET /api/equipment. Comma separated (equipmentIds=3,7) or repeated (equipmentIds=3&equipmentIds=7), at most 100.
+ *         style: form
+ *         explode: false
+ *         schema:
+ *           type: array
+ *           maxItems: 100
+ *           items: { type: integer }
+ *       - in: query
  *         name: sort
  *         schema:
  *           type: string
@@ -156,6 +165,12 @@ listingRouter.post(
  *               transmission: { type: string, enum: [manual, automatic] }
  *               fiscalPower: { type: integer }
  *               doorsNumber: { type: integer }
+ *               equipmentIds:
+ *                 type: array
+ *                 description: Optional ids from GET /api/equipment. Unique, at most 100. Unknown ids return 400 with field equipmentIds.
+ *                 maxItems: 100
+ *                 uniqueItems: true
+ *                 items: { type: integer }
  *               files:
  *                 type: array
  *                 items:
@@ -165,7 +180,7 @@ listingRouter.post(
  *                     isPrimary: { type: boolean }
  *     responses:
  *       201:
- *         description: Car attached to listing, which is now pending approval. Each carMedia item holds the stored filename, the originalName sent by the client, and upload ({ url, fields }), a presigned POST policy. Send a multipart/form-data POST to upload.url with every fields entry first and the file last as field \"file\". Images max 10MB (image/*), videos max 50MB (video/*), valid for 15 minutes.
+ *         description: Car attached to listing, which is now pending approval. The car includes the saved equipmentIds. Each carMedia item holds the stored filename, the originalName sent by the client, and upload ({ url, fields }), a presigned POST policy. Send a multipart/form-data POST to upload.url with every fields entry first and the file last as field \"file\". Images max 10MB (image/*), videos max 50MB (video/*), valid for 15 minutes.
  *       400:
  *         description: Validation error
  *       401:
@@ -297,7 +312,32 @@ listingRouter.get("/:id/mechanics", async (req: Request, res: Response) => {
  *         schema: { type: integer }
  *     responses:
  *       200:
- *         description: Listing details
+ *         description: Listing details. car.equipment lists the car's equipment in catalog display order.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 listing:
+ *                   type: object
+ *                   properties:
+ *                     car:
+ *                       type: object
+ *                       nullable: true
+ *                       properties:
+ *                         equipment:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               id: { type: integer }
+ *                               slug: { type: string, example: panoramic_roof }
+ *                               name: { type: string, example: Panoramic roof }
+ *                               category:
+ *                                 type: object
+ *                                 properties:
+ *                                   slug: { type: string, example: comfort }
+ *                                   name: { type: string, example: Comfort }
  *       404:
  *         description: Listing not found
  */
@@ -349,6 +389,12 @@ listingRouter.get(
  *                   transmission: { type: string, enum: [manual, automatic] }
  *                   fiscalPower: { type: integer }
  *                   doorsNumber: { type: integer }
+ *                   equipmentIds:
+ *                     type: array
+ *                     description: Replaces the car's whole equipment set with these ids from GET /api/equipment. Send an empty array to clear it; omit it to keep the current set. Unique, at most 100.
+ *                     maxItems: 100
+ *                     uniqueItems: true
+ *                     items: { type: integer }
  *     responses:
  *       200:
  *         description: Listing updated, status set to pending

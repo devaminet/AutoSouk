@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z, type ZodIssue } from "zod";
 import {
   getProfileImageUrl,
   generateGetPresignedUrls,
@@ -31,6 +31,7 @@ import {
   findCarReferencesByListingId,
   markCarMediaUploaded,
   findInvalidCarReferences,
+  findMissingEquipmentIds,
   findListingById,
   type CarReferenceField,
   type CarReferenceIds,
@@ -68,16 +69,31 @@ const invalidReferenceMessages: Record<CarReferenceField, string> = {
   cityId: "City does not exist",
 };
 
-const assertCarReferencesExist = async (ids: CarReferenceIds) => {
+const findCarReferenceIssues = async (
+  ids: CarReferenceIds,
+): Promise<ZodIssue[]> => {
   const invalidFields = await findInvalidCarReferences(ids);
-  if (invalidFields.length > 0) {
-    throw new RequestValidationError(
-      invalidFields.map((field) => ({
-        code: "custom",
-        message: invalidReferenceMessages[field],
-        path: [field],
-      })),
-    );
+  return invalidFields.map((field) => ({
+    code: "custom",
+    message: invalidReferenceMessages[field],
+    path: [field],
+  }));
+};
+
+const findEquipmentIssues = async (
+  equipmentIds: number[],
+): Promise<ZodIssue[]> => {
+  const missingIds = await findMissingEquipmentIds(equipmentIds);
+  return missingIds.map((id) => ({
+    code: "custom",
+    message: `Equipment ${id} does not exist`,
+    path: ["equipmentIds"],
+  }));
+};
+
+const throwIfIssues = (issues: ZodIssue[]) => {
+  if (issues.length > 0) {
+    throw new RequestValidationError(issues);
   }
 };
 
@@ -140,8 +156,12 @@ export const attachCarToListing = async (
     throw new BadRequestError("A car is already attached to this listing");
   }
 
-  const { files, ...carDetails } = data;
-  await assertCarReferencesExist(carDetails);
+  const { files, equipmentIds = [], ...carDetails } = data;
+  const [referenceIssues, equipmentIssues] = await Promise.all([
+    findCarReferenceIssues(carDetails),
+    findEquipmentIssues(equipmentIds),
+  ]);
+  throwIfIssues([...referenceIssues, ...equipmentIssues]);
   let carMedia: Awaited<ReturnType<typeof buildCarMediaUpload>>[] = [];
   try {
     carMedia = await Promise.all(files.map(buildCarMediaUpload));
@@ -153,6 +173,7 @@ export const attachCarToListing = async (
   const car = await saveCarAndMedia({
     carDetails,
     carMedia,
+    equipmentIds,
     listingId,
     userId,
   });
@@ -162,7 +183,7 @@ export const attachCarToListing = async (
   }
 
   return {
-    car,
+    car: { ...car, equipmentIds },
     carMedia,
   };
 };
@@ -228,6 +249,27 @@ export const confirmListingMedia = async (
   };
 };
 
+type ListingDetails = NonNullable<
+  Awaited<ReturnType<typeof getListingDetailsById>>
+>;
+
+// Flattens the car_equipment join rows into the catalog display order.
+const toCarEquipment = (
+  rows: NonNullable<ListingDetails["car"]>["equipment"],
+) =>
+  rows
+    .map(({ equipment }) => equipment)
+    .sort(
+      (a, b) =>
+        a.category.position - b.category.position || a.position - b.position,
+    )
+    .map(({ id, slug, name, category }) => ({
+      id,
+      slug,
+      name,
+      category: { slug: category.slug, name: category.name },
+    }));
+
 export const getListingDetails = async (listingId: number) => {
   const listing = await getListingDetailsById(listingId);
 
@@ -246,6 +288,9 @@ export const getListingDetails = async (listingId: number) => {
 
   return {
     ...listing,
+    car: listing.car
+      ? { ...listing.car, equipment: toCarEquipment(listing.car.equipment) }
+      : null,
     user: listing.user ? await withProfileImageUrl(listing.user) : null,
   };
 };
@@ -268,17 +313,22 @@ export const updateListing = async (
       );
     }
 
-    const { makeId, modelId } = changes.car;
-    await assertCarReferencesExist({
-      ...changes.car,
-      // a changed make or model must stay consistent with the stored one
-      ...(makeId !== undefined || modelId !== undefined
-        ? {
-            makeId: makeId ?? currentCar.makeId ?? undefined,
-            modelId: modelId ?? currentCar.modelId ?? undefined,
-          }
-        : {}),
-    });
+    const { equipmentIds, ...carReferences } = changes.car;
+    const { makeId, modelId } = carReferences;
+    const [referenceIssues, equipmentIssues] = await Promise.all([
+      findCarReferenceIssues({
+        ...carReferences,
+        // a changed make or model must stay consistent with the stored one
+        ...(makeId !== undefined || modelId !== undefined
+          ? {
+              makeId: makeId ?? currentCar.makeId ?? undefined,
+              modelId: modelId ?? currentCar.modelId ?? undefined,
+            }
+          : {}),
+      }),
+      findEquipmentIssues(equipmentIds ?? []),
+    ]);
+    throwIfIssues([...referenceIssues, ...equipmentIssues]);
   }
 
   return await updateListingAndMarkPending(listingId, changes);

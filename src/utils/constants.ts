@@ -9,3 +9,4 @@ export const carMediaUploadExpirationSeconds = 15 * 60;
 export const defaultProfileImageName = "default-avatar.svg";
 export const inspectionReportsBucketName = "inspection-reports";
 export const tokenExpirationMinutes = 5;
+export const maxCarEquipmentCount = 100;
