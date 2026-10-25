@@ -290,6 +290,16 @@ export const attachListingParamSchema = z.object({
     .positive("listingId must be a positive number"),
 });
 
+export const listingMediaParamSchema = attachListingParamSchema.extend({
+  mediaId: z.coerce
+    .number({
+      required_error: "mediaId is required",
+      invalid_type_error: "mediaId must be a number",
+    })
+    .int()
+    .positive("mediaId must be a positive number"),
+});
+
 export const updateListingSchema = z
   .object({
     title: z

@@ -271,37 +271,37 @@ describe("confirming added media", () => {
   });
 });
 
+type DetailsMedia = { id: number; link: string; isPrimary: boolean };
+
+// Attaches a car with the 3 required images plus `extra` more, uploads
+// and confirms all of them, and returns the visible media primary first.
+const createCarWithUploadedImages = async (extra = 0) => {
+  const { authUser, listingId, carId } = await createListingWithCar();
+  if (extra > 0) {
+    await addMedia(listingId, authUser.accessToken, {
+      files: namedFiles(extra),
+    }).expect(201);
+  }
+  const rows = await db
+    .select()
+    .from(carMediaTable)
+    .where(eq(carMediaTable.carId, carId));
+  for (const row of rows) {
+    await uploadImage(row.link);
+  }
+  await request(app)
+    .post(`/api/listings/${listingId}/media/confirm`)
+    .auth(authUser.accessToken, { type: "bearer" })
+    .expect(200);
+  return { authUser, listingId, carId, media: await visibleMedia(listingId) };
+};
+
+const visibleMedia = async (listingId: number) => {
+  const details = await request(app).get(`/api/listings/${listingId}`);
+  return details.body.listing.car.carMedias as DetailsMedia[];
+};
+
 describe("DELETE /api/listings/:id/media", () => {
-  type DetailsMedia = { id: number; link: string; isPrimary: boolean };
-
-  // Attaches a car with the 3 required images plus `extra` more, uploads
-  // and confirms all of them, and returns the visible media primary first.
-  const createCarWithUploadedImages = async (extra = 0) => {
-    const { authUser, listingId, carId } = await createListingWithCar();
-    if (extra > 0) {
-      await addMedia(listingId, authUser.accessToken, {
-        files: namedFiles(extra),
-      }).expect(201);
-    }
-    const rows = await db
-      .select()
-      .from(carMediaTable)
-      .where(eq(carMediaTable.carId, carId));
-    for (const row of rows) {
-      await uploadImage(row.link);
-    }
-    await request(app)
-      .post(`/api/listings/${listingId}/media/confirm`)
-      .auth(authUser.accessToken, { type: "bearer" })
-      .expect(200);
-    return { authUser, listingId, carId, media: await visibleMedia(listingId) };
-  };
-
-  const visibleMedia = async (listingId: number) => {
-    const details = await request(app).get(`/api/listings/${listingId}`);
-    return details.body.listing.car.carMedias as DetailsMedia[];
-  };
-
   const filenameOf = async (mediaId: number) => {
     const [row] = await db
       .select({ link: carMediaTable.link })
@@ -525,5 +525,152 @@ describe("DELETE /api/listings/:id/media", () => {
     const media = await visibleMedia(listingId);
     expect(media).toHaveLength(2);
     expect(media[0].isPrimary).toBe(true);
+  });
+});
+
+describe("PATCH /api/listings/:id/media/:mediaId/primary", () => {
+  const setPrimary = (
+    listingId: number,
+    mediaId: number,
+    accessToken: string,
+  ) =>
+    request(app)
+      .patch(`/api/listings/${listingId}/media/${mediaId}/primary`)
+      .auth(accessToken, { type: "bearer" });
+
+  it("requires authentication", () => {
+    return request(app).patch("/api/listings/1/media/1/primary").expect(401);
+  });
+
+  it("makes an uploaded image the only primary media", async () => {
+    const { authUser, listingId, media } = await createCarWithUploadedImages();
+
+    const response = await setPrimary(
+      listingId,
+      media[2].id,
+      authUser.accessToken,
+    );
+
+    expect(response.statusCode).toBe(200);
+    const carMedias: DetailsMedia[] = response.body.carMedias;
+    expect(carMedias.map(({ id, isPrimary }) => [id, isPrimary])).toEqual([
+      [media[2].id, true],
+      [media[0].id, false],
+      [media[1].id, false],
+    ]);
+    expect((await visibleMedia(listingId))[0].id).toBe(media[2].id);
+  });
+
+  it("is idempotent for the current primary", async () => {
+    const { authUser, listingId, media } = await createCarWithUploadedImages();
+
+    await setPrimary(listingId, media[0].id, authUser.accessToken).expect(200);
+
+    const primaries = (await visibleMedia(listingId)).filter(
+      ({ isPrimary }) => isPrimary,
+    );
+    expect(primaries.map(({ id }) => id)).toEqual([media[0].id]);
+  });
+
+  it("keeps an approved listing approved", async () => {
+    const { authUser, listingId, media } = await createCarWithUploadedImages();
+    const admin = await signinUser({
+      email: "admin@autosouk.com",
+      password: "Admin_@@789",
+    });
+    await request(app)
+      .patch(`/api/listings/${listingId}/approve`)
+      .auth(admin.accessToken, { type: "bearer" })
+      .expect(200);
+
+    await setPrimary(listingId, media[1].id, authUser.accessToken).expect(200);
+
+    const details = await request(app).get(`/api/listings/${listingId}`);
+    expect(details.body.listing.status).toBe("approved");
+  });
+
+  it("rejects a video", async () => {
+    const { authUser, listingId } = await createCarWithUploadedImages();
+    const added = await addMedia(listingId, authUser.accessToken, {
+      files: [{ name: "walkaround.mp4" }],
+    }).expect(201);
+    const [video]: AddedMedia[] = added.body.carMedia;
+    await minioClient.putObject(
+      carBucketName,
+      video.filename,
+      Buffer.from("vid"),
+      3,
+      { "Content-Type": "video/mp4" },
+    );
+    await request(app)
+      .post(`/api/listings/${listingId}/media/confirm`)
+      .auth(authUser.accessToken, { type: "bearer" })
+      .expect(200);
+
+    const response = await setPrimary(
+      listingId,
+      video.id,
+      authUser.accessToken,
+    );
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.errors[0].message).toBe(
+      "Only an image can be the primary media",
+    );
+  });
+
+  it("rejects an image that is not uploaded yet", async () => {
+    const { authUser, listingId } = await createCarWithUploadedImages();
+    const added = await addMedia(listingId, authUser.accessToken, {
+      files: [{ name: "side.png" }],
+    }).expect(201);
+    const [pending]: AddedMedia[] = added.body.carMedia;
+
+    const response = await setPrimary(
+      listingId,
+      pending.id,
+      authUser.accessToken,
+    );
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.errors[0].message).toBe(
+      "Upload and confirm this image before making it primary",
+    );
+  });
+
+  it("returns 404 for media of another car", async () => {
+    const { authUser, listingId } = await createCarWithUploadedImages();
+
+    const response = await setPrimary(listingId, 99999, authUser.accessToken);
+
+    expect(response.statusCode).toBe(404);
+    expect(response.body.errors[0].message).toBe(
+      "Media was not found for this car",
+    );
+  });
+
+  it("returns 404 for a listing of another seller", async () => {
+    const { listingId, media } = await createCarWithUploadedImages();
+    await signupUserWithVerification({
+      userType: "seller",
+      email: "other@example.com",
+    });
+    const other = await signinUser({
+      email: "other@example.com",
+      password: "USEr_@@852852",
+    });
+
+    await setPrimary(listingId, media[1].id, other.accessToken).expect(404);
+  });
+
+  it("rejects ids that are not positive whole numbers", async () => {
+    const { authUser, listingId } = await createCarWithUploadedImages();
+
+    const response = await request(app)
+      .patch(`/api/listings/${listingId}/media/abc/primary`)
+      .auth(authUser.accessToken, { type: "bearer" });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.errors[0].field).toBe("mediaId");
   });
 });

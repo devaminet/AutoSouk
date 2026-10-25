@@ -30,6 +30,7 @@ import {
   deleteListingDetails,
   deleteCarMediaByIds,
   deleteCarMediaKeepingMinimum,
+  setPrimaryCarMedia,
   findCarMediaByListing,
   findCarReferencesByListingId,
   markCarMediaUploaded,
@@ -252,6 +253,17 @@ export const addListingMedia = async (
   }));
 };
 
+const withMediaUrls = async <T extends { link: string }>(media: T[]) => {
+  const urlsMap = await generateGetPresignedUrls(
+    carBucketName,
+    media.map(({ link }) => link),
+  );
+  return media.map((item) => ({
+    ...item,
+    link: urlsMap.get(item.link) || "",
+  }));
+};
+
 const removeStoredCarMedia = async (filenames: string[]) => {
   for (const filename of filenames) {
     try {
@@ -304,17 +316,41 @@ export const deleteListingMedia = async (
 
   await removeStoredCarMedia(result.deleted.map(({ link }) => link));
 
-  const urlsMap = await generateGetPresignedUrls(
-    carBucketName,
-    result.remaining.map(({ link }) => link),
-  );
   return {
     deleted: result.deleted.map(({ id }) => id),
-    carMedias: result.remaining.map((media) => ({
-      ...media,
-      link: urlsMap.get(media.link) || "",
-    })),
+    carMedias: await withMediaUrls(result.remaining),
   };
+};
+
+// Changing the primary image only reorders reviewed media, so the listing
+// keeps its approval status.
+export const setListingPrimaryMedia = async (
+  listingId: number,
+  userId: number,
+  mediaId: number,
+) => {
+  const listing = await getUserListing(listingId, userId);
+  if (!listing) {
+    throw new NotFoundError("Listing was not found");
+  }
+
+  const result = await setPrimaryCarMedia(listingId, mediaId);
+  switch (result.status) {
+    case "no_car":
+      throw new BadRequestError(
+        "Attach a car to this listing before editing it",
+      );
+    case "not_found":
+      throw new NotFoundError("Media was not found for this car");
+    case "not_image":
+      throw new BadRequestError("Only an image can be the primary media");
+    case "not_uploaded":
+      throw new BadRequestError(
+        "Upload and confirm this image before making it primary",
+      );
+    case "updated":
+      return { carMedias: await withMediaUrls(result.media) };
+  }
 };
 
 // Marks uploaded media as visible, drops invalid objects, and returns a new

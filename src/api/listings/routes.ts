@@ -3,6 +3,7 @@ import {
   addCarMediaSchema,
   attachListingParamSchema,
   deleteCarMediaSchema,
+  listingMediaParamSchema,
   createCarSchema,
   createListingSchema,
   getListingsQuerySchema,
@@ -21,6 +22,7 @@ import {
   confirmListingMedia,
   addListingMedia,
   deleteListingMedia,
+  setListingPrimaryMedia,
   updateListing,
 } from "./services";
 import { getMechanicsForListing } from "../mechanics/services";
@@ -387,6 +389,69 @@ listingRouter.delete(
       paramValidation.data.id,
       req.currentUser?.id!,
       bodyValidation.data.mediaIds,
+    );
+    res.status(200).json(result);
+  },
+);
+
+/**
+ * @openapi
+ * /api/listings/{id}/media/{mediaId}/primary:
+ *   patch:
+ *     tags: [Listings]
+ *     summary: Make an uploaded image the primary media of a listing's car
+ *     description: The previous primary media stops being primary. The listing keeps its approval status.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *       - in: path
+ *         name: mediaId
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Primary image changed. Returns the car's uploaded media, primary first.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 carMedias:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id: { type: integer }
+ *                       link: { type: string, description: Presigned download URL }
+ *                       type: { type: string, enum: [image, video] }
+ *                       isPrimary: { type: boolean }
+ *       400:
+ *         description: Invalid ids, the media is a video or not uploaded yet, or no car attached
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not a seller
+ *       404:
+ *         description: Listing not found for this seller, or media not found for its car
+ */
+// Make an uploaded image the primary media of a listing's car
+listingRouter.patch(
+  "/:id/media/:mediaId/primary",
+  isAuthenticated,
+  isSeller,
+  async (req: Request, res: Response) => {
+    const paramValidation = listingMediaParamSchema.safeParse(req.params);
+    if (!paramValidation.success) {
+      throw new RequestValidationError(paramValidation.error.errors);
+    }
+    const result = await setListingPrimaryMedia(
+      paramValidation.data.id,
+      req.currentUser?.id!,
+      paramValidation.data.mediaId,
     );
     res.status(200).json(result);
   },
