@@ -314,7 +314,7 @@ listingRouter.get("/:id/mechanics", async (req: Request, res: Response) => {
  *         schema: { type: integer }
  *     responses:
  *       200:
- *         description: Listing details. car.equipment lists the car's equipment in catalog display order.
+ *         description: Listing details. car.carMedias lists uploaded media, primary first, then in upload order; use its id to delete media or change the primary image. car.equipment lists the car's equipment in catalog display order.
  *         content:
  *           application/json:
  *             schema:
@@ -327,6 +327,15 @@ listingRouter.get("/:id/mechanics", async (req: Request, res: Response) => {
  *                       type: object
  *                       nullable: true
  *                       properties:
+ *                         carMedias:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               id: { type: integer }
+ *                               link: { type: string, description: Presigned download URL }
+ *                               type: { type: string, enum: [image, video] }
+ *                               isPrimary: { type: boolean }
  *                         equipment:
  *                           type: array
  *                           items:

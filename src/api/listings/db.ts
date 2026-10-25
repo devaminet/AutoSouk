@@ -211,11 +211,13 @@ export const getListingDetailsById = async (id: number) => {
           },
           carMedias: {
             columns: {
+              id: true,
               link: true,
               type: true,
               isPrimary: true,
             },
             where: eq(carMediaTable.isUploaded, true),
+            orderBy: [desc(carMediaTable.isPrimary), asc(carMediaTable.id)],
           },
           make: {
             columns: {
