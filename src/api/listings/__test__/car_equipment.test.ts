@@ -262,3 +262,50 @@ describe("car equipment on update", () => {
     expect([first, second]).toContainEqual(await findSavedEquipmentIds(carId));
   });
 });
+
+describe("car equipment on listing details", () => {
+  it("lists the car's equipment with its category in catalog order", async () => {
+    const { authUser, listingId } = await createListing();
+    // sent out of catalog order on purpose
+    const equipmentIds = await findEquipmentIds([
+      "alloy_wheels",
+      "panoramic_roof",
+      "esp",
+      "abs",
+    ]);
+    await request(app)
+      .post(`/api/listings/${listingId}/car`)
+      .send({ ...validCar, equipmentIds: [...equipmentIds].reverse() })
+      .auth(authUser.accessToken, { type: "bearer" })
+      .expect(201);
+
+    const response = await request(app)
+      .get(`/api/listings/${listingId}`)
+      .expect(200);
+
+    const { equipment } = response.body.listing.car;
+    expect(equipment.map(({ slug }: { slug: string }) => slug)).toEqual([
+      "abs",
+      "esp",
+      "panoramic_roof",
+      "alloy_wheels",
+    ]);
+    expect(equipment[0]).toEqual({
+      id: expect.any(Number),
+      slug: "abs",
+      name: "ABS",
+      category: { slug: "safety", name: "Safety" },
+    });
+  });
+
+  it("returns an empty list for a car without equipment", async () => {
+    const response = await attachCar(validCar);
+    const listingId = response.body.listingId;
+
+    const details = await request(app)
+      .get(`/api/listings/${listingId}`)
+      .expect(200);
+
+    expect(details.body.listing.car.equipment).toEqual([]);
+  });
+});

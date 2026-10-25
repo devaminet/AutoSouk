@@ -199,6 +199,19 @@ export const getListingDetailsById = async (id: number) => {
               name: true,
             },
           },
+          equipment: {
+            columns: {},
+            with: {
+              equipment: {
+                columns: { id: true, slug: true, name: true, position: true },
+                with: {
+                  category: {
+                    columns: { slug: true, name: true, position: true },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     },

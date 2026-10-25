@@ -249,6 +249,27 @@ export const confirmListingMedia = async (
   };
 };
 
+type ListingDetails = NonNullable<
+  Awaited<ReturnType<typeof getListingDetailsById>>
+>;
+
+// Flattens the car_equipment join rows into the catalog display order.
+const toCarEquipment = (
+  rows: NonNullable<ListingDetails["car"]>["equipment"],
+) =>
+  rows
+    .map(({ equipment }) => equipment)
+    .sort(
+      (a, b) =>
+        a.category.position - b.category.position || a.position - b.position,
+    )
+    .map(({ id, slug, name, category }) => ({
+      id,
+      slug,
+      name,
+      category: { slug: category.slug, name: category.name },
+    }));
+
 export const getListingDetails = async (listingId: number) => {
   const listing = await getListingDetailsById(listingId);
 
@@ -267,6 +288,9 @@ export const getListingDetails = async (listingId: number) => {
 
   return {
     ...listing,
+    car: listing.car
+      ? { ...listing.car, equipment: toCarEquipment(listing.car.equipment) }
+      : null,
     user: listing.user ? await withProfileImageUrl(listing.user) : null,
   };
 };

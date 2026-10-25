@@ -303,7 +303,32 @@ listingRouter.get("/:id/mechanics", async (req: Request, res: Response) => {
  *         schema: { type: integer }
  *     responses:
  *       200:
- *         description: Listing details
+ *         description: Listing details. car.equipment lists the car's equipment in catalog display order.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 listing:
+ *                   type: object
+ *                   properties:
+ *                     car:
+ *                       type: object
+ *                       nullable: true
+ *                       properties:
+ *                         equipment:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               id: { type: integer }
+ *                               slug: { type: string, example: panoramic_roof }
+ *                               name: { type: string, example: Panoramic roof }
+ *                               category:
+ *                                 type: object
+ *                                 properties:
+ *                                   slug: { type: string, example: comfort }
+ *                                   name: { type: string, example: Comfort }
  *       404:
  *         description: Listing not found
  */
