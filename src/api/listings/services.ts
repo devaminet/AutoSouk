@@ -20,6 +20,7 @@ import {
   carBucketName,
   carMediaUploadExpirationSeconds,
   maxCarMediaCount,
+  minCarImageCount,
   maxCarImageSizeBytes,
   maxCarVideoSizeBytes,
 } from "../../utils/constants";
@@ -28,6 +29,7 @@ import {
   checkCarExistanceByListingId,
   deleteListingDetails,
   deleteCarMediaByIds,
+  deleteCarMediaKeepingMinimum,
   findCarMediaByListing,
   findCarReferencesByListingId,
   markCarMediaUploaded,
@@ -250,6 +252,71 @@ export const addListingMedia = async (
   }));
 };
 
+const removeStoredCarMedia = async (filenames: string[]) => {
+  for (const filename of filenames) {
+    try {
+      await removeObject(carBucketName, filename);
+    } catch (error) {
+      console.error("Error removing deleted car media:", error);
+    }
+  }
+};
+
+// Deletes media from the seller's car while it keeps at least the minimum
+// number of uploaded images. Storage objects are removed after the database
+// commit, so a storage failure never brings the deleted rows back.
+export const deleteListingMedia = async (
+  listingId: number,
+  userId: number,
+  mediaIds: number[],
+) => {
+  const listing = await getUserListing(listingId, userId);
+  if (!listing) {
+    throw new NotFoundError("Listing was not found");
+  }
+
+  const result = await deleteCarMediaKeepingMinimum(
+    listingId,
+    mediaIds,
+    minCarImageCount,
+  );
+  if (result.status === "no_car") {
+    throw new BadRequestError("Attach a car to this listing before editing it");
+  }
+  if (result.status === "unknown_media") {
+    throw new RequestValidationError(
+      result.mediaIds.map((id) => ({
+        code: "custom",
+        message: `Media ${id} does not exist for this car`,
+        path: ["mediaIds"],
+      })),
+    );
+  }
+  if (result.status === "below_minimum") {
+    throw new RequestValidationError([
+      {
+        code: "custom",
+        message: `A car needs at least ${minCarImageCount} images.`,
+        path: ["mediaIds"],
+      },
+    ]);
+  }
+
+  await removeStoredCarMedia(result.deleted.map(({ link }) => link));
+
+  const urlsMap = await generateGetPresignedUrls(
+    carBucketName,
+    result.remaining.map(({ link }) => link),
+  );
+  return {
+    deleted: result.deleted.map(({ id }) => id),
+    carMedias: result.remaining.map((media) => ({
+      ...media,
+      link: urlsMap.get(media.link) || "",
+    })),
+  };
+};
+
 // Marks uploaded media as visible, drops invalid objects, and returns a new
 // upload policy for media that never reached storage so the client can retry.
 export const confirmListingMedia = async (
@@ -277,7 +344,10 @@ export const confirmListingMedia = async (
   }
 
   await markCarMediaUploaded(listingId, uploadedIds);
-  await deleteCarMediaByIds(rejected.map((item) => item.id));
+  await deleteCarMediaByIds(
+    listingId,
+    rejected.map((item) => item.id),
+  );
   for (const item of rejected) {
     try {
       await removeObject(carBucketName, item.filename);

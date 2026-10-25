@@ -690,9 +690,138 @@ export const insertCarMediaWithinLimit = async (
   });
 };
 
-export const deleteCarMediaByIds = async (mediaIds: number[]) => {
+// Gives the car a primary image again after its primary was deleted:
+// the oldest uploaded image, or the oldest image still waiting for upload.
+const ensureCarPrimaryImage = async (tx: Transaction, carId: number) => {
+  const [primary] = await tx
+    .select({ id: carMediaTable.id })
+    .from(carMediaTable)
+    .where(
+      and(eq(carMediaTable.carId, carId), eq(carMediaTable.isPrimary, true)),
+    );
+  if (primary) {
+    return;
+  }
+
+  const [next] = await tx
+    .select({ id: carMediaTable.id })
+    .from(carMediaTable)
+    .where(and(eq(carMediaTable.carId, carId), eq(carMediaTable.type, "image")))
+    .orderBy(desc(carMediaTable.isUploaded), asc(carMediaTable.id))
+    .limit(1);
+  if (next) {
+    await tx
+      .update(carMediaTable)
+      .set({ isPrimary: true })
+      .where(eq(carMediaTable.id, next.id));
+  }
+};
+
+// Removes media that failed upload validation, keeping a primary image.
+export const deleteCarMediaByIds = async (
+  listingId: number,
+  mediaIds: number[],
+) => {
   if (mediaIds.length === 0) {
     return;
   }
-  await db.delete(carMediaTable).where(inArray(carMediaTable.id, mediaIds));
+  await db.transaction(async (tx) => {
+    const car = await lockListingCar(tx, listingId);
+    if (!car) {
+      return;
+    }
+    await tx
+      .delete(carMediaTable)
+      .where(
+        and(
+          eq(carMediaTable.carId, car.id),
+          inArray(carMediaTable.id, mediaIds),
+        ),
+      );
+    await ensureCarPrimaryImage(tx, car.id);
+  });
+};
+
+export type DeleteCarMediaResult =
+  | { status: "no_car" }
+  | { status: "unknown_media"; mediaIds: number[] }
+  | { status: "below_minimum" }
+  | {
+      status: "deleted";
+      deleted: { id: number; link: string }[];
+      remaining: {
+        id: number;
+        link: string;
+        type: "image" | "video";
+        isPrimary: boolean;
+      }[];
+    };
+
+// Deletes media from the listing's car unless fewer than minImages uploaded
+// images would remain. Media that is not uploaded yet can always be deleted.
+export const deleteCarMediaKeepingMinimum = async (
+  listingId: number,
+  mediaIds: number[],
+  minImages: number,
+): Promise<DeleteCarMediaResult> => {
+  return await db.transaction(async (tx) => {
+    const car = await lockListingCar(tx, listingId);
+    if (!car) {
+      return { status: "no_car" };
+    }
+
+    const media = await tx
+      .select({
+        id: carMediaTable.id,
+        link: carMediaTable.link,
+        type: carMediaTable.type,
+        isPrimary: carMediaTable.isPrimary,
+        isUploaded: carMediaTable.isUploaded,
+      })
+      .from(carMediaTable)
+      .where(eq(carMediaTable.carId, car.id))
+      .orderBy(desc(carMediaTable.isPrimary), asc(carMediaTable.id));
+
+    const carMediaIds = new Set(media.map(({ id }) => id));
+    const unknownIds = mediaIds.filter((id) => !carMediaIds.has(id));
+    if (unknownIds.length > 0) {
+      return { status: "unknown_media", mediaIds: unknownIds };
+    }
+
+    const toDelete = new Set(mediaIds);
+    const remainingImages = media.filter(
+      (item) =>
+        !toDelete.has(item.id) && item.isUploaded && item.type === "image",
+    );
+    if (remainingImages.length < minImages) {
+      return { status: "below_minimum" };
+    }
+
+    await tx.delete(carMediaTable).where(inArray(carMediaTable.id, mediaIds));
+    await ensureCarPrimaryImage(tx, car.id);
+
+    const remaining = await tx
+      .select({
+        id: carMediaTable.id,
+        link: carMediaTable.link,
+        type: carMediaTable.type,
+        isPrimary: carMediaTable.isPrimary,
+      })
+      .from(carMediaTable)
+      .where(
+        and(
+          eq(carMediaTable.carId, car.id),
+          eq(carMediaTable.isUploaded, true),
+        ),
+      )
+      .orderBy(desc(carMediaTable.isPrimary), asc(carMediaTable.id));
+
+    return {
+      status: "deleted",
+      deleted: media
+        .filter((item) => toDelete.has(item.id))
+        .map(({ id, link }) => ({ id, link })),
+      remaining,
+    };
+  });
 };

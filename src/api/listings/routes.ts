@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import {
   addCarMediaSchema,
   attachListingParamSchema,
+  deleteCarMediaSchema,
   createCarSchema,
   createListingSchema,
   getListingsQuerySchema,
@@ -19,6 +20,7 @@ import {
   attachCarToListing,
   confirmListingMedia,
   addListingMedia,
+  deleteListingMedia,
   updateListing,
 } from "./services";
 import { getMechanicsForListing } from "../mechanics/services";
@@ -301,6 +303,92 @@ listingRouter.post(
       bodyValidation.data.files,
     );
     res.status(201).json({ carMedia });
+  },
+);
+
+/**
+ * @openapi
+ * /api/listings/{id}/media:
+ *   delete:
+ *     tags: [Listings]
+ *     summary: Delete media from a listing's car
+ *     description: >
+ *       Deletes the given media of the seller's car. The car must keep at least
+ *       3 uploaded images, so upload and confirm replacement images before
+ *       deleting old ones; media that is not uploaded yet can always be
+ *       deleted. When the primary image is deleted, the oldest remaining
+ *       uploaded image becomes primary. Deleting media does not send the
+ *       listing back to approval.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [mediaIds]
+ *             properties:
+ *               mediaIds:
+ *                 type: array
+ *                 minItems: 1
+ *                 maxItems: 20
+ *                 uniqueItems: true
+ *                 items: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Media deleted. Returns the deleted ids and the car's remaining uploaded media, primary first.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 deleted:
+ *                   type: array
+ *                   items: { type: integer }
+ *                 carMedias:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id: { type: integer }
+ *                       link: { type: string, description: Presigned download URL }
+ *                       type: { type: string, enum: [image, video] }
+ *                       isPrimary: { type: boolean }
+ *       400:
+ *         description: Validation error, media not on this car, fewer than 3 images would remain, or no car attached
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not a seller
+ *       404:
+ *         description: Listing not found for this seller
+ */
+// Delete media from a listing's car
+listingRouter.delete(
+  "/:id/media",
+  isAuthenticated,
+  isSeller,
+  async (req: Request, res: Response) => {
+    const paramValidation = attachListingParamSchema.safeParse(req.params);
+    if (!paramValidation.success) {
+      throw new RequestValidationError(paramValidation.error.errors);
+    }
+    const bodyValidation = deleteCarMediaSchema.safeParse(req.body);
+    if (!bodyValidation.success) {
+      throw new RequestValidationError(bodyValidation.error.errors);
+    }
+    const result = await deleteListingMedia(
+      paramValidation.data.id,
+      req.currentUser?.id!,
+      bodyValidation.data.mediaIds,
+    );
+    res.status(200).json(result);
   },
 );
 

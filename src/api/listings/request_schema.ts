@@ -255,6 +255,31 @@ export const addCarMediaSchema = z.object(
   { required_error: "Body with files is required" },
 );
 
+export const deleteCarMediaSchema = z.object(
+  {
+    mediaIds: z
+      .array(
+        z
+          .number({ invalid_type_error: "Media id must be a number" })
+          .int("Media id must be a whole number")
+          .positive("Media id must be a valid ID"),
+        {
+          required_error: "At least one media id is required.",
+          invalid_type_error: "Media ids must be a list of numbers",
+        },
+      )
+      .min(1, "At least one media id is required.")
+      .max(
+        maxCarMediaCount,
+        `Delete at most ${maxCarMediaCount} media at once.`,
+      )
+      .refine((ids) => new Set(ids).size === ids.length, {
+        message: "Media ids must be unique",
+      }),
+  },
+  { required_error: "Body with mediaIds is required" },
+);
+
 export const attachListingParamSchema = z.object({
   id: z.coerce
     .number({
