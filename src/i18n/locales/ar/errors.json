@@ -1,0 +1,9 @@
+{
+  "bad_request": "طلب غير صالح",
+  "not_found": "غير موجود",
+  "not_authorized": "غير مصرح",
+  "forbidden": "الوصول ممنوع",
+  "internal": "خطأ داخلي في الخادم",
+  "unexpected": "حدث خطأ ما",
+  "validation": "خطأ في التحقق من صحة الطلب"
+}

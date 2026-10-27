@@ -1,0 +1,9 @@
+{
+  "bad_request": "Requête invalide",
+  "not_found": "Introuvable",
+  "not_authorized": "Non autorisé",
+  "forbidden": "Accès interdit",
+  "internal": "Erreur interne du serveur",
+  "unexpected": "Une erreur est survenue",
+  "validation": "Erreur de validation de la requête"
+}

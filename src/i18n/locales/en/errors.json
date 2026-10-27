@@ -1,0 +1,9 @@
+{
+  "bad_request": "Bad request",
+  "not_found": "Not found",
+  "not_authorized": "Not Authorized",
+  "forbidden": "Forbidden",
+  "internal": "Internal server error",
+  "unexpected": "Something went wrong",
+  "validation": "Request validation error"
+}
