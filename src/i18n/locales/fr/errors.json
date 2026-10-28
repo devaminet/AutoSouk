@@ -5,5 +5,77 @@
   "forbidden": "Accès interdit",
   "internal": "Erreur interne du serveur",
   "unexpected": "Une erreur est survenue",
-  "validation": "Erreur de validation de la requête"
+  "validation": "Erreur de validation de la requête",
+  "invalid_json": "Le corps de la requête n'est pas un JSON valide",
+  "payload_too_large": "Le corps de la requête est trop volumineux",
+  "auth": {
+    "token_required": "Le jeton est obligatoire",
+    "token_invalid": "Jeton invalide",
+    "token_invalid_or_expired": "Jeton invalide ou expiré",
+    "link_expired": "Ce lien a expiré",
+    "verification_email_failed": "Impossible d'envoyer l'e-mail de vérification",
+    "forgot_password_email_failed": "Impossible d'envoyer l'e-mail de réinitialisation du mot de passe",
+    "password_update_failed": "Impossible de mettre à jour le mot de passe. Veuillez réessayer",
+    "profile_image_url_failed": "Impossible de générer l'URL de la photo de profil",
+    "profile_image_not_pending": "Aucun envoi de photo de profil n'est en attente",
+    "profile_image_not_uploaded": "La photo de profil n'a pas été envoyée ou n'est pas valide. Demandez une nouvelle URL d'envoi et réessayez",
+    "invalid_signup_role": "L'utilisateur doit être acheteur, vendeur ou mécanicien",
+    "invalid_role": "Rôle d'utilisateur invalide",
+    "email_in_use": "Cette adresse e-mail est déjà utilisée",
+    "passwords_mismatch": "Le mot de passe et sa confirmation doivent être identiques",
+    "user_not_found": "Utilisateur introuvable",
+    "invalid_password": "Mot de passe incorrect",
+    "invalid_credentials": "L'adresse e-mail ou le mot de passe est incorrect",
+    "account_not_verified": "Votre compte n'est pas vérifié",
+    "role_unresolved": "Le rôle de l'utilisateur n'a pas pu être déterminé",
+    "login_failed": "La connexion a échoué",
+    "already_verified": "Ce compte est déjà vérifié",
+    "email_not_found": "Aucun compte n'est associé à cette adresse e-mail"
+  },
+  "listing": {
+    "not_found": "Annonce introuvable",
+    "already_approved": "L'annonce est déjà approuvée",
+    "car_already_attached": "Une voiture est déjà associée à cette annonce",
+    "car_required": "Associez une voiture à cette annonce avant de la modifier",
+    "car_required_for_media": "Associez une voiture à cette annonce avant d'ajouter des médias"
+  },
+  "media": {
+    "upload_urls_failed": "Impossible de générer les URL des images",
+    "not_found": "Média introuvable pour cette voiture",
+    "none_for_listing": "Aucun média de voiture n'a été trouvé pour cette annonce",
+    "primary_not_image": "Seule une image peut être le média principal",
+    "primary_not_uploaded": "Envoyez et confirmez cette image avant d'en faire l'image principale"
+  },
+  "car": {
+    "not_found": "Voiture introuvable"
+  },
+  "inspection": {
+    "not_found": "Inspection introuvable",
+    "not_cancellable": "L'inspection est introuvable ou ne peut plus être annulée",
+    "mechanic_city_mismatch": "Le mécanicien doit se trouver dans la même ville que la voiture",
+    "already_active": "Cette voiture a déjà une demande d'inspection en cours",
+    "not_in_progress": "L'inspection doit être en cours avant de pouvoir être terminée",
+    "report_generation_failed": "Impossible de générer le rapport d'inspection en PDF",
+    "report_storage_failed": "Impossible d'enregistrer le rapport d'inspection en PDF",
+    "completion_failed": "Impossible de terminer l'inspection"
+  },
+  "mechanic": {
+    "not_found": "Mécanicien introuvable",
+    "profile_not_found": "Profil de mécanicien introuvable",
+    "already_exists": "Un profil de mécanicien existe déjà",
+    "profile_reload_failed": "Impossible de récupérer le profil du mécanicien",
+    "image_urls_failed": "Impossible de générer les URL des images du mécanicien",
+    "profile_image_url_failed": "Impossible de générer l'URL de la photo de profil",
+    "garage_upload_urls_failed": "Impossible de générer les URL d'envoi des images du garage",
+    "garage_image_not_found": "Image du garage introuvable"
+  },
+  "review": {
+    "not_found": "Avis introuvable",
+    "already_reviewed": "Vous avez déjà donné votre avis sur ce mécanicien"
+  },
+  "favorite": {
+    "add_failed": "Impossible d'ajouter cette annonce à vos favoris",
+    "remove_failed": "Impossible de retirer cette annonce de vos favoris",
+    "not_in_favorites": "Cette annonce n'est pas dans vos favoris"
+  }
 }

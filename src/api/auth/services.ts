@@ -66,7 +66,7 @@ const getProfileImageUpload = async (imageName: string) => {
     return { url: postURL, fields: formData };
   } catch (error) {
     console.error("Error generating profile image upload URL:", error);
-    throw new InternalServerError("Could not generate profile image URL");
+    throw new InternalServerError("auth.profile_image_url_failed");
   }
 };
 
@@ -125,14 +125,12 @@ export const confirmProfileImage = async (userId: number) => {
     throw new NotAuthorizedError();
   }
   if (!user.pendingImageName) {
-    throw new BadRequestError("No profile image upload is pending");
+    throw new BadRequestError("auth.profile_image_not_pending");
   }
 
   const { imageName, uploaded } = await resolvePendingProfileImage(user);
   if (!uploaded) {
-    throw new BadRequestError(
-      "Profile image was not uploaded or is invalid, request a new upload url and retry",
-    );
+    throw new BadRequestError("auth.profile_image_not_uploaded");
   }
 
   return { imageUrl: await getProfileImageUrl(imageName) };
@@ -161,14 +159,12 @@ export const setupUser = async (user: z.infer<typeof registerSchema>) => {
   const { firstName, email } = user;
   const roleValidation = registrationRoleSchema.safeParse(user.userType);
   if (!roleValidation.success) {
-    throw new BadRequestError(
-      "User should be either buyer, seller or mechanic",
-    );
+    throw new BadRequestError("auth.invalid_signup_role");
   }
 
   const found = await findUserByEmail(email);
   if (found) {
-    throw new BadRequestError("Email in use");
+    throw new BadRequestError("auth.email_in_use");
   }
 
   const imageName = user.imageName
@@ -202,13 +198,11 @@ export const resetPassword = async (
 ) => {
   const { password, confirmPassword, oldPassword, email } = data;
   if (password !== confirmPassword) {
-    throw new BadRequestError(
-      "Password and confirm password should be the same",
-    );
+    throw new BadRequestError("auth.passwords_mismatch");
   }
   const user = await findUserByEmail(email);
   if (!user) {
-    throw new BadRequestError("User not found");
+    throw new BadRequestError("auth.user_not_found");
   }
   const isPasswordValid = await verifyPassword(
     oldPassword,
@@ -216,7 +210,7 @@ export const resetPassword = async (
     user.salt,
   );
   if (!isPasswordValid) {
-    throw new BadRequestError("Invalid password");
+    throw new BadRequestError("auth.invalid_password");
   }
   const { hashedPassword, salt } = await hashPassword(password);
   const result = await updateUserPassword(email, hashedPassword, salt);
@@ -229,22 +223,22 @@ export const loginUser = async (data: { email: string; password: string }) => {
   const foundUser = await findUserByEmail(email);
 
   if (!foundUser) {
-    throw new NotAuthorizedError("Email or password is not correct");
+    throw new NotAuthorizedError("auth.invalid_credentials");
   }
 
   if (!foundUser.isVerified) {
-    throw new NotAuthorizedError("Your account is not verified");
+    throw new NotAuthorizedError("auth.account_not_verified");
   }
 
   if (!foundUser.role) {
-    throw new NotAuthorizedError("User role could not be resolved");
+    throw new NotAuthorizedError("auth.role_unresolved");
   }
 
   const { password: storedPassword, salt, ...user } = foundUser;
   const isPasswordValid = await verifyPassword(password, storedPassword, salt);
 
   if (!isPasswordValid) {
-    throw new NotAuthorizedError("Email or password is not correct");
+    throw new NotAuthorizedError("auth.invalid_credentials");
   }
 
   const { imageName } = await resolvePendingProfileImage(foundUser);
@@ -270,7 +264,7 @@ export const loginUser = async (data: { email: string; password: string }) => {
   );
 
   if (!refreshToken) {
-    throw new InternalServerError("Failed to log the user in");
+    throw new InternalServerError("auth.login_failed");
   }
 
   await insertUserRefreshToken(user.id, refreshToken);
@@ -286,7 +280,7 @@ export const loginUser = async (data: { email: string; password: string }) => {
 export const verifyUser = async (token: string) => {
   const tokenResponse = await getVerificationToken(token);
   if (!tokenResponse) {
-    throw new BadRequestError("Invalid token");
+    throw new BadRequestError("auth.token_invalid");
   }
   const { expiresAt } = tokenResponse;
   const difference =
@@ -296,14 +290,14 @@ export const verifyUser = async (token: string) => {
     tokenExpirationMinutes;
   if (difference <= 0) {
     await deleteVerificationToken(token);
-    throw new BadRequestError("Link has been expired");
+    throw new BadRequestError("auth.link_expired");
   }
   const user = await findUserById(tokenResponse.userId);
   if (!user) {
     throw new NotAuthorizedError();
   }
   if (user.isVerified) {
-    throw new BadRequestError("User is already verified");
+    throw new BadRequestError("auth.already_verified");
   }
   await verifyUserById(tokenResponse.userId);
   await deleteVerificationToken(token);
@@ -314,10 +308,10 @@ export const verifyUser = async (token: string) => {
 export const resendVerificationEmail = async (email: string) => {
   const user = await findUserByEmail(email);
   if (!user) {
-    throw new NotFoundError("No account was found with this email");
+    throw new NotFoundError("auth.email_not_found");
   }
   if (user.isVerified) {
-    throw new BadRequestError("User is already verified");
+    throw new BadRequestError("auth.already_verified");
   }
 
   const expiresAt = new Date(Date.now() + 1000 * 60 * tokenExpirationMinutes);
@@ -359,10 +353,10 @@ export const refreshTokens = async (token: string) => {
 
   const user = await findUserById(decoded.id);
   if (!user) {
-    throw new NotFoundError("User was not found");
+    throw new NotFoundError("auth.user_not_found");
   }
   if (!user.role) {
-    throw new NotAuthorizedError("User role could not be resolved");
+    throw new NotAuthorizedError("auth.role_unresolved");
   }
 
   const accessToken = await generateJWT(
@@ -385,7 +379,7 @@ export const refreshTokens = async (token: string) => {
   );
 
   if (!refreshToken) {
-    throw new InternalServerError("An error occurred");
+    throw new InternalServerError("internal");
   }
   await updateRefreshToken(decoded.id, token, refreshToken);
   const sanitizedUser = await sanitizeUser(user);
@@ -402,7 +396,7 @@ export const sendForgotPasswordLink = async (email: string) => {
   const foundUser = await findUserByEmail(email);
 
   if (!foundUser) {
-    throw new NotFoundError("No account was registered with this email");
+    throw new NotFoundError("auth.email_not_found");
   }
   const token = generateToken();
   const expiresAt = new Date(Date.now() + 1000 * 60 * tokenExpirationMinutes);
@@ -429,21 +423,21 @@ export const verifyForgotPasswordToken = async (
 ) => {
   const result = await findPasswordResetToken(token);
   if (!result) {
-    throw new BadRequestError("Invalid token");
+    throw new BadRequestError("auth.token_invalid");
   }
   const difference =
     new Date(result.expiresAt).getTime() - new Date().getTime();
 
   if (difference <= 0) {
     await deletePasswordResetToken(token);
-    throw new BadRequestError("Link has been expired");
+    throw new BadRequestError("auth.link_expired");
   }
   const user = await findUserById(result.userId);
   if (!user) {
     throw new NotFoundError();
   }
   if (user.email !== (email as string)) {
-    throw new BadRequestError("Invalid token");
+    throw new BadRequestError("auth.token_invalid");
   }
 
   return { success: true };
@@ -452,7 +446,7 @@ export const verifyForgotPasswordToken = async (
 export const updatePassword = async (token: string, password: string) => {
   const user = await findPasswordResetToken(token);
   if (!user) {
-    throw new BadRequestError("Invalid token");
+    throw new BadRequestError("auth.token_invalid");
   }
 
   const { hashedPassword, salt } = await hashPassword(password);

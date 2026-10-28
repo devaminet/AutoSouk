@@ -7,6 +7,8 @@ export { apiDefaultLocale, localeSchema, Locale } from "./config";
 
 export type TranslationKey = ParseKeys<Namespace[]>;
 
+export type ErrorKey = ParseKeys<"errors">;
+
 export type TranslationParams = Record<string, string | number>;
 
 const i18n = i18next.createInstance();

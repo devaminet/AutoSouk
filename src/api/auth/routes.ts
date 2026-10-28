@@ -89,11 +89,11 @@ authRouter.post("/register", async (req, res) => {
 authRouter.get("/verify", async (req, res, next) => {
   const { token } = req.query;
   if (!token) {
-    throw new BadRequestError("Token is required");
+    throw new BadRequestError("auth.token_required");
   }
   const result = await verifyUser(token as string);
   if (!result.success) {
-    throw new BadRequestError("Invalid or expired token");
+    throw new BadRequestError("auth.token_invalid_or_expired");
   }
   res.status(200).json({ message: "Verified with success" });
 });
@@ -129,7 +129,7 @@ authRouter.post("/re-verify", async (req, res, next) => {
 
   const result = await resendVerificationEmail(validationResult.data.email);
   if (!result.success) {
-    throw new InternalServerError("Could not send verification email");
+    throw new InternalServerError("auth.verification_email_failed");
   }
   res.status(200).json({ message: "A verification email has been sent" });
 });
@@ -191,7 +191,7 @@ authRouter.post("/refresh-token", async (req, res) => {
   const result = await refreshTokens(token);
   if (!result.success) {
     req.session = undefined;
-    throw new NotAuthorizedError("Unauthorized");
+    throw new NotAuthorizedError("not_authorized");
   }
 
   const { accessToken, refreshToken, user } = result;
@@ -233,7 +233,7 @@ authRouter.post("/forgot-password", async (req, res, next) => {
 
   const result = await sendForgotPasswordLink(validateResult.data.email);
   if (!result.success) {
-    throw new InternalServerError("Could not send forgot password email");
+    throw new InternalServerError("auth.forgot_password_email_failed");
   }
   res.status(200).json({
     message: `Password reset email sent successfully. The reset link expires in ${tokenExpirationMinutes} minutes`,
@@ -263,7 +263,7 @@ authRouter.post("/forgot-password", async (req, res, next) => {
 authRouter.get("/forgot-password", async (req, res) => {
   const { token, email } = req.query;
   if (!token) {
-    throw new BadRequestError("Token is required");
+    throw new BadRequestError("auth.token_required");
   }
   const result = await verifyForgotPasswordToken(
     token as string,
@@ -311,9 +311,7 @@ authRouter.put("/forgot-password", async (req, res) => {
     validateResult.data.password,
   );
   if (!result.success) {
-    throw new BadRequestError(
-      "Could not update the password! Please try again",
-    );
+    throw new BadRequestError("auth.password_update_failed");
   }
   res.status(200).json({ message: "Your password was updated successfully" });
 });
@@ -353,9 +351,7 @@ authRouter.put("/reset-password", isAuthenticated, async (req, res) => {
   }
   const rowCount = await resetPassword(validateResult.data);
   if (rowCount === null || rowCount === 0) {
-    throw new BadRequestError(
-      "Could not update the password! Please try again",
-    );
+    throw new BadRequestError("auth.password_update_failed");
   }
   res.status(200).json({ message: "Your password was updated successfully" });
 });

@@ -5,5 +5,77 @@
   "forbidden": "Forbidden",
   "internal": "Internal server error",
   "unexpected": "Something went wrong",
-  "validation": "Request validation error"
+  "validation": "Request validation error",
+  "invalid_json": "The request body is not valid JSON",
+  "payload_too_large": "The request body is too large",
+  "auth": {
+    "token_required": "Token is required",
+    "token_invalid": "Invalid token",
+    "token_invalid_or_expired": "Invalid or expired token",
+    "link_expired": "Link has been expired",
+    "verification_email_failed": "Could not send verification email",
+    "forgot_password_email_failed": "Could not send forgot password email",
+    "password_update_failed": "Could not update the password! Please try again",
+    "profile_image_url_failed": "Could not generate profile image URL",
+    "profile_image_not_pending": "No profile image upload is pending",
+    "profile_image_not_uploaded": "Profile image was not uploaded or is invalid, request a new upload url and retry",
+    "invalid_signup_role": "User should be either buyer, seller or mechanic",
+    "invalid_role": "Invalid user role",
+    "email_in_use": "Email in use",
+    "passwords_mismatch": "Password and confirm password should be the same",
+    "user_not_found": "User was not found",
+    "invalid_password": "Invalid password",
+    "invalid_credentials": "Email or password is not correct",
+    "account_not_verified": "Your account is not verified",
+    "role_unresolved": "User role could not be resolved",
+    "login_failed": "Failed to log the user in",
+    "already_verified": "User is already verified",
+    "email_not_found": "No account was found with this email"
+  },
+  "listing": {
+    "not_found": "Listing was not found",
+    "already_approved": "Listing is already approved",
+    "car_already_attached": "A car is already attached to this listing",
+    "car_required": "Attach a car to this listing before editing it",
+    "car_required_for_media": "Attach a car to this listing before adding media"
+  },
+  "media": {
+    "upload_urls_failed": "Could not generate urls for images",
+    "not_found": "Media was not found for this car",
+    "none_for_listing": "No car media was found for this listing",
+    "primary_not_image": "Only an image can be the primary media",
+    "primary_not_uploaded": "Upload and confirm this image before making it primary"
+  },
+  "car": {
+    "not_found": "Car was not found"
+  },
+  "inspection": {
+    "not_found": "Inspection was not found",
+    "not_cancellable": "Inspection was not found or can no longer be cancelled",
+    "mechanic_city_mismatch": "Mechanic must be located in the same city as the car",
+    "already_active": "This car already has an active inspection request",
+    "not_in_progress": "Inspection must be in progress before it can be completed",
+    "report_generation_failed": "Could not generate inspection report PDF",
+    "report_storage_failed": "Could not store inspection report PDF",
+    "completion_failed": "Could not complete inspection"
+  },
+  "mechanic": {
+    "not_found": "Mechanic was not found",
+    "profile_not_found": "Mechanic profile was not found",
+    "already_exists": "A mechanic profile already exists",
+    "profile_reload_failed": "Could not retrieve the mechanic profile",
+    "image_urls_failed": "Could not generate mechanic image URLs",
+    "profile_image_url_failed": "Could not generate URL for profile image",
+    "garage_upload_urls_failed": "Could not generate garage image upload URLs",
+    "garage_image_not_found": "Garage image was not found"
+  },
+  "review": {
+    "not_found": "Review was not found",
+    "already_reviewed": "You have already reviewed this mechanic"
+  },
+  "favorite": {
+    "add_failed": "Could not add this listing to your favorites",
+    "remove_failed": "Could not remove this listing from your favorites",
+    "not_in_favorites": "This listing is not in your favorites list"
+  }
 }

@@ -196,7 +196,11 @@ describe("POST /api/listings/:id/media", () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.body.errors).toEqual([
-      { message: "A car can have at most 20 files.", field: "files" },
+      {
+        code: "validation",
+        message: "A car can have at most 20 files.",
+        field: "files",
+      },
     ]);
     expect(await countCarMedia(carId)).toBe(20);
   });
@@ -398,7 +402,11 @@ describe("DELETE /api/listings/:id/media", () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.body.errors).toEqual([
-      { message: "A car needs at least 3 images.", field: "mediaIds" },
+      {
+        code: "validation",
+        message: "A car needs at least 3 images.",
+        field: "mediaIds",
+      },
     ]);
     expect(await visibleMedia(listingId)).toHaveLength(4);
     expect(await objectExists(await filenameOf(media[3].id))).toBe(true);
@@ -441,7 +449,11 @@ describe("DELETE /api/listings/:id/media", () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.body.errors).toEqual([
-      { message: "Media 99999 does not exist for this car", field: "mediaIds" },
+      {
+        code: "validation",
+        message: "Media 99999 does not exist for this car",
+        field: "mediaIds",
+      },
     ]);
     expect(await visibleMedia(listingId)).toHaveLength(4);
   });

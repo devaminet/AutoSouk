@@ -59,7 +59,7 @@ export const createUser = async (
     user;
   const roleId = await findRoleIdByName(userType);
   if (roleId === null) {
-    throw new BadRequestError("Invalid user role");
+    throw new BadRequestError("auth.invalid_role");
   }
 
   const { hashedPassword, salt } = await hashPassword(password);

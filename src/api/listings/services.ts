@@ -152,13 +152,13 @@ export const attachCarToListing = async (
 ) => {
   const listing = await getUserListing(listingId, userId);
   if (!listing) {
-    throw new NotFoundError("Listing was not found");
+    throw new NotFoundError("listing.not_found");
   }
 
   const found = await checkCarExistanceByListingId(listingId);
 
   if (found) {
-    throw new BadRequestError("A car is already attached to this listing");
+    throw new BadRequestError("listing.car_already_attached");
   }
 
   const { files, equipmentIds = [], ...carDetails } = data;
@@ -172,7 +172,7 @@ export const attachCarToListing = async (
     carMedia = await Promise.all(files.map(buildCarMediaUpload));
   } catch (error) {
     console.error("Error generating car media upload policies:", error);
-    throw new InternalServerError("Could not generate urls for images");
+    throw new InternalServerError("media.upload_urls_failed");
   }
 
   const car = await saveCarAndMedia({
@@ -184,7 +184,7 @@ export const attachCarToListing = async (
   });
 
   if (!car) {
-    throw new BadRequestError("A car is already attached to this listing");
+    throw new BadRequestError("listing.car_already_attached");
   }
 
   return {
@@ -211,7 +211,7 @@ export const addListingMedia = async (
 ) => {
   const listing = await getUserListing(listingId, userId);
   if (!listing) {
-    throw new NotFoundError("Listing was not found");
+    throw new NotFoundError("listing.not_found");
   }
 
   let uploads: Awaited<ReturnType<typeof buildCarMediaUpload>>[] = [];
@@ -221,7 +221,7 @@ export const addListingMedia = async (
     );
   } catch (error) {
     console.error("Error generating car media upload policies:", error);
-    throw new InternalServerError("Could not generate urls for images");
+    throw new InternalServerError("media.upload_urls_failed");
   }
 
   const result = await insertCarMediaWithinLimit(
@@ -230,9 +230,7 @@ export const addListingMedia = async (
     maxCarMediaCount,
   );
   if (result.status === "no_car") {
-    throw new BadRequestError(
-      "Attach a car to this listing before adding media",
-    );
+    throw new BadRequestError("listing.car_required_for_media");
   }
   if (result.status === "over_limit") {
     throw new RequestValidationError([
@@ -284,7 +282,7 @@ export const deleteListingMedia = async (
 ) => {
   const listing = await getUserListing(listingId, userId);
   if (!listing) {
-    throw new NotFoundError("Listing was not found");
+    throw new NotFoundError("listing.not_found");
   }
 
   const result = await deleteCarMediaKeepingMinimum(
@@ -293,7 +291,7 @@ export const deleteListingMedia = async (
     minCarImageCount,
   );
   if (result.status === "no_car") {
-    throw new BadRequestError("Attach a car to this listing before editing it");
+    throw new BadRequestError("listing.car_required");
   }
   if (result.status === "unknown_media") {
     throw new RequestValidationError(
@@ -331,23 +329,19 @@ export const setListingPrimaryMedia = async (
 ) => {
   const listing = await getUserListing(listingId, userId);
   if (!listing) {
-    throw new NotFoundError("Listing was not found");
+    throw new NotFoundError("listing.not_found");
   }
 
   const result = await setPrimaryCarMedia(listingId, mediaId);
   switch (result.status) {
     case "no_car":
-      throw new BadRequestError(
-        "Attach a car to this listing before editing it",
-      );
+      throw new BadRequestError("listing.car_required");
     case "not_found":
-      throw new NotFoundError("Media was not found for this car");
+      throw new NotFoundError("media.not_found");
     case "not_image":
-      throw new BadRequestError("Only an image can be the primary media");
+      throw new BadRequestError("media.primary_not_image");
     case "not_uploaded":
-      throw new BadRequestError(
-        "Upload and confirm this image before making it primary",
-      );
+      throw new BadRequestError("media.primary_not_uploaded");
     case "updated":
       return { carMedias: await withMediaUrls(result.media) };
   }
@@ -361,7 +355,7 @@ export const confirmListingMedia = async (
 ) => {
   const media = await findCarMediaByListing(listingId, userId);
   if (media.length === 0) {
-    throw new NotFoundError("No car media was found for this listing");
+    throw new NotFoundError("media.none_for_listing");
   }
 
   const uploadedIds: number[] = [];
@@ -433,7 +427,7 @@ export const getListingDetails = async (listingId: number) => {
   const listing = await getListingDetailsById(listingId);
 
   if (!listing) {
-    throw new NotFoundError("Listing was not found!");
+    throw new NotFoundError("listing.not_found");
   }
 
   const carMedias = listing.car?.carMedias;
@@ -461,15 +455,13 @@ export const updateListing = async (
 ) => {
   const listing = await getUserListing(listingId, userId);
   if (!listing) {
-    throw new NotFoundError("Listing was not found");
+    throw new NotFoundError("listing.not_found");
   }
 
   if (changes.car) {
     const currentCar = await findCarReferencesByListingId(listingId);
     if (!currentCar) {
-      throw new BadRequestError(
-        "Attach a car to this listing before editing it",
-      );
+      throw new BadRequestError("listing.car_required");
     }
 
     const { equipmentIds, ...carReferences } = changes.car;
@@ -497,11 +489,11 @@ export const approveListing = async (listingId: number) => {
   const listing = await findListingById(listingId);
 
   if (!listing) {
-    throw new NotFoundError("Listing not found");
+    throw new NotFoundError("listing.not_found");
   }
 
   if (listing.status === "approved") {
-    throw new BadRequestError("Listing is already approved");
+    throw new BadRequestError("listing.already_approved");
   }
 
   const result = await approveListingById(listingId);
@@ -551,7 +543,7 @@ export const deleteListing = async (listingId: number, userId: number) => {
   const listing = await findListingCarId(userId, listingId);
 
   if (!listing) {
-    throw new NotFoundError("Listing not found");
+    throw new NotFoundError("listing.not_found");
   }
 
   const carId = listing.car?.id;

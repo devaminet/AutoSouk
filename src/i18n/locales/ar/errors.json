@@ -5,5 +5,77 @@
   "forbidden": "الوصول ممنوع",
   "internal": "خطأ داخلي في الخادم",
   "unexpected": "حدث خطأ ما",
-  "validation": "خطأ في التحقق من صحة الطلب"
+  "validation": "خطأ في التحقق من صحة الطلب",
+  "invalid_json": "محتوى الطلب ليس بصيغة JSON صالحة",
+  "payload_too_large": "محتوى الطلب كبير جدًا",
+  "auth": {
+    "token_required": "الرمز مطلوب",
+    "token_invalid": "رمز غير صالح",
+    "token_invalid_or_expired": "رمز غير صالح أو منتهي الصلاحية",
+    "link_expired": "انتهت صلاحية هذا الرابط",
+    "verification_email_failed": "تعذر إرسال رسالة التحقق",
+    "forgot_password_email_failed": "تعذر إرسال رسالة إعادة تعيين كلمة المرور",
+    "password_update_failed": "تعذر تحديث كلمة المرور. يرجى المحاولة مرة أخرى",
+    "profile_image_url_failed": "تعذر إنشاء رابط صورة الملف الشخصي",
+    "profile_image_not_pending": "لا يوجد رفع معلق لصورة الملف الشخصي",
+    "profile_image_not_uploaded": "لم يتم رفع صورة الملف الشخصي أو أنها غير صالحة. اطلب رابط رفع جديدًا وأعد المحاولة",
+    "invalid_signup_role": "يجب أن يكون المستخدم مشتريًا أو بائعًا أو ميكانيكيًا",
+    "invalid_role": "دور المستخدم غير صالح",
+    "email_in_use": "البريد الإلكتروني مستخدم بالفعل",
+    "passwords_mismatch": "يجب أن تتطابق كلمة المرور مع تأكيدها",
+    "user_not_found": "المستخدم غير موجود",
+    "invalid_password": "كلمة المرور غير صحيحة",
+    "invalid_credentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+    "account_not_verified": "حسابك غير مُفعّل",
+    "role_unresolved": "تعذر تحديد دور المستخدم",
+    "login_failed": "تعذر تسجيل الدخول",
+    "already_verified": "هذا الحساب مُفعّل بالفعل",
+    "email_not_found": "لا يوجد حساب مرتبط بهذا البريد الإلكتروني"
+  },
+  "listing": {
+    "not_found": "الإعلان غير موجود",
+    "already_approved": "الإعلان مقبول بالفعل",
+    "car_already_attached": "توجد سيارة مرتبطة بهذا الإعلان بالفعل",
+    "car_required": "أضف سيارة إلى هذا الإعلان قبل تعديله",
+    "car_required_for_media": "أضف سيارة إلى هذا الإعلان قبل إضافة الوسائط"
+  },
+  "media": {
+    "upload_urls_failed": "تعذر إنشاء روابط الصور",
+    "not_found": "الوسائط غير موجودة لهذه السيارة",
+    "none_for_listing": "لا توجد وسائط سيارة لهذا الإعلان",
+    "primary_not_image": "يمكن للصورة فقط أن تكون الوسائط الرئيسية",
+    "primary_not_uploaded": "ارفع هذه الصورة وأكّدها قبل جعلها الصورة الرئيسية"
+  },
+  "car": {
+    "not_found": "السيارة غير موجودة"
+  },
+  "inspection": {
+    "not_found": "الفحص غير موجود",
+    "not_cancellable": "الفحص غير موجود أو لم يعد من الممكن إلغاؤه",
+    "mechanic_city_mismatch": "يجب أن يكون الميكانيكي في نفس مدينة السيارة",
+    "already_active": "لهذه السيارة طلب فحص نشط بالفعل",
+    "not_in_progress": "يجب أن يكون الفحص جاريًا قبل إنهائه",
+    "report_generation_failed": "تعذر إنشاء تقرير الفحص بصيغة PDF",
+    "report_storage_failed": "تعذر حفظ تقرير الفحص بصيغة PDF",
+    "completion_failed": "تعذر إنهاء الفحص"
+  },
+  "mechanic": {
+    "not_found": "الميكانيكي غير موجود",
+    "profile_not_found": "ملف الميكانيكي غير موجود",
+    "already_exists": "ملف الميكانيكي موجود بالفعل",
+    "profile_reload_failed": "تعذر استرجاع ملف الميكانيكي",
+    "image_urls_failed": "تعذر إنشاء روابط صور الميكانيكي",
+    "profile_image_url_failed": "تعذر إنشاء رابط صورة الملف الشخصي",
+    "garage_upload_urls_failed": "تعذر إنشاء روابط رفع صور المرآب",
+    "garage_image_not_found": "صورة المرآب غير موجودة"
+  },
+  "review": {
+    "not_found": "التقييم غير موجود",
+    "already_reviewed": "لقد قمت بتقييم هذا الميكانيكي من قبل"
+  },
+  "favorite": {
+    "add_failed": "تعذر إضافة هذا الإعلان إلى المفضلة",
+    "remove_failed": "تعذر إزالة هذا الإعلان من المفضلة",
+    "not_in_favorites": "هذا الإعلان غير موجود في قائمة المفضلة"
+  }
 }

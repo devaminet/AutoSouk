@@ -1,9 +1,10 @@
+import { ErrorKey, TranslationParams } from "../i18n";
 import { CustomError } from "./custom_error";
 
 export class InternalServerError extends CustomError {
   statusCode = 500;
 
-  serializeError(): { message: string; field?: string }[] {
-    return [{ message: this.message || "Internal server error" }];
+  constructor(code: ErrorKey = "internal", params?: TranslationParams) {
+    super(code, params);
   }
 }
