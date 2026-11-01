@@ -1,0 +1,12 @@
+{
+  "auth": {
+    "account_created": "Votre compte a été créé",
+    "account_verified": "Votre compte a été vérifié",
+    "verification_email_sent": "Un e-mail de vérification a été envoyé",
+    "password_reset_email_sent_one": "L'e-mail de réinitialisation du mot de passe a été envoyé. Le lien expire dans {{count}} minute",
+    "password_reset_email_sent_many": "L'e-mail de réinitialisation du mot de passe a été envoyé. Le lien expire dans {{count}} de minutes",
+    "password_reset_email_sent_other": "L'e-mail de réinitialisation du mot de passe a été envoyé. Le lien expire dans {{count}} minutes",
+    "password_updated": "Votre mot de passe a été mis à jour",
+    "logged_out": "Vous êtes déconnecté"
+  }
+}

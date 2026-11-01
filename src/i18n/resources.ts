@@ -1,17 +1,26 @@
 import arEmails from "./locales/ar/emails.json";
 import arEnums from "./locales/ar/enums.json";
 import arErrors from "./locales/ar/errors.json";
+import arMessages from "./locales/ar/messages.json";
 import arPdf from "./locales/ar/pdf.json";
 import enEmails from "./locales/en/emails.json";
 import enEnums from "./locales/en/enums.json";
 import enErrors from "./locales/en/errors.json";
+import enMessages from "./locales/en/messages.json";
 import enPdf from "./locales/en/pdf.json";
 import frEmails from "./locales/fr/emails.json";
 import frEnums from "./locales/fr/enums.json";
 import frErrors from "./locales/fr/errors.json";
+import frMessages from "./locales/fr/messages.json";
 import frPdf from "./locales/fr/pdf.json";
 
-export const namespaces = ["errors", "enums", "emails", "pdf"] as const;
+export const namespaces = [
+  "errors",
+  "messages",
+  "enums",
+  "emails",
+  "pdf",
+] as const;
 
 export type Namespace = (typeof namespaces)[number];
 
@@ -19,6 +28,7 @@ export type Namespace = (typeof namespaces)[number];
 // catalog test checks that French and Arabic have exactly the same keys.
 export const sourceResources = {
   errors: enErrors,
+  messages: enMessages,
   enums: enEnums,
   emails: enEmails,
   pdf: enPdf,
@@ -26,6 +36,18 @@ export const sourceResources = {
 
 export const resources = {
   en: sourceResources,
-  fr: { errors: frErrors, enums: frEnums, emails: frEmails, pdf: frPdf },
-  ar: { errors: arErrors, enums: arEnums, emails: arEmails, pdf: arPdf },
+  fr: {
+    errors: frErrors,
+    messages: frMessages,
+    enums: frEnums,
+    emails: frEmails,
+    pdf: frPdf,
+  },
+  ar: {
+    errors: arErrors,
+    messages: arMessages,
+    enums: arEnums,
+    emails: arEmails,
+    pdf: arPdf,
+  },
 } satisfies Record<string, Record<Namespace, object>>;

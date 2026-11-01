@@ -28,6 +28,7 @@ import {
 } from "./services";
 import { InternalServerError } from "../../errors/internal_server_error";
 import { tokenExpirationMinutes } from "../../utils/constants";
+import { localizedMessage } from "../../i18n";
 
 const authRouter = Router();
 
@@ -66,7 +67,11 @@ authRouter.post("/register", async (req, res) => {
   }
 
   const { token, imageUpload } = await setupUser(validationResult.data);
-  res.status(201).json({ message: "Account was created", token, imageUpload });
+  res.status(201).json({
+    ...localizedMessage(req.locale, "auth.account_created"),
+    token,
+    imageUpload,
+  });
 });
 
 /**
@@ -95,7 +100,7 @@ authRouter.get("/verify", async (req, res, next) => {
   if (!result.success) {
     throw new BadRequestError("auth.token_invalid_or_expired");
   }
-  res.status(200).json({ message: "Verified with success" });
+  res.status(200).json(localizedMessage(req.locale, "auth.account_verified"));
 });
 
 /**
@@ -131,7 +136,9 @@ authRouter.post("/re-verify", async (req, res, next) => {
   if (!result.success) {
     throw new InternalServerError("auth.verification_email_failed");
   }
-  res.status(200).json({ message: "A verification email has been sent" });
+  res
+    .status(200)
+    .json(localizedMessage(req.locale, "auth.verification_email_sent"));
 });
 
 /**
@@ -235,9 +242,11 @@ authRouter.post("/forgot-password", async (req, res, next) => {
   if (!result.success) {
     throw new InternalServerError("auth.forgot_password_email_failed");
   }
-  res.status(200).json({
-    message: `Password reset email sent successfully. The reset link expires in ${tokenExpirationMinutes} minutes`,
-  });
+  res.status(200).json(
+    localizedMessage(req.locale, "auth.password_reset_email_sent", {
+      count: tokenExpirationMinutes,
+    }),
+  );
 });
 
 /**
@@ -313,7 +322,7 @@ authRouter.put("/forgot-password", async (req, res) => {
   if (!result.success) {
     throw new BadRequestError("auth.password_update_failed");
   }
-  res.status(200).json({ message: "Your password was updated successfully" });
+  res.status(200).json(localizedMessage(req.locale, "auth.password_updated"));
 });
 
 /**
@@ -353,7 +362,7 @@ authRouter.put("/reset-password", isAuthenticated, async (req, res) => {
   if (rowCount === null || rowCount === 0) {
     throw new BadRequestError("auth.password_update_failed");
   }
-  res.status(200).json({ message: "Your password was updated successfully" });
+  res.status(200).json(localizedMessage(req.locale, "auth.password_updated"));
 });
 
 /**
@@ -368,7 +377,7 @@ authRouter.put("/reset-password", isAuthenticated, async (req, res) => {
  */
 authRouter.post("/logout", (req, res) => {
   req.session = undefined;
-  res.status(200).json({ message: "Success" });
+  res.status(200).json(localizedMessage(req.locale, "auth.logged_out"));
 });
 
 /**

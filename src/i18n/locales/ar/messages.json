@@ -1,0 +1,15 @@
+{
+  "auth": {
+    "account_created": "تم إنشاء حسابك",
+    "account_verified": "تم تفعيل حسابك",
+    "verification_email_sent": "تم إرسال رسالة التحقق",
+    "password_reset_email_sent_zero": "تم إرسال رسالة إعادة تعيين كلمة المرور. تنتهي صلاحية الرابط خلال {{count}} دقيقة",
+    "password_reset_email_sent_one": "تم إرسال رسالة إعادة تعيين كلمة المرور. تنتهي صلاحية الرابط خلال دقيقة واحدة",
+    "password_reset_email_sent_two": "تم إرسال رسالة إعادة تعيين كلمة المرور. تنتهي صلاحية الرابط خلال دقيقتين",
+    "password_reset_email_sent_few": "تم إرسال رسالة إعادة تعيين كلمة المرور. تنتهي صلاحية الرابط خلال {{count}} دقائق",
+    "password_reset_email_sent_many": "تم إرسال رسالة إعادة تعيين كلمة المرور. تنتهي صلاحية الرابط خلال {{count}} دقيقة",
+    "password_reset_email_sent_other": "تم إرسال رسالة إعادة تعيين كلمة المرور. تنتهي صلاحية الرابط خلال {{count}} دقيقة",
+    "password_updated": "تم تحديث كلمة المرور",
+    "logged_out": "تم تسجيل خروجك"
+  }
+}
