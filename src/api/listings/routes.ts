@@ -567,6 +567,11 @@ listingRouter.get("/:id/mechanics", async (req: Request, res: Response) => {
  *                       type: object
  *                       nullable: true
  *                       properties:
+ *                         city:
+ *                           type: object
+ *                           properties:
+ *                             name: { type: string, example: Casablanca }
+ *                             slug: { type: string, example: casablanca, description: "Translation key: enums:city.<slug>" }
  *                         carMedias:
  *                           type: array
  *                           items:

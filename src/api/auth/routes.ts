@@ -56,7 +56,16 @@ const authRouter = Router();
  *               imageName: { type: string, description: "Optional profile image file name (jpg, jpeg, png, webp). Upload the file with a multipart/form-data POST to imageUpload.url, sending every imageUpload.fields entry first and the file last as field \"file\". Max 10MB, image/* content type." }
  *     responses:
  *       201:
- *         description: Account created. Includes imageUpload ({ url, fields }, presigned POST policy) when imageName was sent.
+ *         description: Account created; the user's locale is set from the request language. Includes imageUpload ({ url, fields }, presigned POST policy) when imageName was sent.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/LocalizedMessage'
+ *                 - type: object
+ *                   properties:
+ *                     token: { type: string }
+ *                     imageUpload: { type: object, nullable: true }
  *       400:
  *         description: Validation error
  */
@@ -91,6 +100,9 @@ authRouter.post("/register", async (req, res) => {
  *     responses:
  *       200:
  *         description: Verified with success
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/LocalizedMessage' }
  *       400:
  *         description: Token missing, invalid, or expired
  */
@@ -124,6 +136,9 @@ authRouter.get("/verify", async (req, res, next) => {
  *     responses:
  *       200:
  *         description: Verification email sent
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/LocalizedMessage' }
  *       400:
  *         description: Validation error
  *       500:
@@ -163,6 +178,13 @@ authRouter.post("/re-verify", async (req, res, next) => {
  *     responses:
  *       200:
  *         description: Access token and user issued (refresh token set as a session cookie)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken: { type: string }
+ *                 user: { $ref: '#/components/schemas/AuthUser' }
  *       400:
  *         description: Validation error
  */
@@ -189,6 +211,13 @@ authRouter.post("/login", async (req, res) => {
  *     responses:
  *       200:
  *         description: New access token and user issued
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken: { type: string }
+ *                 user: { $ref: '#/components/schemas/AuthUser' }
  *       401:
  *         description: Unauthorized (missing or invalid refresh token)
  */
@@ -230,6 +259,9 @@ authRouter.post("/refresh-token", async (req, res) => {
  *     responses:
  *       200:
  *         description: Password reset email sent
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/LocalizedMessage' }
  *       400:
  *         description: Validation error
  *       500:
@@ -310,6 +342,9 @@ authRouter.get("/forgot-password", async (req, res) => {
  *     responses:
  *       200:
  *         description: Password updated
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/LocalizedMessage' }
  *       400:
  *         description: Validation error or update failed
  */
@@ -351,6 +386,9 @@ authRouter.put("/forgot-password", async (req, res) => {
  *     responses:
  *       200:
  *         description: Password updated
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/LocalizedMessage' }
  *       400:
  *         description: Validation error or update failed
  *       401:
@@ -377,6 +415,9 @@ authRouter.put("/reset-password", isAuthenticated, async (req, res) => {
  *     responses:
  *       200:
  *         description: Success
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/LocalizedMessage' }
  */
 authRouter.post("/logout", (req, res) => {
   req.session = undefined;
