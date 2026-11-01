@@ -97,9 +97,10 @@ describe("car equipment on attach", () => {
     expect(response.statusCode).toBe(400);
     expect(response.body.errors).toEqual([
       {
-        code: "validation",
+        code: "equipment.not_found",
         message: "Equipment 99999 does not exist",
         field: "equipmentIds",
+        params: { id: 99999 },
       },
     ]);
   });
@@ -129,8 +130,8 @@ describe("car equipment on attach", () => {
     expect(response.statusCode).toBe(400);
     expect(response.body.errors).toEqual([
       {
-        code: "validation",
-        message: "Equipment ids must be unique",
+        code: "validation.unique_ids",
+        message: "Ids must be unique",
         field: "equipmentIds",
       },
     ]);
@@ -252,9 +253,10 @@ describe("car equipment on update", () => {
     expect(response.statusCode).toBe(400);
     expect(response.body.errors).toEqual([
       {
-        code: "validation",
+        code: "equipment.not_found",
         message: "Equipment 99999 does not exist",
         field: "equipmentIds",
+        params: { id: 99999 },
       },
     ]);
     expect(await findSavedEquipmentIds(carId)).toEqual(

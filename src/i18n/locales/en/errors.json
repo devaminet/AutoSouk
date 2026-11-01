@@ -5,9 +5,58 @@
   "forbidden": "Forbidden",
   "internal": "Internal server error",
   "unexpected": "Something went wrong",
-  "validation": "Request validation error",
   "invalid_json": "The request body is not valid JSON",
   "payload_too_large": "The request body is too large",
+  "validation": {
+    "failed": "Request validation error",
+    "required": "This field is required",
+    "invalid": "Invalid value",
+    "invalid_type": {
+      "string": "Must be a text",
+      "number": "Must be a number",
+      "integer": "Must be a whole number",
+      "boolean": "Must be true or false",
+      "array": "Must be a list",
+      "object": "Must be an object",
+      "date": "Must be a date",
+      "other": "Has an invalid type"
+    },
+    "invalid_option": "Must be one of: {{options}}",
+    "invalid_email": "Must be a valid email address",
+    "invalid_url": "Must be a valid URL",
+    "invalid_datetime": "Must be a date and time in ISO 8601 format",
+    "invalid_date": "Must be a valid date",
+    "invalid_format": "Has an invalid format",
+    "string_min_one": "Must contain at least {{count}} character",
+    "string_min_other": "Must contain at least {{count}} characters",
+    "string_max_one": "Must contain at most {{count}} character",
+    "string_max_other": "Must contain at most {{count}} characters",
+    "string_length_one": "Must contain exactly {{count}} character",
+    "string_length_other": "Must contain exactly {{count}} characters",
+    "array_min_one": "Must contain at least {{count}} item",
+    "array_min_other": "Must contain at least {{count}} items",
+    "array_max_one": "Must contain at most {{count}} item",
+    "array_max_other": "Must contain at most {{count}} items",
+    "array_length_one": "Must contain exactly {{count}} item",
+    "array_length_other": "Must contain exactly {{count}} items",
+    "number_min": "Must be at least {{minimum}}",
+    "number_gt": "Must be greater than {{minimum}}",
+    "number_max": "Must be at most {{maximum}}",
+    "number_lt": "Must be less than {{maximum}}",
+    "date_min": "Must be on or after {{minimum}}",
+    "date_max": "Must be on or before {{maximum}}",
+    "not_multiple_of": "Must be a multiple of {{multipleOf}}",
+    "unrecognized_keys": "Unknown fields: {{keys}}",
+    "no_fields": "At least one field to update is required",
+    "unique_ids": "Ids must be unique",
+    "unique_file_names": "File names must be unique.",
+    "file_type": "{{filename}} has an invalid file type, allowed types: {{allowed}}",
+    "image_type": "{{filename}} is not an image, allowed types: {{allowed}}",
+    "password_strength": "Password must have more than 8 characters with lower case, upper case, numbers, and symbols",
+    "year_in_future": "Year cannot be in the future",
+    "vin_format": "VIN must be 17 characters and exclude I, O and Q",
+    "inappropriate_content": "This text contains inappropriate content"
+  },
   "auth": {
     "token_required": "Token is required",
     "token_invalid": "Invalid token",
@@ -44,10 +93,23 @@
     "not_found": "Media was not found for this car",
     "none_for_listing": "No car media was found for this listing",
     "primary_not_image": "Only an image can be the primary media",
-    "primary_not_uploaded": "Upload and confirm this image before making it primary"
+    "primary_not_uploaded": "Upload and confirm this image before making it primary",
+    "min_images_one": "A car needs at least {{count}} image.",
+    "min_images_other": "A car needs at least {{count}} images.",
+    "max_files_one": "A car can have at most {{count}} file.",
+    "max_files_other": "A car can have at most {{count}} files.",
+    "one_primary": "Exactly one file must be designated as primary.",
+    "primary_file_not_image": "The primary file must be an image.",
+    "unknown": "Media {{id}} does not exist for this car"
   },
   "car": {
-    "not_found": "Car was not found"
+    "not_found": "Car was not found",
+    "make_not_found": "Car make does not exist",
+    "model_not_found": "Car model does not exist for the selected make",
+    "carburant_not_found": "Carburant does not exist",
+    "origin_not_found": "Origin does not exist",
+    "state_not_found": "State does not exist",
+    "city_not_found": "City does not exist"
   },
   "inspection": {
     "not_found": "Inspection was not found",
@@ -77,5 +139,8 @@
     "add_failed": "Could not add this listing to your favorites",
     "remove_failed": "Could not remove this listing from your favorites",
     "not_in_favorites": "This listing is not in your favorites list"
+  },
+  "equipment": {
+    "not_found": "Equipment {{id}} does not exist"
   }
 }

@@ -28,6 +28,22 @@ void i18n.init({
   interpolation: { escapeValue: false },
 });
 
+const pluralSuffix = /_(zero|one|two|few|many|other)$/;
+
+const collectKeys = (messages: object, prefix = ""): string[] =>
+  Object.entries(messages).flatMap(([key, value]) =>
+    typeof value === "string"
+      ? [`${prefix}${key}`.replace(pluralSuffix, "")]
+      : collectKeys(value, `${prefix}${key}.`),
+  );
+
+const errorKeys: ReadonlySet<string> = new Set(
+  collectKeys(resources[sourceLocale].errors),
+);
+
+export const isErrorKey = (value: string): value is ErrorKey =>
+  errorKeys.has(value);
+
 export const translate = (
   locale: Locale,
   key: TranslationKey,

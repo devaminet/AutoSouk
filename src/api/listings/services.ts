@@ -15,6 +15,8 @@ import {
 } from "./request_schema";
 import { BadRequestError } from "../../errors/bad_request_error";
 import { RequestValidationError } from "../../errors/request_validation_error";
+import { ErrorKey } from "../../i18n";
+import { customIssue } from "../../i18n/zod_issues";
 import { NotFoundError } from "../../errors/not_found_error";
 import {
   carBucketName,
@@ -65,35 +67,31 @@ export const saveListing = async (
   return await insertListing(title, description, userId);
 };
 
-const invalidReferenceMessages: Record<CarReferenceField, string> = {
-  makeId: "Car make does not exist",
-  modelId: "Car model does not exist for the selected make",
-  carburantId: "Carburant does not exist",
-  originId: "Origin does not exist",
-  stateId: "State does not exist",
-  cityId: "City does not exist",
+const invalidReferenceKeys: Record<CarReferenceField, ErrorKey> = {
+  makeId: "car.make_not_found",
+  modelId: "car.model_not_found",
+  carburantId: "car.carburant_not_found",
+  originId: "car.origin_not_found",
+  stateId: "car.state_not_found",
+  cityId: "car.city_not_found",
 };
 
 const findCarReferenceIssues = async (
   ids: CarReferenceIds,
 ): Promise<ZodIssue[]> => {
   const invalidFields = await findInvalidCarReferences(ids);
-  return invalidFields.map((field) => ({
-    code: "custom",
-    message: invalidReferenceMessages[field],
-    path: [field],
-  }));
+  return invalidFields.map((field) =>
+    customIssue([field], invalidReferenceKeys[field]),
+  );
 };
 
 const findEquipmentIssues = async (
   equipmentIds: number[],
 ): Promise<ZodIssue[]> => {
   const missingIds = await findMissingEquipmentIds(equipmentIds);
-  return missingIds.map((id) => ({
-    code: "custom",
-    message: `Equipment ${id} does not exist`,
-    path: ["equipmentIds"],
-  }));
+  return missingIds.map((id) =>
+    customIssue(["equipmentIds"], "equipment.not_found", { id }),
+  );
 };
 
 const throwIfIssues = (issues: ZodIssue[]) => {
@@ -234,11 +232,7 @@ export const addListingMedia = async (
   }
   if (result.status === "over_limit") {
     throw new RequestValidationError([
-      {
-        code: "custom",
-        message: `A car can have at most ${maxCarMediaCount} files.`,
-        path: ["files"],
-      },
+      customIssue(["files"], "media.max_files", { count: maxCarMediaCount }),
     ]);
   }
 
@@ -295,20 +289,16 @@ export const deleteListingMedia = async (
   }
   if (result.status === "unknown_media") {
     throw new RequestValidationError(
-      result.mediaIds.map((id) => ({
-        code: "custom",
-        message: `Media ${id} does not exist for this car`,
-        path: ["mediaIds"],
-      })),
+      result.mediaIds.map((id) =>
+        customIssue(["mediaIds"], "media.unknown", { id }),
+      ),
     );
   }
   if (result.status === "below_minimum") {
     throw new RequestValidationError([
-      {
-        code: "custom",
-        message: `A car needs at least ${minCarImageCount} images.`,
-        path: ["mediaIds"],
-      },
+      customIssue(["mediaIds"], "media.min_images", {
+        count: minCarImageCount,
+      }),
     ]);
   }
 

@@ -158,8 +158,8 @@ describe("POST /api/listings/:id/media", () => {
   });
 
   it.each([
-    [{}, "At least one file is required."],
-    [{ files: [] }, "At least one file is required."],
+    [{}, "This field is required"],
+    [{ files: [] }, "Must contain at least 1 item"],
     [
       { files: [{ name: "a.png" }, { name: "A.png" }] },
       "File names must be unique.",
@@ -197,9 +197,10 @@ describe("POST /api/listings/:id/media", () => {
     expect(response.statusCode).toBe(400);
     expect(response.body.errors).toEqual([
       {
-        code: "validation",
+        code: "media.max_files",
         message: "A car can have at most 20 files.",
         field: "files",
+        params: { count: 20 },
       },
     ]);
     expect(await countCarMedia(carId)).toBe(20);
@@ -363,9 +364,9 @@ describe("DELETE /api/listings/:id/media", () => {
   });
 
   it.each([
-    [{}, "At least one media id is required."],
-    [{ mediaIds: [] }, "At least one media id is required."],
-    [{ mediaIds: [4, 4] }, "Media ids must be unique"],
+    [{}, "This field is required"],
+    [{ mediaIds: [] }, "Must contain at least 1 item"],
+    [{ mediaIds: [4, 4] }, "Ids must be unique"],
   ])("rejects an invalid body %j", async (body, message) => {
     const { authUser, listingId } = await createListingWithCar();
 
@@ -403,9 +404,10 @@ describe("DELETE /api/listings/:id/media", () => {
     expect(response.statusCode).toBe(400);
     expect(response.body.errors).toEqual([
       {
-        code: "validation",
+        code: "media.min_images",
         message: "A car needs at least 3 images.",
         field: "mediaIds",
+        params: { count: 3 },
       },
     ]);
     expect(await visibleMedia(listingId)).toHaveLength(4);
@@ -450,9 +452,10 @@ describe("DELETE /api/listings/:id/media", () => {
     expect(response.statusCode).toBe(400);
     expect(response.body.errors).toEqual([
       {
-        code: "validation",
+        code: "media.unknown",
         message: "Media 99999 does not exist for this car",
         field: "mediaIds",
+        params: { id: 99999 },
       },
     ]);
     expect(await visibleMedia(listingId)).toHaveLength(4);
