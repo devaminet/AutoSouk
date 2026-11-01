@@ -24,6 +24,11 @@ export const namespaces = [
 
 export type Namespace = (typeof namespaces)[number];
 
+// The namespaces React loads; emails and pdf are rendered on the server only.
+export const clientNamespaces = ["errors", "messages", "enums"] as const;
+
+export type ClientNamespace = (typeof clientNamespaces)[number];
+
 // English is the source catalog: it defines the keys and their types, and the
 // catalog test checks that French and Arabic have exactly the same keys.
 export const sourceResources = {

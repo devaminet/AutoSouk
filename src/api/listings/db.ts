@@ -12,7 +12,6 @@ import {
   desc,
   eq,
   gte,
-  ilike,
   inArray,
   lte,
   sql,
@@ -134,6 +133,7 @@ export const findListings = async (
           city: {
             columns: {
               name: true,
+              slug: true,
             },
           },
         },
@@ -189,6 +189,7 @@ export const getListingDetailsById = async (id: number) => {
           city: {
             columns: {
               name: true,
+              slug: true,
             },
           },
         },
@@ -243,6 +244,7 @@ export const getListingDetailsById = async (id: number) => {
           city: {
             columns: {
               name: true,
+              slug: true,
             },
           },
           equipment: {

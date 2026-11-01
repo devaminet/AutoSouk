@@ -14,21 +14,25 @@ export const updateInspectionStatusSchema = z.object({
   status: z.enum(["accepted", "rejected", "in_progress", "cancelled"]),
 });
 
+export const inspectionItemStatusSchema = z.enum(["pass", "attention", "fail"]);
+
+export const inspectionCategorySchema = z.enum([
+  "exterior",
+  "interior",
+  "mechanical",
+  "electrical",
+  "under_vehicle",
+  "road_test",
+]);
+
 const inspectionItemSchema = z.object({
   label: z.string(),
-  status: z.enum(["pass", "attention", "fail"]),
+  status: inspectionItemStatusSchema,
   note: z.string().optional(),
 });
 
 const inspectionSectionSchema = z.object({
-  category: z.enum([
-    "exterior",
-    "interior",
-    "mechanical",
-    "electrical",
-    "under_vehicle",
-    "road_test",
-  ]),
+  category: inspectionCategorySchema,
   items: z.array(inspectionItemSchema).min(1),
 });
 

@@ -9,6 +9,7 @@ import { mechanicTable } from "./mechanic";
 export const cityTable = pgTable("cities", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   name: varchar().notNull().unique(),
+  slug: varchar().notNull().unique(),
 });
 
 export const cityRelations = relations(cityTable, ({ many }) => ({
