@@ -1,0 +1,39 @@
+{
+  "common": {
+    "greeting": "Bonjour {{firstName}}",
+    "alt_link_label": "Le bouton ne fonctionne pas ?",
+    "alt_link_text": "Copiez et collez ce lien dans votre navigateur :",
+    "security_label": "⚠️ Avis de sécurité :",
+    "support_suffix": "- nous sommes là pour vous aider !",
+    "signature": "L'équipe AutoSouk"
+  },
+  "register": {
+    "subject": "Vérifiez votre compte",
+    "title": "Vérifiez votre adresse e-mail",
+    "subtitle": "Bienvenue sur notre plateforme !",
+    "intro": "Merci de vous être inscrit sur AutoSouk ! Nous sommes ravis de vous compter parmi nous. Pour terminer votre inscription et sécuriser votre compte, veuillez vérifier votre adresse e-mail en cliquant sur le bouton ci-dessous.",
+    "button": "Vérifier mon adresse e-mail",
+    "security_text_one": "Pour votre sécurité, ce lien de vérification expire dans {{count}} minute. Si vous n'avez pas créé de compte chez nous, vous pouvez ignorer cet e-mail.",
+    "security_text_many": "Pour votre sécurité, ce lien de vérification expire dans {{count}} de minutes. Si vous n'avez pas créé de compte chez nous, vous pouvez ignorer cet e-mail.",
+    "security_text_other": "Pour votre sécurité, ce lien de vérification expire dans {{count}} minutes. Si vous n'avez pas créé de compte chez nous, vous pouvez ignorer cet e-mail.",
+    "support_text": "Un problème avec la vérification ? N'hésitez pas à contacter notre équipe d'assistance à l'adresse",
+    "closing": "Bienvenue à bord !"
+  },
+  "forgot_password": {
+    "subject": "Demande de réinitialisation du mot de passe de votre compte",
+    "title": "Réinitialisez votre mot de passe",
+    "subtitle": "Demande de réinitialisation du mot de passe",
+    "intro": "Nous avons reçu une demande de réinitialisation du mot de passe de votre compte AutoSouk. Si vous êtes à l'origine de cette demande, cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe.",
+    "button": "Réinitialiser mon mot de passe",
+    "security_text": "Si vous pensez que cette demande a été faite par erreur ou par quelqu'un d'autre, ignorez cet e-mail et pensez à changer votre mot de passe sans attendre depuis les paramètres de votre compte.",
+    "not_requested_label": "💡 Vous n'avez rien demandé ?",
+    "not_requested_text": "Si vous n'avez pas demandé de réinitialisation du mot de passe, vous pouvez ignorer cet e-mail. Votre mot de passe reste inchangé et aucune action n'est nécessaire.",
+    "support_text": "Besoin d'aide ou une inquiétude concernant la sécurité ? Contactez sans attendre notre équipe d'assistance à l'adresse",
+    "closing": "Restez en sécurité,"
+  },
+  "inspection_report": {
+    "subject": "Votre rapport d'inspection AutoSouk est prêt",
+    "body": "Le rapport d'inspection du véhicule que vous suiviez est maintenant disponible.",
+    "link": "Consulter le rapport"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "auth": {
+    "account_created": "Account was created",
+    "account_verified": "Verified with success",
+    "verification_email_sent": "A verification email has been sent",
+    "password_reset_email_sent_one": "Password reset email sent successfully. The reset link expires in {{count}} minute",
+    "password_reset_email_sent_other": "Password reset email sent successfully. The reset link expires in {{count}} minutes",
+    "password_updated": "Your password was updated successfully",
+    "logged_out": "Success"
+  }
+}

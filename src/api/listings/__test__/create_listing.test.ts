@@ -425,7 +425,12 @@ describe("car media limits on attach", () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.body.errors).toEqual([
-      { message: "A car needs at least 3 images.", field: "files" },
+      {
+        code: "media.min_images",
+        message: "A car needs at least 3 images.",
+        field: "files",
+        params: { count: 3 },
+      },
     ]);
   });
 
@@ -453,7 +458,12 @@ describe("car media limits on attach", () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.body.errors).toEqual([
-      { message: "A car can have at most 20 files.", field: "files" },
+      {
+        code: "media.max_files",
+        message: "A car can have at most 20 files.",
+        field: "files",
+        params: { count: 20 },
+      },
     ]);
   });
 
@@ -465,7 +475,11 @@ describe("car media limits on attach", () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.body.errors).toEqual([
-      { message: "The primary file must be an image.", field: "files" },
+      {
+        code: "media.primary_file_not_image",
+        message: "The primary file must be an image.",
+        field: "files",
+      },
     ]);
   });
 });

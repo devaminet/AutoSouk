@@ -33,13 +33,13 @@ it("should properly provide data to sendMail function on signup", async () => {
 it("should properly provide data to register template on signup", async () => {
   const { formData, statusCode } = await signupUser();
   const templateOptions = (readTemplateFile as jest.Mock).mock.calls[0];
-  const { verificationUrl, firstName, expiration } = templateOptions[1];
+  const { verificationUrl, firstName, expirationMinutes } = templateOptions[1];
   const parsedUrl = url.parse(verificationUrl, true, true);
 
   expect(readTemplateFile).toHaveBeenCalledTimes(1);
   expect(templateOptions[0]).toBe("register.ejs");
   expect(firstName).toBe(formData.firstName);
-  expect(expiration).toBe("5 minutes");
+  expect(expirationMinutes).toBe(5);
   expect(`${parsedUrl.protocol}//${parsedUrl.host}`).toBe(
     process.env.BACKEND_URL,
   );

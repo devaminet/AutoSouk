@@ -12,3 +12,7 @@ export const tokenExpirationMinutes = 5;
 export const maxCarEquipmentCount = 100;
 export const minCarImageCount = 3;
 export const maxCarMediaCount = 20;
+export const supportedLocales = ["en", "fr", "ar"] as const;
+export const defaultLocale = "fr";
+export const sourceLocale = "en";
+export const rtlLocales: readonly string[] = ["ar"];

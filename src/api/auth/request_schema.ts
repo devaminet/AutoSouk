@@ -1,142 +1,68 @@
 import { z } from "zod";
+import { messageKey } from "../../i18n/zod_issues";
 import { allowedImageTypes, getFileType } from "../../utils/functions";
 
-const passwordShema = (options?: {
-  requiredError?: string;
-  invalidTypeError?: string;
-}) => {
-  return z
-    .string({
-      required_error: options?.requiredError || "Password is required",
-      invalid_type_error:
-        options?.invalidTypeError || "Password must be a text",
-    })
-    .regex(
-      new RegExp(
-        "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#,;()$%^&*-/.])(?=.{8,})",
-      ),
-      {
-        message:
-          "Password must have more than 8 characters with lower case, upper case, numbers, and symbols",
-      },
-    );
-};
+const passwordSchema = z
+  .string()
+  .regex(
+    new RegExp(
+      "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#,;()$%^&*-/.])(?=.{8,})",
+    ),
+    messageKey("validation.password_strength"),
+  );
 
-export const registrationRoleSchema = z.enum(["buyer", "seller", "mechanic"], {
-  message: "User should be either buyer, seller or mechanic",
-});
+const emailSchema = z.string().email();
 
-export const profileImageNameSchema = z
-  .string({ invalid_type_error: "Image name must be a text" })
-  .refine((name) => getFileType(name) === "image", {
-    message: `Profile image must be one of: ${allowedImageTypes}`,
-  });
+export const registrationRoleSchema = z.enum(["buyer", "seller", "mechanic"]);
+
+export const profileImageNameSchema = z.string().refine(
+  (name) => getFileType(name) === "image",
+  (filename) => ({
+    message: messageKey("validation.image_type"),
+    params: { filename, allowed: allowedImageTypes },
+  }),
+);
 
 export const profileImageUploadSchema = z.object({
   imageName: profileImageNameSchema,
 });
 
-export const registerSchema = z.object(
-  {
-    firstName: z
-      .string({
-        required_error: "First name is required",
-        invalid_type_error: "First name must be a text",
-      })
-      .min(3, { message: "First name should at least contain 3 charaters" }),
-    lastName: z
-      .string({
-        required_error: "Last name is required",
-        invalid_type_error: "Last name must be a text",
-      })
-      .min(3, { message: "Last name should at least contain 3 characters" }),
-    email: z
-      .string({
-        required_error: "Email is required",
-        invalid_type_error: "Email must be a text",
-      })
-      .email({ message: "Invalid email address" }),
-    password: passwordShema(),
-    phone: z
-      .string({
-        required_error: "Phone is required",
-        invalid_type_error: "Phone must be a text",
-      })
-      .min(10, { message: "Phone should have at least 10 charaters" }),
-    userType: registrationRoleSchema,
-    cityId: z
-      .number({
-        required_error: "City is required",
-        invalid_type_error: "City must be a number",
-      })
-      .min(1, { message: "City should have a valid ID" }),
-    imageName: profileImageNameSchema.optional(),
-  },
-  { required_error: "User information are required!" },
-);
+export const registerSchema = z.object({
+  firstName: z.string().min(3),
+  lastName: z.string().min(3),
+  email: emailSchema,
+  password: passwordSchema,
+  phone: z.string().min(10),
+  userType: registrationRoleSchema,
+  cityId: z.number().min(1),
+  imageName: profileImageNameSchema.optional(),
+});
 
 export const resendTokenSchema = z.object({
-  email: z
-    .string({
-      required_error: "Email is required",
-      invalid_type_error: "Email must be a text",
-    })
-    .email({ message: "Invalid email address" }),
+  email: emailSchema,
 });
 
 export const loginSchema = z.object({
-  email: z
-    .string({
-      required_error: "Email is required",
-      invalid_type_error: "Email must be a text",
-    })
-    .email({ message: "Invalid email address" }),
-  password: z
-    .string({
-      required_error: "Password is required",
-      invalid_type_error: "Password must be a text",
-    })
-    .nonempty("Password is required"),
+  email: emailSchema,
+  password: z.string().min(1),
 });
 
 export const refreshTokenSchema = z.object({
-  refreshToken: z.string({
-    required_error: "Invalid request",
-    invalid_type_error: "Invalid request",
-  }),
+  refreshToken: z.string(),
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z
-    .string({
-      required_error: "Email is required",
-      invalid_type_error: "Email must be a text",
-    })
-    .email({ message: "Invalid email address" }),
+  email: emailSchema,
 });
 
 export const updatePasswordSchema = z.object({
-  token: z.string({
-    required_error: "Token is required",
-    invalid_type_error: "Token must be a text",
-  }),
-  password: passwordShema(),
+  token: z.string(),
+  password: passwordSchema,
 });
 
 export const resetPasswordSchema = z.object({
-  email: z
-    .string({
-      required_error: "Email is required",
-      invalid_type_error: "Email must be a text",
-    })
-    .email({ message: "Invalid email address" }),
-  oldPassword: passwordShema({
-    requiredError: "Old password is required",
-    invalidTypeError: "Old password must be a text",
-  }),
-  password: passwordShema(),
-  confirmPassword: passwordShema({
-    requiredError: "Confirm password is required",
-    invalidTypeError: "Confirm password must be a text",
-  }),
+  email: emailSchema,
+  oldPassword: passwordSchema,
+  password: passwordSchema,
+  confirmPassword: passwordSchema,
 });

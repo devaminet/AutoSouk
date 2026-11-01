@@ -5,11 +5,13 @@ import router from "./routes";
 import errorHandler from "./middlewares/error_handler";
 import { NotFoundError } from "./errors/not_found_error";
 import currentUser from "./middlewares/current_user";
+import locale from "./middlewares/locale";
 import { swaggerSpec } from "./swagger";
 
 export const app = express();
 
 app.disable("x-powered-by");
+app.use(locale);
 app.use(express.json());
 if (process.env.NODE_ENV === "development") {
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));

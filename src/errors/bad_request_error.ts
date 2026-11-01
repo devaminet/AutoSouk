@@ -1,12 +1,10 @@
+import { ErrorKey, TranslationParams } from "../i18n";
 import { CustomError } from "./custom_error";
 
 export class BadRequestError extends CustomError {
   statusCode = 400;
-  constructor(public message: string) {
-    super(message);
-  }
 
-  serializeError(): { message: string; field?: string }[] {
-    return [{ message: this.message }];
+  constructor(code: ErrorKey = "bad_request", params?: TranslationParams) {
+    super(code, params);
   }
 }

@@ -15,9 +15,7 @@ export const favorListing = async (data: {
   try {
     return await createFavoriteListing(data);
   } catch (error) {
-    throw new InternalServerError(
-      "Could not add this listing to your favorites",
-    );
+    throw new InternalServerError("favorite.add_failed");
   }
 };
 
@@ -29,13 +27,11 @@ export const removeFavorite = async (data: {
   try {
     count = await removeFavoriteListing(data);
   } catch (error) {
-    throw new InternalServerError(
-      "Could not remove this listing from your favorites",
-    );
+    throw new InternalServerError("favorite.remove_failed");
   }
 
   if (count === 0) {
-    throw new BadRequestError("This listing is not in your favorites list");
+    throw new BadRequestError("favorite.not_in_favorites");
   }
   return { count };
 };

@@ -56,7 +56,7 @@ const attachMechanicImageUrls = async <
     }
   } catch (error) {
     console.error("Error generating mechanic image URLs:", error);
-    throw new InternalServerError("Could not generate mechanic image URLs");
+    throw new InternalServerError("mechanic.image_urls_failed");
   }
 
   return mechanic;
@@ -75,10 +75,11 @@ const getProfileImageUploadUrl = async (filename?: string) => {
   try {
     return await generatePresignedUrl(mechanicsBucketName, filename);
   } catch (error) {
-    console.error("Error generating profile image upload URL:", error);
-    throw new InternalServerError(
-      `Could not generate URL for profile image: ${filename}`,
+    console.error(
+      `Error generating profile image upload URL for ${filename}:`,
+      error,
     );
+    throw new InternalServerError("mechanic.profile_image_url_failed");
   }
 };
 
@@ -88,15 +89,13 @@ export const createMechanicProfile = async (
 ) => {
   const existingMechanic = await findMechanicByUserId(userId);
   if (existingMechanic) {
-    throw new BadRequestError("A mechanic profile already exists");
+    throw new BadRequestError("mechanic.already_exists");
   }
 
   await insertMechanic(userId, data);
   const mechanic = await findMechanicByUserId(userId);
   if (!mechanic) {
-    throw new InternalServerError(
-      "Could not retrieve the created mechanic profile",
-    );
+    throw new InternalServerError("mechanic.profile_reload_failed");
   }
 
   const profileImageUploadUrl = await getProfileImageUploadUrl(
@@ -109,7 +108,7 @@ export const createMechanicProfile = async (
 export const getOwnMechanicProfile = async (userId: number) => {
   const mechanic = await findMechanicByUserId(userId);
   if (!mechanic) {
-    throw new NotFoundError("Mechanic profile was not found");
+    throw new NotFoundError("mechanic.profile_not_found");
   }
 
   return attachRatingSummary(await attachMechanicImageUrls(mechanic));
@@ -121,7 +120,7 @@ export const addGarageImages = async (
 ) => {
   const mechanic = await findMechanicByUserId(userId);
   if (!mechanic) {
-    throw new NotFoundError("Mechanic profile was not found");
+    throw new NotFoundError("mechanic.profile_not_found");
   }
 
   let uploadUrls: Map<string, string>;
@@ -132,15 +131,11 @@ export const addGarageImages = async (
     );
   } catch (error) {
     console.error("Error generating garage image upload URLs:", error);
-    throw new InternalServerError(
-      "Could not generate garage image upload URLs",
-    );
+    throw new InternalServerError("mechanic.garage_upload_urls_failed");
   }
 
   if (data.filenames.some((filename) => !uploadUrls.has(filename))) {
-    throw new InternalServerError(
-      "Could not generate garage image upload URLs",
-    );
+    throw new InternalServerError("mechanic.garage_upload_urls_failed");
   }
 
   const garageImages = await insertGarageImages(mechanic.id, data.filenames);
@@ -156,12 +151,12 @@ export const addGarageImages = async (
 export const removeGarageImage = async (userId: number, imageId: number) => {
   const mechanic = await findMechanicByUserId(userId);
   if (!mechanic) {
-    throw new NotFoundError("Mechanic profile was not found");
+    throw new NotFoundError("mechanic.profile_not_found");
   }
 
   const garageImage = await deleteGarageImageByOwner(imageId, mechanic.id);
   if (!garageImage) {
-    throw new NotFoundError("Garage image was not found");
+    throw new NotFoundError("mechanic.garage_image_not_found");
   }
 
   return { deleted: true, imageId: garageImage.id };
@@ -174,7 +169,7 @@ export const getMechanicById = async (
   const mechanic = await findMechanicById(mechanicId);
   const isOwner = mechanic?.userId === requesterUserId;
   if (!mechanic || (!mechanic.isActive && !isOwner)) {
-    throw new NotFoundError("Mechanic profile was not found");
+    throw new NotFoundError("mechanic.profile_not_found");
   }
 
   return attachRatingSummary(await attachMechanicImageUrls(mechanic));
@@ -227,13 +222,11 @@ export const updateMechanicProfile = async (
 ) => {
   const updated = await updateMechanicByUserId(userId, data);
   if (!updated) {
-    throw new NotFoundError("Mechanic profile was not found");
+    throw new NotFoundError("mechanic.profile_not_found");
   }
   const mechanic = await findMechanicByUserId(userId);
   if (!mechanic) {
-    throw new InternalServerError(
-      "Could not retrieve the updated mechanic profile",
-    );
+    throw new InternalServerError("mechanic.profile_reload_failed");
   }
 
   const profileImageUploadUrl = await getProfileImageUploadUrl(
@@ -249,13 +242,11 @@ export const updateMechanicStatus = async (
 ) => {
   const updated = await updateMechanicStatusByUserId(userId, isActive);
   if (!updated) {
-    throw new NotFoundError("Mechanic profile was not found");
+    throw new NotFoundError("mechanic.profile_not_found");
   }
   const mechanic = await findMechanicByUserId(userId);
   if (!mechanic) {
-    throw new InternalServerError(
-      "Could not retrieve the updated mechanic profile",
-    );
+    throw new InternalServerError("mechanic.profile_reload_failed");
   }
 
   return attachMechanicImageUrls(mechanic);

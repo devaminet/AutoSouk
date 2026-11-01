@@ -1,4 +1,4 @@
-export {};
+import type { Locale } from "../../i18n/config";
 
 type AuthenticatedRole = "buyer" | "seller" | "mechanic" | "admin";
 
@@ -11,6 +11,7 @@ declare global {
           })
         | null
         | undefined;
+      locale: Locale;
       currentUser?: {
         id: number;
         email: string;

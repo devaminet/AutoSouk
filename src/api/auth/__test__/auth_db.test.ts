@@ -3,15 +3,18 @@ import { createUser, findUserByEmail, findUserById } from "../db";
 describe("auth user role lookups", () => {
   it("returns the related role name when finding a user by email", async () => {
     const email = `auth-db-email-${Date.now()}@autosouk.com`;
-    await createUser({
-      firstName: "Auth",
-      lastName: "Email",
-      email,
-      password: "Auth_@@7890",
-      phone: "+212600000020",
-      userType: "buyer",
-      cityId: 1,
-    });
+    await createUser(
+      {
+        firstName: "Auth",
+        lastName: "Email",
+        email,
+        password: "Auth_@@7890",
+        phone: "+212600000020",
+        userType: "buyer",
+        cityId: 1,
+      },
+      "fr",
+    );
 
     const user = await findUserByEmail(email);
 
@@ -24,15 +27,18 @@ describe("auth user role lookups", () => {
   });
 
   it("returns the related role name when finding a user by ID", async () => {
-    const createdUserId = await createUser({
-      firstName: "Auth",
-      lastName: "ID",
-      email: `auth-db-id-${Date.now()}@autosouk.com`,
-      password: "Auth_@@7890",
-      phone: "+212600000021",
-      userType: "seller",
-      cityId: 1,
-    });
+    const createdUserId = await createUser(
+      {
+        firstName: "Auth",
+        lastName: "ID",
+        email: `auth-db-id-${Date.now()}@autosouk.com`,
+        password: "Auth_@@7890",
+        phone: "+212600000021",
+        userType: "seller",
+        cityId: 1,
+      },
+      "fr",
+    );
 
     const user = await findUserById(createdUserId);
 

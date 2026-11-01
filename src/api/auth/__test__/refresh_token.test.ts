@@ -34,6 +34,7 @@ it("should return a new access token", async () => {
     imageUrl: expect.any(String),
     isVerified: true,
     phone: "+212685412593",
+    locale: "en",
     role: "buyer",
   });
   expect(response.body.user).not.toHaveProperty("roleId");

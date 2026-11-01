@@ -4,7 +4,13 @@ import { InternalServerError } from "../../errors/internal_server_error";
 import { NotAllowedError } from "../../errors/not_allowed";
 import { NotFoundError } from "../../errors/not_found_error";
 import { inspectionReportsBucketName } from "../../utils/constants";
-import { generateGetPresignedUrl, sendMail } from "../../utils/functions";
+import {
+  generateGetPresignedUrl,
+  readTemplateFile,
+  sendMail,
+} from "../../utils/functions";
+import { Locale } from "../../i18n";
+import { emailSubject, emailTemplateContext } from "../../i18n/emails";
 import { minioClient } from "../../file_storage/minio";
 import { generateInspectionReportPdf } from "./pdf";
 import {
@@ -36,25 +42,21 @@ export const requestInspection = async (
 ) => {
   const car = await findCarWithCityById(data.carId);
   if (!car) {
-    throw new NotFoundError("Car was not found");
+    throw new NotFoundError("car.not_found");
   }
 
   const mechanic = await findMechanicById(data.mechanicId);
   if (!mechanic || !mechanic.isActive) {
-    throw new NotFoundError("Mechanic was not found");
+    throw new NotFoundError("mechanic.not_found");
   }
 
   if (mechanic.cityId !== car.cityId) {
-    throw new BadRequestError(
-      "Mechanic must be located in the same city as the car",
-    );
+    throw new BadRequestError("inspection.mechanic_city_mismatch");
   }
 
   const existingActive = await findActiveInspectionByCarId(data.carId);
   if (existingActive) {
-    throw new BadRequestError(
-      "This car already has an active inspection request",
-    );
+    throw new BadRequestError("inspection.already_active");
   }
 
   const inspection = await insertInspection({
@@ -70,7 +72,7 @@ export const requestInspection = async (
 export const getInspectionById = async (id: number, requesterUserId: number) => {
   const inspection = await findInspectionById(id);
   if (!inspection) {
-    throw new NotFoundError("Inspection was not found");
+    throw new NotFoundError("inspection.not_found");
   }
 
   const isBuyer = inspection.buyerId === requesterUserId;
@@ -100,7 +102,7 @@ export const getMyInspections = async (currentUser: {
   if (currentUser.role === "mechanic") {
     const mechanic = await findMechanicByUserId(currentUser.id);
     if (!mechanic) {
-      throw new NotFoundError("Mechanic profile was not found");
+      throw new NotFoundError("mechanic.profile_not_found");
     }
     return await findInspectionsByMechanicId(mechanic.id);
   }
@@ -123,9 +125,7 @@ export const updateInspectionStatus = async (
       currentUser.id,
     );
     if (!inspection) {
-      throw new NotFoundError(
-        "Inspection was not found or can no longer be cancelled",
-      );
+      throw new NotFoundError("inspection.not_cancellable");
     }
 
     return { inspection };
@@ -137,7 +137,7 @@ export const updateInspectionStatus = async (
 
   const mechanic = await findMechanicByUserId(currentUser.id);
   if (!mechanic) {
-    throw new NotFoundError("Mechanic profile was not found");
+    throw new NotFoundError("mechanic.profile_not_found");
   }
 
   const inspection = await updateInspectionStatusByMechanic(
@@ -146,7 +146,7 @@ export const updateInspectionStatus = async (
     data.status,
   );
   if (!inspection) {
-    throw new NotFoundError("Inspection was not found");
+    throw new NotFoundError("inspection.not_found");
   }
 
   return { inspection };
@@ -155,15 +155,21 @@ export const updateInspectionStatus = async (
 const buildReportReference = (inspectionId: number, issuedAt: Date) =>
   `AS-${issuedAt.getFullYear()}-${String(inspectionId).padStart(6, "0")}`;
 
+// Sent in the buyer's saved language, like the report itself.
 const notifyBuyerOfCompletedInspection = async (
-  buyerEmail: string,
+  buyer: { email: string; firstName: string; locale: Locale },
   reportUrl: string,
 ) => {
   try {
+    const html = await readTemplateFile("inspection_report.ejs", {
+      ...emailTemplateContext(buyer.locale),
+      firstName: buyer.firstName,
+      reportUrl,
+    });
     await sendMail({
-      to: buyerEmail,
-      subject: "Votre rapport d'inspection AutoSouk est pret",
-      html: `<p>Bonjour,</p><p>Le rapport d'inspection du vehicule que vous suiviez est maintenant disponible.</p><p><a href="${reportUrl}">Consulter le rapport</a></p>`,
+      to: buyer.email,
+      subject: emailSubject(buyer.locale, "inspection_report.subject"),
+      html,
     });
   } catch (error) {
     console.error("Error sending inspection completion email:", error);
@@ -177,69 +183,70 @@ export const submitInspectionReport = async (
 ) => {
   const mechanic = await findMechanicByUserId(mechanicUserId);
   if (!mechanic) {
-    throw new NotFoundError("Mechanic profile was not found");
+    throw new NotFoundError("mechanic.profile_not_found");
   }
 
   const inspection = await findInspectionById(inspectionId);
   if (!inspection || inspection.mechanicId !== mechanic.id) {
-    throw new NotFoundError("Inspection was not found");
+    throw new NotFoundError("inspection.not_found");
   }
 
   if (inspection.status !== "in_progress") {
-    throw new BadRequestError(
-      "Inspection must be in progress before it can be completed",
-    );
+    throw new BadRequestError("inspection.not_in_progress");
   }
 
   const issuedAt = new Date();
   let pdfBuffer: Buffer;
   try {
-    pdfBuffer = await generateInspectionReportPdf({
-      reference: buildReportReference(inspection.id, issuedAt),
-      inspectedAt: data.inspectedAt ? new Date(data.inspectedAt) : issuedAt,
-      issuedAt,
-      vehicle: {
-        make: inspection.car.make?.name ?? null,
-        model: inspection.car.model?.name ?? null,
-        year: inspection.car.year,
-        matricule: data.matricule,
-        vin: data.vin ?? null,
-        carteGriseNumber: data.carteGriseNumber ?? null,
-        mileageKm: data.mileage,
-        mileageConsistency: data.mileageConsistency,
-        mileageConsistencyNote: data.mileageConsistencyNote ?? null,
-        firstRegistrationDate: data.firstRegistrationDate ?? null,
-        fuel: inspection.car.carburant?.carburant ?? null,
-        transmission: inspection.car.transmission,
-        fiscalPower: inspection.car.fiscalPower,
-        doorsNumber: inspection.car.doorsNumber,
-        ownersCount: inspection.car.ownersCount,
-        origin: inspection.car.origin?.origin ?? null,
-        city: inspection.car.city?.name ?? null,
+    pdfBuffer = await generateInspectionReportPdf(
+      {
+        reference: buildReportReference(inspection.id, issuedAt),
+        inspectedAt: data.inspectedAt ? new Date(data.inspectedAt) : issuedAt,
+        issuedAt,
+        vehicle: {
+          make: inspection.car.make?.name ?? null,
+          model: inspection.car.model?.name ?? null,
+          year: inspection.car.year,
+          matricule: data.matricule,
+          vin: data.vin ?? null,
+          carteGriseNumber: data.carteGriseNumber ?? null,
+          mileageKm: data.mileage,
+          mileageConsistency: data.mileageConsistency,
+          mileageConsistencyNote: data.mileageConsistencyNote ?? null,
+          firstRegistrationDate: data.firstRegistrationDate ?? null,
+          fuel: inspection.car.carburant?.carburant ?? null,
+          transmission: inspection.car.transmission,
+          fiscalPower: inspection.car.fiscalPower,
+          doorsNumber: inspection.car.doorsNumber,
+          ownersCount: inspection.car.ownersCount,
+          origin: inspection.car.origin?.origin ?? null,
+          city: inspection.car.city ?? null,
+        },
+        administrative: {
+          controleTechniqueValid: data.controleTechniqueValid,
+          controleTechniqueExpiry: data.controleTechniqueExpiry ?? null,
+          vignetteValid: data.vignetteValid,
+        },
+        expert: {
+          name: inspection.mechanic.name,
+          address: inspection.mechanic.address,
+          city: inspection.mechanic.city ?? null,
+          phone: inspection.mechanic.phone,
+        },
+        client: {
+          name: `${inspection.buyer.firstName} ${inspection.buyer.lastName}`.trim(),
+        },
+        verdict: data.verdict,
+        overallScore: data.overallScore,
+        summary: data.summary,
+        sections: data.sections,
+        estimatedRepairCost: data.estimatedRepairCost,
       },
-      administrative: {
-        controleTechniqueValid: data.controleTechniqueValid,
-        controleTechniqueExpiry: data.controleTechniqueExpiry ?? null,
-        vignetteValid: data.vignetteValid,
-      },
-      expert: {
-        name: inspection.mechanic.name,
-        address: inspection.mechanic.address,
-        city: inspection.mechanic.city?.name ?? null,
-        phone: inspection.mechanic.phone,
-      },
-      client: {
-        name: `${inspection.buyer.firstName} ${inspection.buyer.lastName}`.trim(),
-      },
-      verdict: data.verdict,
-      overallScore: data.overallScore,
-      summary: data.summary,
-      sections: data.sections,
-      estimatedRepairCost: data.estimatedRepairCost,
-    });
+      inspection.buyer.locale,
+    );
   } catch (error) {
     console.error("Error generating inspection report PDF:", error);
-    throw new InternalServerError("Could not generate inspection report PDF");
+    throw new InternalServerError("inspection.report_generation_failed");
   }
 
   const filename = `inspection-${inspection.id}-${Date.now()}.pdf`;
@@ -253,7 +260,7 @@ export const submitInspectionReport = async (
     );
   } catch (error) {
     console.error("Error uploading inspection report PDF:", error);
-    throw new InternalServerError("Could not store inspection report PDF");
+    throw new InternalServerError("inspection.report_storage_failed");
   }
 
   const updated = await completeInspectionByMechanic(
@@ -263,14 +270,14 @@ export const submitInspectionReport = async (
     filename,
   );
   if (!updated) {
-    throw new InternalServerError("Could not complete inspection");
+    throw new InternalServerError("inspection.completion_failed");
   }
 
   const reportUrl = await generateGetPresignedUrl(
     inspectionReportsBucketName,
     filename,
   );
-  await notifyBuyerOfCompletedInspection(inspection.buyer.email, reportUrl);
+  await notifyBuyerOfCompletedInspection(inspection.buyer, reportUrl);
 
   return { inspection: { ...updated, reportPdfLink: reportUrl } };
 };

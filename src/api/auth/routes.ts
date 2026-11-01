@@ -28,6 +28,7 @@ import {
 } from "./services";
 import { InternalServerError } from "../../errors/internal_server_error";
 import { tokenExpirationMinutes } from "../../utils/constants";
+import { localizedMessage } from "../../i18n";
 
 const authRouter = Router();
 
@@ -55,7 +56,16 @@ const authRouter = Router();
  *               imageName: { type: string, description: "Optional profile image file name (jpg, jpeg, png, webp). Upload the file with a multipart/form-data POST to imageUpload.url, sending every imageUpload.fields entry first and the file last as field \"file\". Max 10MB, image/* content type." }
  *     responses:
  *       201:
- *         description: Account created. Includes imageUpload ({ url, fields }, presigned POST policy) when imageName was sent.
+ *         description: Account created; the user's locale is set from the request language. Includes imageUpload ({ url, fields }, presigned POST policy) when imageName was sent.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/LocalizedMessage'
+ *                 - type: object
+ *                   properties:
+ *                     token: { type: string }
+ *                     imageUpload: { type: object, nullable: true }
  *       400:
  *         description: Validation error
  */
@@ -65,8 +75,15 @@ authRouter.post("/register", async (req, res) => {
     throw new RequestValidationError(validationResult.error.errors);
   }
 
-  const { token, imageUpload } = await setupUser(validationResult.data);
-  res.status(201).json({ message: "Account was created", token, imageUpload });
+  const { token, imageUpload } = await setupUser(
+    validationResult.data,
+    req.locale,
+  );
+  res.status(201).json({
+    ...localizedMessage(req.locale, "auth.account_created"),
+    token,
+    imageUpload,
+  });
 });
 
 /**
@@ -83,19 +100,22 @@ authRouter.post("/register", async (req, res) => {
  *     responses:
  *       200:
  *         description: Verified with success
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/LocalizedMessage' }
  *       400:
  *         description: Token missing, invalid, or expired
  */
 authRouter.get("/verify", async (req, res, next) => {
   const { token } = req.query;
   if (!token) {
-    throw new BadRequestError("Token is required");
+    throw new BadRequestError("auth.token_required");
   }
   const result = await verifyUser(token as string);
   if (!result.success) {
-    throw new BadRequestError("Invalid or expired token");
+    throw new BadRequestError("auth.token_invalid_or_expired");
   }
-  res.status(200).json({ message: "Verified with success" });
+  res.status(200).json(localizedMessage(req.locale, "auth.account_verified"));
 });
 
 /**
@@ -116,6 +136,9 @@ authRouter.get("/verify", async (req, res, next) => {
  *     responses:
  *       200:
  *         description: Verification email sent
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/LocalizedMessage' }
  *       400:
  *         description: Validation error
  *       500:
@@ -129,9 +152,11 @@ authRouter.post("/re-verify", async (req, res, next) => {
 
   const result = await resendVerificationEmail(validationResult.data.email);
   if (!result.success) {
-    throw new InternalServerError("Could not send verification email");
+    throw new InternalServerError("auth.verification_email_failed");
   }
-  res.status(200).json({ message: "A verification email has been sent" });
+  res
+    .status(200)
+    .json(localizedMessage(req.locale, "auth.verification_email_sent"));
 });
 
 /**
@@ -153,6 +178,13 @@ authRouter.post("/re-verify", async (req, res, next) => {
  *     responses:
  *       200:
  *         description: Access token and user issued (refresh token set as a session cookie)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken: { type: string }
+ *                 user: { $ref: '#/components/schemas/AuthUser' }
  *       400:
  *         description: Validation error
  */
@@ -179,6 +211,13 @@ authRouter.post("/login", async (req, res) => {
  *     responses:
  *       200:
  *         description: New access token and user issued
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken: { type: string }
+ *                 user: { $ref: '#/components/schemas/AuthUser' }
  *       401:
  *         description: Unauthorized (missing or invalid refresh token)
  */
@@ -191,7 +230,7 @@ authRouter.post("/refresh-token", async (req, res) => {
   const result = await refreshTokens(token);
   if (!result.success) {
     req.session = undefined;
-    throw new NotAuthorizedError("Unauthorized");
+    throw new NotAuthorizedError("not_authorized");
   }
 
   const { accessToken, refreshToken, user } = result;
@@ -220,6 +259,9 @@ authRouter.post("/refresh-token", async (req, res) => {
  *     responses:
  *       200:
  *         description: Password reset email sent
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/LocalizedMessage' }
  *       400:
  *         description: Validation error
  *       500:
@@ -233,11 +275,13 @@ authRouter.post("/forgot-password", async (req, res, next) => {
 
   const result = await sendForgotPasswordLink(validateResult.data.email);
   if (!result.success) {
-    throw new InternalServerError("Could not send forgot password email");
+    throw new InternalServerError("auth.forgot_password_email_failed");
   }
-  res.status(200).json({
-    message: `Password reset email sent successfully. The reset link expires in ${tokenExpirationMinutes} minutes`,
-  });
+  res.status(200).json(
+    localizedMessage(req.locale, "auth.password_reset_email_sent", {
+      count: tokenExpirationMinutes,
+    }),
+  );
 });
 
 /**
@@ -263,7 +307,7 @@ authRouter.post("/forgot-password", async (req, res, next) => {
 authRouter.get("/forgot-password", async (req, res) => {
   const { token, email } = req.query;
   if (!token) {
-    throw new BadRequestError("Token is required");
+    throw new BadRequestError("auth.token_required");
   }
   const result = await verifyForgotPasswordToken(
     token as string,
@@ -298,6 +342,9 @@ authRouter.get("/forgot-password", async (req, res) => {
  *     responses:
  *       200:
  *         description: Password updated
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/LocalizedMessage' }
  *       400:
  *         description: Validation error or update failed
  */
@@ -311,11 +358,9 @@ authRouter.put("/forgot-password", async (req, res) => {
     validateResult.data.password,
   );
   if (!result.success) {
-    throw new BadRequestError(
-      "Could not update the password! Please try again",
-    );
+    throw new BadRequestError("auth.password_update_failed");
   }
-  res.status(200).json({ message: "Your password was updated successfully" });
+  res.status(200).json(localizedMessage(req.locale, "auth.password_updated"));
 });
 
 /**
@@ -341,6 +386,9 @@ authRouter.put("/forgot-password", async (req, res) => {
  *     responses:
  *       200:
  *         description: Password updated
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/LocalizedMessage' }
  *       400:
  *         description: Validation error or update failed
  *       401:
@@ -353,11 +401,9 @@ authRouter.put("/reset-password", isAuthenticated, async (req, res) => {
   }
   const rowCount = await resetPassword(validateResult.data);
   if (rowCount === null || rowCount === 0) {
-    throw new BadRequestError(
-      "Could not update the password! Please try again",
-    );
+    throw new BadRequestError("auth.password_update_failed");
   }
-  res.status(200).json({ message: "Your password was updated successfully" });
+  res.status(200).json(localizedMessage(req.locale, "auth.password_updated"));
 });
 
 /**
@@ -369,10 +415,13 @@ authRouter.put("/reset-password", isAuthenticated, async (req, res) => {
  *     responses:
  *       200:
  *         description: Success
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/LocalizedMessage' }
  */
 authRouter.post("/logout", (req, res) => {
   req.session = undefined;
-  res.status(200).json({ message: "Success" });
+  res.status(200).json(localizedMessage(req.locale, "auth.logged_out"));
 });
 
 /**

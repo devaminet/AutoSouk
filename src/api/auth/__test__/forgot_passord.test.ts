@@ -31,16 +31,16 @@ it("should validate readTemplateFile function", async () => {
     .post("/api/auth/forgot-password")
     .send({ email: formData.email });
 
-  const { firstName, forgotPasswordUrl, expiration } = (
+  const { firstName, forgotPasswordUrl, locale } = (
     readTemplateFile as jest.Mock
   ).mock.calls[0][1];
   const parsedUrl = url.parse(forgotPasswordUrl, true, true);
 
   expect(readTemplateFile).toHaveBeenCalledTimes(1);
   expect(firstName).toBe(formData.firstName);
-  expect(expiration).toBe("5 minutes");
+  expect(locale).toBe("en");
   expect(`${parsedUrl.protocol}//${parsedUrl.host}`).toBe(
-    process.env.BACKEND_URL
+    process.env.BACKEND_URL,
   );
   expect(parsedUrl.pathname).toBe("/api/auth/forgot-password");
   expect(parsedUrl.query.token).toBeDefined();
@@ -96,7 +96,7 @@ it("should redirect if request is valid", async () => {
     .send();
   expect(statusCode).toBe(301);
   expect(headers.location).toBe(
-    `${process.env.CLIENT_URL}/reset-password?token=${token}`
+    `${process.env.CLIENT_URL}/reset-password?token=${token}`,
   );
 });
 

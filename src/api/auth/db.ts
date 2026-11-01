@@ -9,6 +9,7 @@ import { emailVerificationTokensTable } from "../../db/schema/email_verification
 import { refreshTokensTable } from "../../db/schema/refresh_tokens";
 import { forgotPasswordTokensTable } from "../../db/schema/forget_password_tokens";
 import { BadRequestError } from "../../errors/bad_request_error";
+import { Locale } from "../../i18n";
 
 export const findRoleIdByName = async (
   roleName: string,
@@ -53,13 +54,14 @@ export const findUserById = async (id: number) => {
 
 export const createUser = async (
   user: z.infer<typeof registerSchema>,
+  locale: Locale,
   imageName: string | null = null,
 ) => {
   const { email, password, cityId, firstName, lastName, phone, userType } =
     user;
   const roleId = await findRoleIdByName(userType);
   if (roleId === null) {
-    throw new BadRequestError("Invalid user role");
+    throw new BadRequestError("auth.invalid_role");
   }
 
   const { hashedPassword, salt } = await hashPassword(password);
@@ -76,6 +78,7 @@ export const createUser = async (
       phone,
       roleId,
       pendingImageName: imageName,
+      locale,
     })
     .returning({ id: usersTable.id });
 

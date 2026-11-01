@@ -15,6 +15,8 @@ import {
 } from "./request_schema";
 import { BadRequestError } from "../../errors/bad_request_error";
 import { RequestValidationError } from "../../errors/request_validation_error";
+import { ErrorKey } from "../../i18n";
+import { customIssue } from "../../i18n/zod_issues";
 import { NotFoundError } from "../../errors/not_found_error";
 import {
   carBucketName,
@@ -65,35 +67,31 @@ export const saveListing = async (
   return await insertListing(title, description, userId);
 };
 
-const invalidReferenceMessages: Record<CarReferenceField, string> = {
-  makeId: "Car make does not exist",
-  modelId: "Car model does not exist for the selected make",
-  carburantId: "Carburant does not exist",
-  originId: "Origin does not exist",
-  stateId: "State does not exist",
-  cityId: "City does not exist",
+const invalidReferenceKeys: Record<CarReferenceField, ErrorKey> = {
+  makeId: "car.make_not_found",
+  modelId: "car.model_not_found",
+  carburantId: "car.carburant_not_found",
+  originId: "car.origin_not_found",
+  stateId: "car.state_not_found",
+  cityId: "car.city_not_found",
 };
 
 const findCarReferenceIssues = async (
   ids: CarReferenceIds,
 ): Promise<ZodIssue[]> => {
   const invalidFields = await findInvalidCarReferences(ids);
-  return invalidFields.map((field) => ({
-    code: "custom",
-    message: invalidReferenceMessages[field],
-    path: [field],
-  }));
+  return invalidFields.map((field) =>
+    customIssue([field], invalidReferenceKeys[field]),
+  );
 };
 
 const findEquipmentIssues = async (
   equipmentIds: number[],
 ): Promise<ZodIssue[]> => {
   const missingIds = await findMissingEquipmentIds(equipmentIds);
-  return missingIds.map((id) => ({
-    code: "custom",
-    message: `Equipment ${id} does not exist`,
-    path: ["equipmentIds"],
-  }));
+  return missingIds.map((id) =>
+    customIssue(["equipmentIds"], "equipment.not_found", { id }),
+  );
 };
 
 const throwIfIssues = (issues: ZodIssue[]) => {
@@ -152,13 +150,13 @@ export const attachCarToListing = async (
 ) => {
   const listing = await getUserListing(listingId, userId);
   if (!listing) {
-    throw new NotFoundError("Listing was not found");
+    throw new NotFoundError("listing.not_found");
   }
 
   const found = await checkCarExistanceByListingId(listingId);
 
   if (found) {
-    throw new BadRequestError("A car is already attached to this listing");
+    throw new BadRequestError("listing.car_already_attached");
   }
 
   const { files, equipmentIds = [], ...carDetails } = data;
@@ -172,7 +170,7 @@ export const attachCarToListing = async (
     carMedia = await Promise.all(files.map(buildCarMediaUpload));
   } catch (error) {
     console.error("Error generating car media upload policies:", error);
-    throw new InternalServerError("Could not generate urls for images");
+    throw new InternalServerError("media.upload_urls_failed");
   }
 
   const car = await saveCarAndMedia({
@@ -184,7 +182,7 @@ export const attachCarToListing = async (
   });
 
   if (!car) {
-    throw new BadRequestError("A car is already attached to this listing");
+    throw new BadRequestError("listing.car_already_attached");
   }
 
   return {
@@ -211,7 +209,7 @@ export const addListingMedia = async (
 ) => {
   const listing = await getUserListing(listingId, userId);
   if (!listing) {
-    throw new NotFoundError("Listing was not found");
+    throw new NotFoundError("listing.not_found");
   }
 
   let uploads: Awaited<ReturnType<typeof buildCarMediaUpload>>[] = [];
@@ -221,7 +219,7 @@ export const addListingMedia = async (
     );
   } catch (error) {
     console.error("Error generating car media upload policies:", error);
-    throw new InternalServerError("Could not generate urls for images");
+    throw new InternalServerError("media.upload_urls_failed");
   }
 
   const result = await insertCarMediaWithinLimit(
@@ -230,17 +228,11 @@ export const addListingMedia = async (
     maxCarMediaCount,
   );
   if (result.status === "no_car") {
-    throw new BadRequestError(
-      "Attach a car to this listing before adding media",
-    );
+    throw new BadRequestError("listing.car_required_for_media");
   }
   if (result.status === "over_limit") {
     throw new RequestValidationError([
-      {
-        code: "custom",
-        message: `A car can have at most ${maxCarMediaCount} files.`,
-        path: ["files"],
-      },
+      customIssue(["files"], "media.max_files", { count: maxCarMediaCount }),
     ]);
   }
 
@@ -284,7 +276,7 @@ export const deleteListingMedia = async (
 ) => {
   const listing = await getUserListing(listingId, userId);
   if (!listing) {
-    throw new NotFoundError("Listing was not found");
+    throw new NotFoundError("listing.not_found");
   }
 
   const result = await deleteCarMediaKeepingMinimum(
@@ -293,24 +285,20 @@ export const deleteListingMedia = async (
     minCarImageCount,
   );
   if (result.status === "no_car") {
-    throw new BadRequestError("Attach a car to this listing before editing it");
+    throw new BadRequestError("listing.car_required");
   }
   if (result.status === "unknown_media") {
     throw new RequestValidationError(
-      result.mediaIds.map((id) => ({
-        code: "custom",
-        message: `Media ${id} does not exist for this car`,
-        path: ["mediaIds"],
-      })),
+      result.mediaIds.map((id) =>
+        customIssue(["mediaIds"], "media.unknown", { id }),
+      ),
     );
   }
   if (result.status === "below_minimum") {
     throw new RequestValidationError([
-      {
-        code: "custom",
-        message: `A car needs at least ${minCarImageCount} images.`,
-        path: ["mediaIds"],
-      },
+      customIssue(["mediaIds"], "media.min_images", {
+        count: minCarImageCount,
+      }),
     ]);
   }
 
@@ -331,23 +319,19 @@ export const setListingPrimaryMedia = async (
 ) => {
   const listing = await getUserListing(listingId, userId);
   if (!listing) {
-    throw new NotFoundError("Listing was not found");
+    throw new NotFoundError("listing.not_found");
   }
 
   const result = await setPrimaryCarMedia(listingId, mediaId);
   switch (result.status) {
     case "no_car":
-      throw new BadRequestError(
-        "Attach a car to this listing before editing it",
-      );
+      throw new BadRequestError("listing.car_required");
     case "not_found":
-      throw new NotFoundError("Media was not found for this car");
+      throw new NotFoundError("media.not_found");
     case "not_image":
-      throw new BadRequestError("Only an image can be the primary media");
+      throw new BadRequestError("media.primary_not_image");
     case "not_uploaded":
-      throw new BadRequestError(
-        "Upload and confirm this image before making it primary",
-      );
+      throw new BadRequestError("media.primary_not_uploaded");
     case "updated":
       return { carMedias: await withMediaUrls(result.media) };
   }
@@ -361,7 +345,7 @@ export const confirmListingMedia = async (
 ) => {
   const media = await findCarMediaByListing(listingId, userId);
   if (media.length === 0) {
-    throw new NotFoundError("No car media was found for this listing");
+    throw new NotFoundError("media.none_for_listing");
   }
 
   const uploadedIds: number[] = [];
@@ -433,7 +417,7 @@ export const getListingDetails = async (listingId: number) => {
   const listing = await getListingDetailsById(listingId);
 
   if (!listing) {
-    throw new NotFoundError("Listing was not found!");
+    throw new NotFoundError("listing.not_found");
   }
 
   const carMedias = listing.car?.carMedias;
@@ -461,15 +445,13 @@ export const updateListing = async (
 ) => {
   const listing = await getUserListing(listingId, userId);
   if (!listing) {
-    throw new NotFoundError("Listing was not found");
+    throw new NotFoundError("listing.not_found");
   }
 
   if (changes.car) {
     const currentCar = await findCarReferencesByListingId(listingId);
     if (!currentCar) {
-      throw new BadRequestError(
-        "Attach a car to this listing before editing it",
-      );
+      throw new BadRequestError("listing.car_required");
     }
 
     const { equipmentIds, ...carReferences } = changes.car;
@@ -497,11 +479,11 @@ export const approveListing = async (listingId: number) => {
   const listing = await findListingById(listingId);
 
   if (!listing) {
-    throw new NotFoundError("Listing not found");
+    throw new NotFoundError("listing.not_found");
   }
 
   if (listing.status === "approved") {
-    throw new BadRequestError("Listing is already approved");
+    throw new BadRequestError("listing.already_approved");
   }
 
   const result = await approveListingById(listingId);
@@ -551,7 +533,7 @@ export const deleteListing = async (listingId: number, userId: number) => {
   const listing = await findListingCarId(userId, listingId);
 
   if (!listing) {
-    throw new NotFoundError("Listing not found");
+    throw new NotFoundError("listing.not_found");
   }
 
   const carId = listing.car?.id;

@@ -26,7 +26,7 @@ type MechanicRankingsQuery = z.infer<typeof mechanicRankingsQuerySchema>;
 const requireMechanic = async (mechanicId: number) => {
   const mechanic = await findMechanicById(mechanicId);
   if (!mechanic) {
-    throw new NotFoundError("Mechanic profile was not found");
+    throw new NotFoundError("mechanic.profile_not_found");
   }
 
   return mechanic;
@@ -70,7 +70,7 @@ export const createMechanicReview = async (
     buyerId,
   );
   if (existingReview) {
-    throw new BadRequestError("You have already reviewed this mechanic");
+    throw new BadRequestError("review.already_reviewed");
   }
 
   const review = await insertReview(mechanicId, buyerId, data);
@@ -111,7 +111,7 @@ export const updateMechanicReview = async (
 
   const updated = await updateReviewByBuyer(mechanicId, buyerId, data);
   if (!updated) {
-    throw new NotFoundError("Review was not found");
+    throw new NotFoundError("review.not_found");
   }
 
   return formatReview(updated);
@@ -125,7 +125,7 @@ export const deleteMechanicReview = async (
 
   const deleted = await deleteReviewByBuyer(mechanicId, buyerId);
   if (!deleted) {
-    throw new NotFoundError("Review was not found");
+    throw new NotFoundError("review.not_found");
   }
 
   return { deleted: true, reviewId: deleted.id };

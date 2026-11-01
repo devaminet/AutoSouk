@@ -1,45 +1,33 @@
 import { z } from "zod";
+import { messageKey } from "../../i18n/zod_issues";
 import { containsNsfwContent } from "../../utils/content_moderation";
 
 const messageSchema = z
-  .string({ invalid_type_error: "Review message must be a text" })
-  .max(1000, "Review message must be at most 1000 characters")
+  .string()
+  .max(1000)
   .refine((message) => !containsNsfwContent(message), {
-    message: "Review message contains inappropriate content",
+    message: messageKey("validation.inappropriate_content"),
   })
   .optional();
+
+const ratingSchema = z.number().int().min(1).max(5);
 
 export const mechanicIdParamSchema = z.object({
   mechanicId: z.coerce.number().int().positive(),
 });
 
-export const createReviewSchema = z.object(
-  {
-    rating: z
-      .number({
-        required_error: "Rating is required",
-        invalid_type_error: "Rating must be a number",
-      })
-      .int("Rating must be a whole number")
-      .min(1, "Rating must be between 1 and 5")
-      .max(5, "Rating must be between 1 and 5"),
-    message: messageSchema,
-  },
-  { required_error: "Review details are required" },
-);
+export const createReviewSchema = z.object({
+  rating: ratingSchema,
+  message: messageSchema,
+});
 
 export const updateReviewSchema = z
   .object({
-    rating: z
-      .number({ invalid_type_error: "Rating must be a number" })
-      .int("Rating must be a whole number")
-      .min(1, "Rating must be between 1 and 5")
-      .max(5, "Rating must be between 1 and 5")
-      .optional(),
+    rating: ratingSchema.optional(),
     message: messageSchema,
   })
   .refine((data) => data.rating !== undefined || data.message !== undefined, {
-    message: "At least one field must be provided",
+    message: messageKey("validation.no_fields"),
   });
 
 export const reviewsQuerySchema = z.object({
