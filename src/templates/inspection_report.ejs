@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="<%= locale %>" dir="<%= dir %>">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= t("inspection_report.subject") %></title>
+  </head>
+  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1a1a1a;">
+    <p><%= t("common.greeting", { firstName }) %></p>
+    <p><%= t("inspection_report.body") %></p>
+    <p><a href="<%= reportUrl %>" style="color: #667eea"><%= t("inspection_report.link") %></a></p>
+    <p><strong><%= t("common.signature") %></strong></p>
+  </body>
+</html>

@@ -2,6 +2,10 @@ import request from "supertest";
 import { app } from "../../../app";
 import * as fileUtils from "../../../utils/functions";
 import { minioClient } from "../../../file_storage/minio";
+import { eq } from "drizzle-orm";
+import { db } from "../../../db";
+import { usersTable } from "../../../db/schema/user";
+import * as pdf from "../pdf";
 import { createApprovedCar, createBuyer, createMechanic } from "./fixtures";
 
 const requestInspection = async (
@@ -199,6 +203,40 @@ it("should generate the PDF report, store it in MinIO, and email the buyer", asy
   );
   expect(fileUtils.sendMail).toHaveBeenCalledWith(
     expect.objectContaining({ to: buyer.user.email }),
+  );
+});
+
+it("should write the report and the email in the buyer's language", async () => {
+  const generatePdf = jest.spyOn(pdf, "generateInspectionReportPdf");
+  const { carId } = await createApprovedCar("seller@example.com");
+  const { mechanic, mechanicUser } = await createMechanic(
+    "mechanic@example.com",
+  );
+  const buyer = await createBuyer("buyer@example.com");
+  await db
+    .update(usersTable)
+    .set({ locale: "ar" })
+    .where(eq(usersTable.email, buyer.user.email));
+  const inspection = await requestInspection(
+    buyer.accessToken,
+    carId,
+    mechanic.id,
+  );
+  await moveToInProgress(mechanicUser.accessToken, inspection.id);
+
+  await request(app)
+    .post(`/api/inspections/${inspection.id}/report`)
+    .set("Accept-Language", "fr")
+    .send(validReportPayload)
+    .auth(mechanicUser.accessToken, { type: "bearer" })
+    .expect(200);
+
+  expect(generatePdf).toHaveBeenCalledWith(expect.any(Object), "ar");
+  expect(fileUtils.sendMail).toHaveBeenCalledWith(
+    expect.objectContaining({
+      to: buyer.user.email,
+      subject: "تقرير فحص سيارتك على AutoSouk جاهز",
+    }),
   );
 });
 

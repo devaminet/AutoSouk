@@ -30,5 +30,10 @@
     "not_requested_text": "Si vous n'avez pas demandé de réinitialisation du mot de passe, vous pouvez ignorer cet e-mail. Votre mot de passe reste inchangé et aucune action n'est nécessaire.",
     "support_text": "Besoin d'aide ou une inquiétude concernant la sécurité ? Contactez sans attendre notre équipe d'assistance à l'adresse",
     "closing": "Restez en sécurité,"
+  },
+  "inspection_report": {
+    "subject": "Votre rapport d'inspection AutoSouk est prêt",
+    "body": "Le rapport d'inspection du véhicule que vous suiviez est maintenant disponible.",
+    "link": "Consulter le rapport"
   }
 }

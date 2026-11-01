@@ -1,1 +1,121 @@
-{}
+{
+  "document": {
+    "title": "Inspection report {{reference}}",
+    "subject": "Technical inspection of vehicle {{matricule}}",
+    "keywords": "inspection, car, AutoSouk, Morocco"
+  },
+  "header": {
+    "subtitle": "Vehicle inspection report",
+    "reference": "No. {{reference}}",
+    "issued": "Issued on {{date}}",
+    "confidential": "Confidential document"
+  },
+  "footer": {
+    "notice": "Report No. {{reference}} · Private inspection — does not replace the mandatory technical inspection (NARSA-approved centres)",
+    "page": "Page {{page}} / {{total}}"
+  },
+  "intro": {
+    "vehicle_fallback": "Vehicle",
+    "summary": "Registration {{matricule}} · Year {{year}} · {{mileage}} km on the odometer",
+    "inspection": "Inspected on {{date}} · Report prepared at the request of {{client}}"
+  },
+  "verdict": {
+    "heading": "Overall assessment",
+    "score": "Overall score",
+    "advice": {
+      "excellent": "The vehicle is in excellent overall condition. No major reservation was noted during the inspection.",
+      "good": "The vehicle is in good overall condition. A few points should be monitored, none of them serious.",
+      "fair": "The vehicle is in fair condition. Repairs are needed in the short term and should be factored into the negotiation.",
+      "poor": "The vehicle is in poor condition. Major repairs are required before any purchase."
+    }
+  },
+  "sections": {
+    "vehicle": "Vehicle identification",
+    "administrative": "Declared administrative status",
+    "expert": "Inspecting expert",
+    "anomalies": "Summary of issues found",
+    "repairs": "Estimated repairs",
+    "conclusion": "Expert's conclusion",
+    "legal": "Legal notice and inspection limits"
+  },
+  "fields": {
+    "make": "Make",
+    "model": "Model",
+    "matricule": "Registration (matricule)",
+    "vin": "Chassis number (VIN)",
+    "carte_grise": "Registration certificate number",
+    "year": "Model year",
+    "first_registration": "First registration",
+    "mileage": "Recorded mileage",
+    "mileage_consistency": "Mileage consistency",
+    "fuel": "Fuel",
+    "transmission": "Transmission",
+    "fiscal_power": "Fiscal power",
+    "doors": "Number of doors",
+    "owners": "Number of owners",
+    "origin": "Vehicle origin",
+    "city": "Location",
+    "controle_technique_valid": "Technical inspection valid",
+    "controle_technique_expiry": "Technical inspection expiry",
+    "vignette": "Road tax (vignette) paid",
+    "carte_grise_presented": "Registration certificate presented",
+    "expert_name": "Garage / expert",
+    "phone": "Phone",
+    "address": "Address",
+    "expert_city": "City"
+  },
+  "values": {
+    "not_provided": "Not provided",
+    "yes": "Yes",
+    "no": "No",
+    "not_presented": "Not presented",
+    "km": "{{value}} km",
+    "fiscal_power": "{{value}} CV",
+    "mad": "{{value}} MAD"
+  },
+  "mileage": {
+    "consistent": {
+      "label": "Consistent",
+      "title": "Mileage consistent",
+      "fallback": "The displayed mileage is consistent with the cross-checking information available during the inspection."
+    },
+    "suspicious": {
+      "label": "Inconsistent — possible tampering",
+      "title": "Alert — suspicious mileage",
+      "fallback": "Discrepancies were found between the displayed mileage and the cross-checking information available. A thorough check is recommended before any purchase."
+    },
+    "unverifiable": {
+      "label": "Unverifiable",
+      "title": "Mileage unverifiable",
+      "fallback": "The information needed to cross-check the displayed mileage (control units, service history, previous technical inspections) was not available during the inspection."
+    }
+  },
+  "table": {
+    "item": "Checked item",
+    "status": "Condition",
+    "notes": "Notes"
+  },
+  "anomalies": {
+    "none": "No issue was found on the items checked during this inspection."
+  },
+  "repairs": {
+    "amount": "Estimated cost of work (indicative)"
+  },
+  "legal": {
+    "notice": "This report is a private technical inspection carried out at the client's request. It is not an official technical inspection report and in no way replaces the mandatory technical inspection issued by a centre approved by NARSA (National Road Safety Agency). It is neither a registration certificate nor a certificate of administrative compliance.",
+    "points": {
+      "scope": "The findings only cover the parts accessible without disassembly, at the date and time of the inspection.",
+      "disassembly": "The inspection does not include engine disassembly, removal of components or dynamometer testing, unless expressly stated otherwise.",
+      "mileage": "The mileage shown is the odometer reading. The expert assesses its consistency from the information available (on-board control units, service history, previous technical inspections) without being able to guarantee its authenticity.",
+      "estimates": "Repair estimates are indicative, excluding taxes and genuine manufacturer parts.",
+      "liability": "Neither the expert nor AutoSouk can be held liable for any defect appearing after the inspection date."
+    }
+  },
+  "signature": {
+    "place_date": "Done at {{city}} on {{date}}",
+    "expert_title": "The expert / garage",
+    "expert_subtitle": "Signature and stamp",
+    "client_title": "The client",
+    "client_subtitle": "Read and approved"
+  }
+}

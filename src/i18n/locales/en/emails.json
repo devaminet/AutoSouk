@@ -29,5 +29,10 @@
     "not_requested_text": "If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged, and no further action is required.",
     "support_text": "Need help or have security concerns? Contact our support team immediately at",
     "closing": "Stay secure,"
+  },
+  "inspection_report": {
+    "subject": "Your AutoSouk inspection report is ready",
+    "body": "The inspection report for the vehicle you were following is now available.",
+    "link": "View the report"
   }
 }

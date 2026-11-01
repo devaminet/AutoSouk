@@ -13,7 +13,8 @@ const { readTemplateFile: renderTemplate } = jest.requireActual<
   typeof import("../../utils/functions")
 >("../../utils/functions");
 
-const leftoverKey = /\b(common|register|forgot_password)\.[a-z_]+/;
+const leftoverKey =
+  /\b(common|register|forgot_password|inspection_report)\.[a-z_]+/;
 
 describe("email templates", () => {
   it.each<[string, Locale, string, string]>([
@@ -23,12 +24,16 @@ describe("email templates", () => {
     ["forgot_password.ejs", "en", "ltr", "Reset My Password"],
     ["forgot_password.ejs", "fr", "ltr", "Réinitialiser mon mot de passe"],
     ["forgot_password.ejs", "ar", "rtl", "إعادة تعيين كلمة المرور"],
+    ["inspection_report.ejs", "en", "ltr", "View the report"],
+    ["inspection_report.ejs", "fr", "ltr", "Consulter le rapport"],
+    ["inspection_report.ejs", "ar", "rtl", "اطّلع على التقرير"],
   ])("renders %s in %s", async (template, locale, dir, button) => {
     const html = await renderTemplate(template, {
       ...emailTemplateContext(locale),
       firstName: "Amina",
       verificationUrl: "https://autosouk.ma/verify",
       forgotPasswordUrl: "https://autosouk.ma/reset",
+      reportUrl: "https://autosouk.ma/report.pdf",
       expirationMinutes: 5,
     });
 

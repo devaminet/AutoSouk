@@ -71,3 +71,19 @@ export const localizedMessage = (
   message: translate(locale, `messages:${code}`, params),
   ...(Object.keys(params).length > 0 && { params }),
 });
+
+export type EnumKind = keyof (typeof resources)["en"]["enums"];
+
+// Labels a lookup value (a slug or enum value) for display, falling back to
+// the value itself when the catalog has no label for it.
+export const translateEnum = (
+  locale: Locale,
+  kind: EnumKind,
+  value: string,
+  fallback: string = value,
+): string => {
+  const key = `enums:${kind}.${value}`;
+  return i18n.exists(key, { lng: locale })
+    ? translateKey(key, { lng: locale })
+    : fallback;
+};

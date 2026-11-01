@@ -1,1 +1,121 @@
-{}
+{
+  "document": {
+    "title": "Rapport d'expertise {{reference}}",
+    "subject": "Expertise technique du véhicule {{matricule}}",
+    "keywords": "expertise, automobile, AutoSouk, Maroc"
+  },
+  "header": {
+    "subtitle": "Rapport d'expertise automobile",
+    "reference": "N° {{reference}}",
+    "issued": "Établi le {{date}}",
+    "confidential": "Document confidentiel"
+  },
+  "footer": {
+    "notice": "Rapport N° {{reference}} · Expertise privée — ne remplace pas la visite technique obligatoire (centres agréés NARSA)",
+    "page": "Page {{page}} / {{total}}"
+  },
+  "intro": {
+    "vehicle_fallback": "Véhicule",
+    "summary": "Immatriculation {{matricule}} · Année {{year}} · {{mileage}} km au compteur",
+    "inspection": "Expertise réalisée le {{date}} · Rapport établi à la demande de {{client}}"
+  },
+  "verdict": {
+    "heading": "Appréciation générale",
+    "score": "Note globale",
+    "advice": {
+      "excellent": "Véhicule en excellent état général. Aucune réserve majeure n'a été relevée lors de l'expertise.",
+      "good": "Véhicule en bon état général. Quelques points sont à surveiller sans caractère de gravité.",
+      "fair": "Véhicule en état moyen. Des réparations sont à prévoir à court terme et à intégrer à la négociation.",
+      "poor": "Véhicule en état médiocre. Des réparations importantes sont nécessaires avant toute acquisition."
+    }
+  },
+  "sections": {
+    "vehicle": "Identification du véhicule",
+    "administrative": "Situation administrative déclarée",
+    "expert": "Expert ayant réalisé le contrôle",
+    "anomalies": "Synthèse des anomalies relevées",
+    "repairs": "Estimation des réparations à prévoir",
+    "conclusion": "Conclusion de l'expert",
+    "legal": "Mentions légales et limites de l'expertise"
+  },
+  "fields": {
+    "make": "Marque",
+    "model": "Modèle",
+    "matricule": "Immatriculation (matricule)",
+    "vin": "Numéro de châssis (VIN)",
+    "carte_grise": "Numéro de carte grise",
+    "year": "Année du modèle",
+    "first_registration": "Première mise en circulation",
+    "mileage": "Kilométrage relevé",
+    "mileage_consistency": "Cohérence du kilométrage",
+    "fuel": "Énergie",
+    "transmission": "Boîte de vitesses",
+    "fiscal_power": "Puissance fiscale",
+    "doors": "Nombre de portes",
+    "owners": "Nombre de propriétaires",
+    "origin": "Origine du véhicule",
+    "city": "Ville de localisation",
+    "controle_technique_valid": "Visite technique en cours de validité",
+    "controle_technique_expiry": "Échéance de la visite technique",
+    "vignette": "Vignette à jour",
+    "carte_grise_presented": "Carte grise présentée",
+    "expert_name": "Garage / expert",
+    "phone": "Téléphone",
+    "address": "Adresse",
+    "expert_city": "Ville"
+  },
+  "values": {
+    "not_provided": "Non renseigné",
+    "yes": "Oui",
+    "no": "Non",
+    "not_presented": "Non présentée",
+    "km": "{{value}} km",
+    "fiscal_power": "{{value}} CV",
+    "mad": "{{value}} MAD"
+  },
+  "mileage": {
+    "consistent": {
+      "label": "Cohérent",
+      "title": "Kilométrage cohérent",
+      "fallback": "Le kilométrage affiché est cohérent avec les éléments de recoupement disponibles lors de l'expertise."
+    },
+    "suspicious": {
+      "label": "Incohérent — suspicion de trafic",
+      "title": "Alerte — kilométrage suspect",
+      "fallback": "Des écarts ont été relevés entre le kilométrage affiché et les éléments de recoupement disponibles. Une vérification approfondie est recommandée avant toute acquisition."
+    },
+    "unverifiable": {
+      "label": "Non vérifiable",
+      "title": "Kilométrage non vérifiable",
+      "fallback": "Les éléments permettant de recouper le kilométrage affiché (calculateurs, historique d'entretien, visites techniques antérieures) n'étaient pas disponibles lors de l'expertise."
+    }
+  },
+  "table": {
+    "item": "Point contrôlé",
+    "status": "État",
+    "notes": "Observations"
+  },
+  "anomalies": {
+    "none": "Aucune anomalie n'a été relevée sur les points contrôlés lors de cette expertise."
+  },
+  "repairs": {
+    "amount": "Montant estimé des travaux (à titre indicatif)"
+  },
+  "legal": {
+    "notice": "Le présent rapport est une expertise technique privée réalisée à la demande du client. Il ne constitue pas un procès-verbal de visite technique et ne remplace en aucun cas le contrôle technique obligatoire délivré par un centre agréé par la NARSA (Agence Nationale de la Sécurité Routière). Il ne vaut ni certificat d'immatriculation, ni attestation de conformité administrative.",
+    "points": {
+      "scope": "Les constatations portent exclusivement sur les éléments accessibles sans démontage, à la date et à l'heure de l'expertise.",
+      "disassembly": "L'expertise ne comprend ni démontage moteur, ni dépose d'organes, ni essai en banc de puissance, sauf mention expresse contraire.",
+      "mileage": "Le kilométrage indiqué est celui relevé au compteur. L'expert en apprécie la cohérence à partir des éléments disponibles (calculateurs embarqués, historique d'entretien, visites techniques antérieures) sans pouvoir en garantir l'authenticité.",
+      "estimates": "Les estimations de réparation sont données à titre indicatif hors taxes et hors pièces d'origine constructeur.",
+      "liability": "La responsabilité de l'expert et d'AutoSouk ne saurait être engagée pour tout défaut apparu postérieurement à la date d'expertise."
+    }
+  },
+  "signature": {
+    "place_date": "Fait à {{city}}, le {{date}}",
+    "expert_title": "L'expert / le garage",
+    "expert_subtitle": "Signature et cachet",
+    "client_title": "Le client",
+    "client_subtitle": "Lu et approuvé"
+  }
+}

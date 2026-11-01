@@ -4,7 +4,13 @@ import { InternalServerError } from "../../errors/internal_server_error";
 import { NotAllowedError } from "../../errors/not_allowed";
 import { NotFoundError } from "../../errors/not_found_error";
 import { inspectionReportsBucketName } from "../../utils/constants";
-import { generateGetPresignedUrl, sendMail } from "../../utils/functions";
+import {
+  generateGetPresignedUrl,
+  readTemplateFile,
+  sendMail,
+} from "../../utils/functions";
+import { Locale } from "../../i18n";
+import { emailSubject, emailTemplateContext } from "../../i18n/emails";
 import { minioClient } from "../../file_storage/minio";
 import { generateInspectionReportPdf } from "./pdf";
 import {
@@ -149,15 +155,21 @@ export const updateInspectionStatus = async (
 const buildReportReference = (inspectionId: number, issuedAt: Date) =>
   `AS-${issuedAt.getFullYear()}-${String(inspectionId).padStart(6, "0")}`;
 
+// Sent in the buyer's saved language, like the report itself.
 const notifyBuyerOfCompletedInspection = async (
-  buyerEmail: string,
+  buyer: { email: string; firstName: string; locale: Locale },
   reportUrl: string,
 ) => {
   try {
+    const html = await readTemplateFile("inspection_report.ejs", {
+      ...emailTemplateContext(buyer.locale),
+      firstName: buyer.firstName,
+      reportUrl,
+    });
     await sendMail({
-      to: buyerEmail,
-      subject: "Votre rapport d'inspection AutoSouk est pret",
-      html: `<p>Bonjour,</p><p>Le rapport d'inspection du vehicule que vous suiviez est maintenant disponible.</p><p><a href="${reportUrl}">Consulter le rapport</a></p>`,
+      to: buyer.email,
+      subject: emailSubject(buyer.locale, "inspection_report.subject"),
+      html,
     });
   } catch (error) {
     console.error("Error sending inspection completion email:", error);
@@ -186,49 +198,52 @@ export const submitInspectionReport = async (
   const issuedAt = new Date();
   let pdfBuffer: Buffer;
   try {
-    pdfBuffer = await generateInspectionReportPdf({
-      reference: buildReportReference(inspection.id, issuedAt),
-      inspectedAt: data.inspectedAt ? new Date(data.inspectedAt) : issuedAt,
-      issuedAt,
-      vehicle: {
-        make: inspection.car.make?.name ?? null,
-        model: inspection.car.model?.name ?? null,
-        year: inspection.car.year,
-        matricule: data.matricule,
-        vin: data.vin ?? null,
-        carteGriseNumber: data.carteGriseNumber ?? null,
-        mileageKm: data.mileage,
-        mileageConsistency: data.mileageConsistency,
-        mileageConsistencyNote: data.mileageConsistencyNote ?? null,
-        firstRegistrationDate: data.firstRegistrationDate ?? null,
-        fuel: inspection.car.carburant?.carburant ?? null,
-        transmission: inspection.car.transmission,
-        fiscalPower: inspection.car.fiscalPower,
-        doorsNumber: inspection.car.doorsNumber,
-        ownersCount: inspection.car.ownersCount,
-        origin: inspection.car.origin?.origin ?? null,
-        city: inspection.car.city?.name ?? null,
+    pdfBuffer = await generateInspectionReportPdf(
+      {
+        reference: buildReportReference(inspection.id, issuedAt),
+        inspectedAt: data.inspectedAt ? new Date(data.inspectedAt) : issuedAt,
+        issuedAt,
+        vehicle: {
+          make: inspection.car.make?.name ?? null,
+          model: inspection.car.model?.name ?? null,
+          year: inspection.car.year,
+          matricule: data.matricule,
+          vin: data.vin ?? null,
+          carteGriseNumber: data.carteGriseNumber ?? null,
+          mileageKm: data.mileage,
+          mileageConsistency: data.mileageConsistency,
+          mileageConsistencyNote: data.mileageConsistencyNote ?? null,
+          firstRegistrationDate: data.firstRegistrationDate ?? null,
+          fuel: inspection.car.carburant?.carburant ?? null,
+          transmission: inspection.car.transmission,
+          fiscalPower: inspection.car.fiscalPower,
+          doorsNumber: inspection.car.doorsNumber,
+          ownersCount: inspection.car.ownersCount,
+          origin: inspection.car.origin?.origin ?? null,
+          city: inspection.car.city ?? null,
+        },
+        administrative: {
+          controleTechniqueValid: data.controleTechniqueValid,
+          controleTechniqueExpiry: data.controleTechniqueExpiry ?? null,
+          vignetteValid: data.vignetteValid,
+        },
+        expert: {
+          name: inspection.mechanic.name,
+          address: inspection.mechanic.address,
+          city: inspection.mechanic.city ?? null,
+          phone: inspection.mechanic.phone,
+        },
+        client: {
+          name: `${inspection.buyer.firstName} ${inspection.buyer.lastName}`.trim(),
+        },
+        verdict: data.verdict,
+        overallScore: data.overallScore,
+        summary: data.summary,
+        sections: data.sections,
+        estimatedRepairCost: data.estimatedRepairCost,
       },
-      administrative: {
-        controleTechniqueValid: data.controleTechniqueValid,
-        controleTechniqueExpiry: data.controleTechniqueExpiry ?? null,
-        vignetteValid: data.vignetteValid,
-      },
-      expert: {
-        name: inspection.mechanic.name,
-        address: inspection.mechanic.address,
-        city: inspection.mechanic.city?.name ?? null,
-        phone: inspection.mechanic.phone,
-      },
-      client: {
-        name: `${inspection.buyer.firstName} ${inspection.buyer.lastName}`.trim(),
-      },
-      verdict: data.verdict,
-      overallScore: data.overallScore,
-      summary: data.summary,
-      sections: data.sections,
-      estimatedRepairCost: data.estimatedRepairCost,
-    });
+      inspection.buyer.locale,
+    );
   } catch (error) {
     console.error("Error generating inspection report PDF:", error);
     throw new InternalServerError("inspection.report_generation_failed");
@@ -262,7 +277,7 @@ export const submitInspectionReport = async (
     inspectionReportsBucketName,
     filename,
   );
-  await notifyBuyerOfCompletedInspection(inspection.buyer.email, reportUrl);
+  await notifyBuyerOfCompletedInspection(inspection.buyer, reportUrl);
 
   return { inspection: { ...updated, reportPdfLink: reportUrl } };
 };
