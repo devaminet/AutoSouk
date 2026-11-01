@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= locale %>" dir="<%= dir %>">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Verify Your Email Address</title>
+    <title><%= t("register.title") %></title>
     <style>
       * {
         margin: 0;
@@ -234,7 +234,7 @@
                     <td align="center">
                       <div class="logo">AutoSouk</div>
                       <div class="header-subtitle">
-                        Welcome to our platform!
+                        <%= t("register.subtitle") %>
                       </div>
                     </td>
                   </tr>
@@ -253,18 +253,14 @@
                 >
                   <tr>
                     <td>
-                      <div class="greeting">Hi <%= firstName %></div>
+                      <div class="greeting"><%= t("common.greeting", { firstName }) %></div>
                     </td>
                   </tr>
 
                   <tr>
                     <td>
                       <div class="message">
-                        Thanks for signing up with
-                        <strong>AutoSouk</strong>! We're excited to have you on
-                        board. To complete your registration and secure your
-                        account, please verify your email address by clicking
-                        the button below.
+                        <%= t("register.intro") %>
                       </div>
                     </td>
                   </tr>
@@ -306,7 +302,8 @@
                                 border-radius: 50px;
                               "
                             >
-                              Verify Email Address
+                              <%= t("register.button") %>
+
                             </a>
                           </td>
                         </tr>
@@ -327,8 +324,7 @@
                         <tr>
                           <td>
                             <div class="alt-link-text">
-                              <strong>Button not working?</strong> Copy and
-                              paste this link into your browser:
+                              <strong><%= t("common.alt_link_label") %></strong> <%= t("common.alt_link_text") %>
                             </div>
                             <a
                               href="<%= verificationUrl %>"
@@ -344,10 +340,7 @@
                   <tr>
                     <td>
                       <div class="warning">
-                        <strong>⚠️ Security Notice:</strong> This verification
-                        link will expire in <%= expiration %> for your security.
-                        If you didn't create an account with us, you can safely
-                        ignore this email.
+                        <strong><%= t("common.security_label") %></strong> <%= t("register.security_text", { count: expirationMinutes }) %>
                       </div>
                     </td>
                   </tr>
@@ -355,14 +348,13 @@
                   <tr>
                     <td>
                       <div class="message">
-                        Having trouble with verification? Don't hesitate to
-                        reach out to our support team at
+                        <%= t("register.support_text") %>
                         <a
                           href="mailto:support@autosouk.ma"
                           style="color: #667eea"
                           >support@autosouk.ma</a
                         >
-                        - we're here to help!
+                        <%= t("common.support_suffix") %>
                       </div>
                     </td>
                   </tr>
@@ -370,8 +362,8 @@
                   <tr>
                     <td>
                       <div class="message">
-                        Welcome aboard!<br />
-                        <strong>The AutoSouk Team</strong>
+                        <%= t("register.closing") %><br />
+                        <strong><%= t("common.signature") %></strong>
                       </div>
                     </td>
                   </tr>

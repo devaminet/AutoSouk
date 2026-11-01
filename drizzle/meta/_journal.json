@@ -197,6 +197,13 @@
       "when": 1793543982180,
       "tag": "0028_add_city_slug",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1793544705211,
+      "tag": "0029_add_user_locale",
+      "breakpoints": true
     }
   ]
 }

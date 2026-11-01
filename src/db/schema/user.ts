@@ -13,6 +13,7 @@ import { listingTable } from "./listing";
 import { cityTable } from "./city";
 import { rolesTable } from "./roles";
 import { mechanicTable } from "./mechanic";
+import { defaultLocale, supportedLocales } from "../../utils/constants";
 
 export const usersTable = pgTable(
   "users",
@@ -31,6 +32,10 @@ export const usersTable = pgTable(
     imageName: varchar("image_name"),
     pendingImageName: varchar("pending_image_name"),
     isVerified: boolean("is_verified").default(false),
+    // The language of the emails and documents sent to this user.
+    locale: varchar({ enum: supportedLocales })
+      .notNull()
+      .default(defaultLocale),
     createdAt: date("created_at").defaultNow().notNull(),
     updatedAt: date("updated_at").defaultNow().notNull(),
   },

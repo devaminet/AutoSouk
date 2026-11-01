@@ -49,6 +49,8 @@ import {
   usersBucketName,
 } from "../../utils/constants";
 import { InternalServerError } from "../../errors/internal_server_error";
+import { Locale } from "../../i18n";
+import { emailSubject, emailTemplateContext } from "../../i18n/emails";
 
 const buildProfileImageName = (originalName: string) => {
   const extension = originalName.substring(originalName.lastIndexOf(".") + 1);
@@ -155,7 +157,29 @@ export const requestProfileImageUpload = async (
   return { imageUpload: await getProfileImageUpload(pendingImageName) };
 };
 
-export const setupUser = async (user: z.infer<typeof registerSchema>) => {
+// Emails go out in the recipient's saved language, whatever the language of
+// the request that triggered them.
+const sendVerificationEmail = async (
+  user: { email: string; firstName: string; locale: Locale },
+  token: string,
+) => {
+  const registerHTML = await readTemplateFile("register.ejs", {
+    ...emailTemplateContext(user.locale),
+    firstName: user.firstName,
+    verificationUrl: `${process.env.BACKEND_URL}/api/auth/verify?token=${token}`,
+    expirationMinutes: tokenExpirationMinutes,
+  });
+  await sendMail({
+    to: user.email,
+    subject: emailSubject(user.locale, "register.subject"),
+    html: registerHTML,
+  });
+};
+
+export const setupUser = async (
+  user: z.infer<typeof registerSchema>,
+  locale: Locale,
+) => {
   const { firstName, email } = user;
   const roleValidation = registrationRoleSchema.safeParse(user.userType);
   if (!roleValidation.success) {
@@ -170,21 +194,12 @@ export const setupUser = async (user: z.infer<typeof registerSchema>) => {
   const imageName = user.imageName
     ? buildProfileImageName(user.imageName)
     : null;
-  const createdUser = await createUser(user, imageName);
+  const createdUser = await createUser(user, locale, imageName);
   const expiresAt = new Date(Date.now() + 1000 * 60 * tokenExpirationMinutes);
   const token = generateToken();
 
   await insertVerificationToken(createdUser, token, expiresAt);
-  const registerHTML = await readTemplateFile("register.ejs", {
-    firstName,
-    verificationUrl: `${process.env.BACKEND_URL}/api/auth/verify?token=${token}`,
-    expiration: `${tokenExpirationMinutes} minutes`,
-  });
-  await sendMail({
-    to: email,
-    subject: "Verify Account",
-    html: registerHTML,
-  });
+  await sendVerificationEmail({ email, firstName, locale }, token);
 
   const imageUpload = imageName
     ? await getProfileImageUpload(imageName)
@@ -319,16 +334,7 @@ export const resendVerificationEmail = async (email: string) => {
 
   await insertVerificationToken(user.id, token, expiresAt);
 
-  const registerHTML = await readTemplateFile("register.ejs", {
-    firstName: user.firstName,
-    verificationUrl: `${process.env.BACKEND_URL}/api/auth/verify?token=${token}`,
-    expiration: `${tokenExpirationMinutes} minutes`,
-  });
-  await sendMail({
-    to: user.email,
-    subject: "Verify Account",
-    html: registerHTML,
-  });
+  await sendVerificationEmail(user, token);
 
   return { success: true };
 };
@@ -404,13 +410,13 @@ export const sendForgotPasswordLink = async (email: string) => {
   await insertPasswordResetToken(foundUser.id, token, expiresAt);
 
   const forgotPasswordHTML = await readTemplateFile("forgot_password.ejs", {
+    ...emailTemplateContext(foundUser.locale),
     firstName: foundUser.firstName,
     forgotPasswordUrl: `${process.env.BACKEND_URL}/api/auth/forgot-password?token=${token}&email=${email}`,
-    expiration: `${tokenExpirationMinutes} minutes`,
   });
   await sendMail({
     to: email,
-    subject: "Password reset request for your account",
+    subject: emailSubject(foundUser.locale, "forgot_password.subject"),
     html: forgotPasswordHTML,
   });
 

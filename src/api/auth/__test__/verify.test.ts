@@ -96,13 +96,13 @@ it("should properly provide data to register template on re-verify", async () =>
 
   // readTemplateFile called twice, the first time inside signupUser and the second time in the re-verify handler
   const templateOptions = (readTemplateFile as jest.Mock).mock.calls[1];
-  const { verificationUrl, firstName, expiration } = templateOptions[1];
+  const { verificationUrl, firstName, expirationMinutes } = templateOptions[1];
   const parsedUrl = url.parse(verificationUrl, true, true);
 
   expect(readTemplateFile).toHaveBeenCalledTimes(2);
   expect(templateOptions[0]).toBe("register.ejs");
   expect(firstName).toBe(formData.firstName);
-  expect(expiration).toBe("5 minutes");
+  expect(expirationMinutes).toBe(5);
   expect(`${parsedUrl.protocol}//${parsedUrl.host}`).toBe(
     process.env.BACKEND_URL,
   );

@@ -1,1 +1,33 @@
-{}
+{
+  "common": {
+    "greeting": "Hi {{firstName}}",
+    "alt_link_label": "Button not working?",
+    "alt_link_text": "Copy and paste this link into your browser:",
+    "security_label": "⚠️ Security Notice:",
+    "support_suffix": "- we're here to help!",
+    "signature": "The AutoSouk Team"
+  },
+  "register": {
+    "subject": "Verify Account",
+    "title": "Verify Your Email Address",
+    "subtitle": "Welcome to our platform!",
+    "intro": "Thanks for signing up with AutoSouk! We're excited to have you on board. To complete your registration and secure your account, please verify your email address by clicking the button below.",
+    "button": "Verify Email Address",
+    "security_text_one": "This verification link will expire in {{count}} minute for your security. If you didn't create an account with us, you can safely ignore this email.",
+    "security_text_other": "This verification link will expire in {{count}} minutes for your security. If you didn't create an account with us, you can safely ignore this email.",
+    "support_text": "Having trouble with verification? Don't hesitate to reach out to our support team at",
+    "closing": "Welcome aboard!"
+  },
+  "forgot_password": {
+    "subject": "Password reset request for your account",
+    "title": "Reset Your Password",
+    "subtitle": "Password Reset Request",
+    "intro": "We received a request to reset the password for your AutoSouk account. If you made this request, click the button below to create a new password.",
+    "button": "Reset My Password",
+    "security_text": "If you believe this request was made in error or by someone else, please ignore this email and consider changing your password immediately through your account settings.",
+    "not_requested_label": "💡 Didn't request this?",
+    "not_requested_text": "If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged, and no further action is required.",
+    "support_text": "Need help or have security concerns? Contact our support team immediately at",
+    "closing": "Stay secure,"
+  }
+}

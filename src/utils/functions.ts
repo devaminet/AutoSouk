@@ -260,7 +260,14 @@ type UserWithRole = typeof usersTable.$inferSelect & {
 
 export type SanitizedUser = Pick<
   typeof usersTable.$inferSelect,
-  "id" | "firstName" | "lastName" | "email" | "cityId" | "isVerified" | "phone"
+  | "id"
+  | "firstName"
+  | "lastName"
+  | "email"
+  | "cityId"
+  | "isVerified"
+  | "phone"
+  | "locale"
 > & { role: string; imageUrl: string };
 
 export const sanitizeUser = async (
@@ -276,6 +283,7 @@ export const sanitizeUser = async (
     imageUrl,
     isVerified: user.isVerified,
     phone: user.phone,
+    locale: user.locale,
     role: user.role.name,
   };
 };

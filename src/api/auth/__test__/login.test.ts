@@ -25,6 +25,7 @@ it("should return status code of 200 and response body on valid login", async ()
     imageUrl: expect.any(String),
     isVerified: true,
     phone: formData.phone,
+    locale: "en",
     role: formData.userType,
   });
   expect(loginResponse.body.user).not.toHaveProperty("roleId");

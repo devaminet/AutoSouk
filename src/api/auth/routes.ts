@@ -66,7 +66,10 @@ authRouter.post("/register", async (req, res) => {
     throw new RequestValidationError(validationResult.error.errors);
   }
 
-  const { token, imageUpload } = await setupUser(validationResult.data);
+  const { token, imageUpload } = await setupUser(
+    validationResult.data,
+    req.locale,
+  );
   res.status(201).json({
     ...localizedMessage(req.locale, "auth.account_created"),
     token,
