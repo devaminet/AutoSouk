@@ -64,7 +64,6 @@ const authRouter = Router();
  *                 - $ref: '#/components/schemas/LocalizedMessage'
  *                 - type: object
  *                   properties:
- *                     token: { type: string }
  *                     imageUpload: { type: object, nullable: true }
  *       400:
  *         description: Validation error
@@ -75,13 +74,9 @@ authRouter.post("/register", async (req, res) => {
     throw new RequestValidationError(validationResult.error.errors);
   }
 
-  const { token, imageUpload } = await setupUser(
-    validationResult.data,
-    req.locale,
-  );
+  const { imageUpload } = await setupUser(validationResult.data, req.locale);
   res.status(201).json({
     ...localizedMessage(req.locale, "auth.account_created"),
-    token,
     imageUpload,
   });
 });

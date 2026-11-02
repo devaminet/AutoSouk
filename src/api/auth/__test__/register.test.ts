@@ -13,6 +13,16 @@ it("should persist the requested role on successful signup", async () => {
   expect(registeredUser?.role.name).toBe(formData.userType);
 });
 
+it("should only reveal the verification token through the email", async () => {
+  const { responseBody, statusCode } = await signupUser();
+  const { verificationUrl } = (readTemplateFile as jest.Mock).mock.calls[0][1];
+  const emailedToken = url.parse(verificationUrl, true).query.token as string;
+
+  expect(statusCode).toBe(201);
+  expect(responseBody).not.toHaveProperty("token");
+  expect(JSON.stringify(responseBody)).not.toContain(emailedToken);
+});
+
 it("should fail when trying to signup with the same email", async () => {
   await signupUser();
   const { statusCode } = await signupUser();

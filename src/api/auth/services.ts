@@ -205,7 +205,7 @@ export const setupUser = async (
     ? await getProfileImageUpload(imageName)
     : undefined;
 
-  return { token, imageUpload };
+  return { imageUpload };
 };
 
 export const resetPassword = async (
