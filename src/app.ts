@@ -20,7 +20,7 @@ app.use(
   cookieSession({
     secret: process.env.COOKIE_SECRET,
     httpOnly: true,
-    sameSite: process.env.NODE_ENV === "production" ? "lax" : "none",
+    sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
   }),
 );

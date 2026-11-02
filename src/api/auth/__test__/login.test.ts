@@ -70,3 +70,16 @@ it("should fail when sending invalid password", async () => {
   expect(body.errors).toHaveLength(1);
   expect(body.errors[0].field).toBe("password");
 });
+
+it("should set a session cookie that browsers accept", async () => {
+  const { formData } = await signupUserWithVerification();
+  const response = await request(app)
+    .post("/api/auth/login")
+    .send({ email: formData.email, password: formData.password })
+    .expect(200);
+
+  // Browsers reject SameSite=None without Secure, which needs HTTPS.
+  const sessionCookie = response.get("Set-Cookie")?.[0].toLowerCase();
+  expect(sessionCookie).toContain("samesite=lax");
+  expect(sessionCookie).toContain("httponly");
+});
