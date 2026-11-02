@@ -120,3 +120,16 @@ export const signinUser = async (options?: {
     cookies: response.get("Set-Cookie"),
   };
 };
+
+// Unapproved listings are hidden from the public, so tests that inspect them
+// read the details as an admin.
+export const getListingDetailsAsAdmin = async (listingId: number) => {
+  const admin = await signinUser({
+    email: "admin@autosouk.com",
+    password: "Admin_@@789",
+  });
+  return await request(app)
+    .get(`/api/listings/${listingId}`)
+    .auth(admin.accessToken, { type: "bearer" })
+    .expect(200);
+};

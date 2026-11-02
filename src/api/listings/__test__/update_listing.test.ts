@@ -2,6 +2,7 @@ import request from "supertest";
 import { app } from "../../../app";
 import {
   carImageFiles,
+  getListingDetailsAsAdmin,
   signinUser,
   signupUserWithVerification,
 } from "../../../test/helpers";
@@ -81,6 +82,6 @@ it("should update listing and car, and mark the listing pending", async () => {
   expect(response.body.listing.approvedAt).toBeNull();
   expect(response.body.listing.title).toBe("Updated title");
 
-  const details = await request(app).get(`/api/listings/${listingId}`);
+  const details = await getListingDetailsAsAdmin(listingId);
   expect(details.body.listing.car.price).toBe(450000);
 });

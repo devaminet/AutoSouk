@@ -8,6 +8,7 @@ import {
 } from "../../../db/schema/equipment";
 import {
   carImageFiles,
+  getListingDetailsAsAdmin,
   signinUser,
   signupUserWithVerification,
 } from "../../../test/helpers";
@@ -297,9 +298,7 @@ describe("car equipment on listing details", () => {
       .auth(authUser.accessToken, { type: "bearer" })
       .expect(201);
 
-    const response = await request(app)
-      .get(`/api/listings/${listingId}`)
-      .expect(200);
+    const response = await getListingDetailsAsAdmin(listingId);
 
     const { equipment } = response.body.listing.car;
     expect(equipment.map(({ slug }: { slug: string }) => slug)).toEqual([
@@ -320,9 +319,7 @@ describe("car equipment on listing details", () => {
     const response = await attachCar(validCar);
     const listingId = response.body.listingId;
 
-    const details = await request(app)
-      .get(`/api/listings/${listingId}`)
-      .expect(200);
+    const details = await getListingDetailsAsAdmin(listingId);
 
     expect(details.body.listing.car.equipment).toEqual([]);
   });

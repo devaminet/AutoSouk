@@ -8,6 +8,8 @@ import {
   createListingSchema,
   getListingsQuerySchema,
   getMyListingsQuerySchema,
+  getPendingListingsQuerySchema,
+  rejectListingSchema,
   updateListingSchema,
 } from "./request_schema";
 import { listingMechanicsQuerySchema } from "../mechanics/request_schema";
@@ -19,6 +21,8 @@ import {
   saveListing,
   getListings,
   getMyListings,
+  getPendingListings,
+  rejectListing,
   deleteListing,
   attachCarToListing,
   confirmListingMedia,
@@ -95,6 +99,48 @@ listingRouter.get("/", async (req: Request, res: Response) => {
 
 /**
  * @openapi
+ * /api/listings/pending:
+ *   get:
+ *     tags: [Listings]
+ *     summary: List the listings waiting for approval
+ *     description: The moderation queue, the longest waiting first.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, minimum: 1, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, minimum: 1, maximum: 100, default: 10 }
+ *     responses:
+ *       200:
+ *         description: Pending listings, in the same shape as /api/listings/mine, with the seller as `user`
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not an admin
+ */
+// Declared before "/:id" so that "pending" is not read as a listing id.
+listingRouter.get(
+  "/pending",
+  isAuthenticated,
+  isAdmin,
+  async (req: Request, res: Response) => {
+    const validationResult = getPendingListingsQuerySchema.safeParse(req.query);
+    if (!validationResult.success) {
+      throw new RequestValidationError(validationResult.error.errors);
+    }
+
+    const result = await getPendingListings(validationResult.data);
+    res.status(200).json(result);
+  },
+);
+
+/**
+ * @openapi
  * /api/listings/mine:
  *   get:
  *     tags: [Listings]
@@ -134,6 +180,7 @@ listingRouter.get("/", async (req: Request, res: Response) => {
  *                       description: { type: string }
  *                       status: { type: string, description: "Translate with enums:listing_status.<status>" }
  *                       approvedAt: { type: string, format: date, nullable: true }
+ *                       rejectionReason: { type: string, nullable: true, description: "Why an admin rejected the listing; cleared when the seller edits it" }
  *                       createdAt: { type: string, format: date }
  *                       updatedAt: { type: string, format: date }
  *                       car:
@@ -644,6 +691,10 @@ listingRouter.get("/:id/mechanics", async (req: Request, res: Response) => {
  *   get:
  *     tags: [Listings]
  *     summary: Get listing data by id
+ *     description: >
+ *       Approved listings are public. Any other status answers 404, except for
+ *       the listing's seller and admins (send the bearer token), who also see
+ *       `rejectionReason`.
  *     parameters:
  *       - in: path
  *         name: id
@@ -692,17 +743,13 @@ listingRouter.get("/:id/mechanics", async (req: Request, res: Response) => {
  *                                   slug: { type: string, example: comfort }
  *                                   name: { type: string, example: Comfort }
  *       404:
- *         description: Listing not found
+ *         description: Listing not found, or not visible to the requester
  */
 // Get listing data by id
-listingRouter.get(
-  "/:id",
-  // isAuthenticated,
-  async (req: Request, res: Response) => {
-    const listing = await getListingDetails(+req.params.id);
-    res.status(200).json({ listing });
-  },
-);
+listingRouter.get("/:id", async (req: Request, res: Response) => {
+  const listing = await getListingDetails(+req.params.id, req.currentUser);
+  res.status(200).json({ listing });
+});
 
 /**
  * @openapi
@@ -813,6 +860,76 @@ listingRouter.patch(
     const listingId = +req.params.id;
     const result = await approveListing(listingId);
     res.status(200).json({ updatedRows: result });
+  },
+);
+
+/**
+ * @openapi
+ * /api/listings/{id}/reject:
+ *   patch:
+ *     tags: [Listings]
+ *     summary: Reject a pending listing with a reason for the seller
+ *     description: >
+ *       The seller sees `rejectionReason` on /api/listings/mine and on the
+ *       listing. Editing the listing sends it back to pending and clears it.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [reason]
+ *             properties:
+ *               reason: { type: string, minLength: 1, maxLength: 1000 }
+ *     responses:
+ *       200:
+ *         description: Listing rejected
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 listing:
+ *                   type: object
+ *                   properties:
+ *                     id: { type: integer }
+ *                     status: { type: string, example: rejected }
+ *                     rejectionReason: { type: string }
+ *       400:
+ *         description: Validation error, or the listing is not pending
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not an admin
+ *       404:
+ *         description: Listing not found
+ */
+listingRouter.patch(
+  "/:id/reject",
+  isAuthenticated,
+  isAdmin,
+  async (req: Request, res: Response) => {
+    const paramValidation = attachListingParamSchema.safeParse(req.params);
+    if (!paramValidation.success) {
+      throw new RequestValidationError(paramValidation.error.errors);
+    }
+    const bodyValidation = rejectListingSchema.safeParse(req.body);
+    if (!bodyValidation.success) {
+      throw new RequestValidationError(bodyValidation.error.errors);
+    }
+
+    const listing = await rejectListing(
+      paramValidation.data.id,
+      bodyValidation.data.reason,
+    );
+    res.status(200).json({ listing });
   },
 );
 

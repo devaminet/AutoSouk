@@ -85,7 +85,8 @@
     "already_approved": "Listing is already approved",
     "car_already_attached": "A car is already attached to this listing",
     "car_required": "Attach a car to this listing before editing it",
-    "car_required_for_media": "Attach a car to this listing before adding media"
+    "car_required_for_media": "Attach a car to this listing before adding media",
+    "not_pending": "Only a pending listing can be rejected"
   },
   "media": {
     "upload_urls_failed": "Could not generate urls for images",

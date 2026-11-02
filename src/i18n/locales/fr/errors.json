@@ -91,7 +91,8 @@
     "already_approved": "L'annonce est déjà approuvée",
     "car_already_attached": "Une voiture est déjà associée à cette annonce",
     "car_required": "Associez une voiture à cette annonce avant de la modifier",
-    "car_required_for_media": "Associez une voiture à cette annonce avant d'ajouter des médias"
+    "car_required_for_media": "Associez une voiture à cette annonce avant d'ajouter des médias",
+    "not_pending": "Seule une annonce en attente de validation peut être refusée"
   },
   "media": {
     "upload_urls_failed": "Impossible de générer les URL des images",

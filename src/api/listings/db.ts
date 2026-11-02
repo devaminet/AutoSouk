@@ -3,6 +3,7 @@ import {
   createCarSchema,
   getListingsQuerySchema,
   getMyListingsQuerySchema,
+  getPendingListingsQuerySchema,
   updateListingSchema,
 } from "./request_schema";
 import {
@@ -151,6 +152,56 @@ export const findListings = async (
   return { listings, totalCountResult };
 };
 
+const listingCarSummary = {
+  columns: { id: true, price: true, year: true },
+  with: {
+    make: { columns: { name: true } },
+    model: { columns: { name: true } },
+    city: { columns: { name: true, slug: true } },
+    carMedias: {
+      columns: { id: true, type: true, link: true, isPrimary: true },
+      where: eq(carMediaTable.isUploaded, true),
+      orderBy: [desc(carMediaTable.isPrimary), asc(carMediaTable.id)] as SQL[],
+    },
+  },
+} as const;
+
+// The moderation queue: the listing waiting the longest comes first.
+export const findPendingListings = async ({
+  page,
+  limit,
+}: z.infer<typeof getPendingListingsQuerySchema>) => {
+  const where = eq(listingTable.status, "pending");
+
+  const listings = await db.query.listingTable.findMany({
+    columns: {
+      id: true,
+      title: true,
+      description: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+    with: {
+      user: {
+        columns: { firstName: true, lastName: true, imageName: true },
+      },
+      car: { ...listingCarSummary },
+    },
+    where,
+    orderBy: [asc(listingTable.updatedAt), asc(listingTable.id)],
+    limit,
+    offset: (page - 1) * limit,
+  });
+
+  const [{ total }] = await db
+    .select({ total: count() })
+    .from(listingTable)
+    .where(where);
+
+  return { listings, total };
+};
+
 // A seller's listings in every status. Drafts have no car yet, and filters and
 // sorting only use listing columns, so this stays a relational query.
 export const findListingsBySeller = async (
@@ -170,24 +221,11 @@ export const findListingsBySeller = async (
       description: true,
       status: true,
       approvedAt: true,
+      rejectionReason: true,
       createdAt: true,
       updatedAt: true,
     },
-    with: {
-      car: {
-        columns: { id: true, price: true, year: true },
-        with: {
-          make: { columns: { name: true } },
-          model: { columns: { name: true } },
-          city: { columns: { name: true, slug: true } },
-          carMedias: {
-            columns: { id: true, type: true, link: true, isPrimary: true },
-            where: eq(carMediaTable.isUploaded, true),
-            orderBy: [desc(carMediaTable.isPrimary), asc(carMediaTable.id)],
-          },
-        },
-      },
-    },
+    with: { car: { ...listingCarSummary } },
     where,
     orderBy: [desc(listingTable.createdAt), desc(listingTable.id)],
     limit,
@@ -226,7 +264,6 @@ export const getListingDetailsById = async (id: number) => {
     columns: {
       createdAt: false,
       updatedAt: false,
-      userId: false,
     },
     with: {
       user: {
@@ -352,9 +389,30 @@ export const findListingCityById = async (id: number) => {
 export const approveListingById = async (id: number) => {
   return await db
     .update(listingTable)
-    .set({ status: "approved", approvedAt: new Date().toISOString() })
+    .set({
+      status: "approved",
+      approvedAt: new Date().toISOString(),
+      rejectionReason: null,
+    })
     .where(eq(listingTable.id, id))
     .returning();
+};
+
+// Only a pending listing can be rejected; the condition is part of the update
+// so that a listing approved or edited at the same time is left alone.
+export const rejectPendingListingById = async (id: number, reason: string) => {
+  const [listing] = await db
+    .update(listingTable)
+    .set({
+      status: "rejected",
+      rejectionReason: reason,
+      approvedAt: null,
+      updatedAt: new Date().toISOString(),
+    })
+    .where(and(eq(listingTable.id, id), eq(listingTable.status, "pending")))
+    .returning();
+
+  return listing ?? null;
 };
 
 export const findListingCarId = async (userId: number, listingId: number) => {
@@ -452,6 +510,7 @@ export const saveCarAndMedia = async (args: {
       .set({
         status: "pending",
         approvedAt: null,
+        rejectionReason: null,
         updatedAt: new Date().toISOString(),
       })
       .where(eq(listingTable.id, listingId));
@@ -534,6 +593,7 @@ export const updateListingAndMarkPending = async (
         ...listingChanges,
         status: "pending",
         approvedAt: null,
+        rejectionReason: null,
         updatedAt: new Date().toISOString(),
       })
       .where(eq(listingTable.id, listingId))
@@ -696,6 +756,7 @@ export const markCarMediaUploaded = async (
       .set({
         status: "pending",
         approvedAt: null,
+        rejectionReason: null,
         updatedAt: new Date().toISOString(),
       })
       .where(eq(listingTable.id, listingId));

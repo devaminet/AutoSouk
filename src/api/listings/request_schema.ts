@@ -139,6 +139,15 @@ export const getMyListingsQuerySchema = z.object({
   status: z.enum(listingStatusEnum.enumValues).optional(),
 });
 
+export const getPendingListingsQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(10),
+});
+
+export const rejectListingSchema = z.object({
+  reason: z.string().trim().min(1).max(1000),
+});
+
 export const addCarMediaSchema = z.object({
   files: z
     .array(z.object({ name: carMediaNameSchema }))

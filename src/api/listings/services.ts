@@ -12,6 +12,7 @@ import {
   createCarSchema,
   getListingsQuerySchema,
   getMyListingsQuerySchema,
+  getPendingListingsQuerySchema,
   updateListingSchema,
 } from "./request_schema";
 import { BadRequestError } from "../../errors/bad_request_error";
@@ -46,9 +47,11 @@ import {
   findListingCarId,
   findListings,
   findListingsBySeller,
+  findPendingListings,
   getListingDetailsById,
   getUserListing,
   insertListing,
+  rejectPendingListingById,
   saveCarAndMedia,
   updateListingAndMarkPending,
 } from "./db";
@@ -415,12 +418,29 @@ const toCarEquipment = (
       category: { slug: category.slug, name: category.name },
     }));
 
-export const getListingDetails = async (listingId: number) => {
-  const listing = await getListingDetailsById(listingId);
+type ListingViewer = { id: number; role: string } | undefined;
 
-  if (!listing) {
+// Only approved listings are public. Other statuses answer 404, as if the
+// listing did not exist, except for its seller and admins.
+const canViewListing = (
+  listing: { status: string | null; userId: number | null },
+  viewer: ListingViewer,
+) =>
+  listing.status === "approved" ||
+  viewer?.role === "admin" ||
+  viewer?.id === listing.userId;
+
+export const getListingDetails = async (
+  listingId: number,
+  viewer: ListingViewer,
+) => {
+  const found = await getListingDetailsById(listingId);
+
+  if (!found || !canViewListing(found, viewer)) {
     throw new NotFoundError("listing.not_found");
   }
+
+  const { userId, ...listing } = found;
 
   const carMedias = listing.car?.carMedias;
   if (carMedias) {
@@ -492,6 +512,21 @@ export const approveListing = async (listingId: number) => {
   return result;
 };
 
+export const rejectListing = async (listingId: number, reason: string) => {
+  const listing = await findListingById(listingId);
+
+  if (!listing) {
+    throw new NotFoundError("listing.not_found");
+  }
+
+  const rejected = await rejectPendingListingById(listingId, reason);
+  if (!rejected) {
+    throw new BadRequestError("listing.not_pending");
+  }
+
+  return rejected;
+};
+
 const signCarMediaLinks = async (
   listings: { car: { carMedias: { link: string }[] } | null }[],
 ) => {
@@ -505,6 +540,27 @@ const signCarMediaLinks = async (
       }
     }
   }
+};
+
+export const getPendingListings = async (
+  query: z.infer<typeof getPendingListingsQuerySchema>,
+) => {
+  const { limit, page } = query;
+  const { listings: found, total } = await findPendingListings(query);
+
+  await signCarMediaLinks(found);
+
+  const listings = await Promise.all(
+    found.map(async (listing) => ({
+      ...listing,
+      user: listing.user ? await withProfileImageUrl(listing.user) : null,
+    })),
+  );
+
+  return {
+    listings,
+    meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+  };
 };
 
 export const getMyListings = async (
