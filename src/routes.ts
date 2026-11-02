@@ -10,6 +10,7 @@ import mechanicReviewsRouter from "./api/mechanic_reviews/routes";
 import inspectionsRouter from "./api/inspections/routes";
 import equipmentRouter from "./api/equipment/routes";
 import i18nRouter from "./api/i18n/routes";
+import lookupsRouter from "./api/lookups/routes";
 
 const router = express.Router();
 
@@ -24,5 +25,6 @@ router.use("/api/mechanics", mechanicReviewsRouter);
 router.use("/api/inspections", inspectionsRouter);
 router.use("/api/equipment", equipmentRouter);
 router.use("/api/i18n", i18nRouter);
+router.use("/api/lookups", lookupsRouter);
 
 export default router;

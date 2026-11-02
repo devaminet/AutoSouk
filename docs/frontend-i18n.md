@@ -151,6 +151,12 @@ them with the `enums` namespace:
 | inspection `sections[].category` and item `status`   | `enums:inspection_category.*`, `enums:inspection_item_status.*`                          |
 | `user.role`                                          | `enums:role.buyer`                                                                       |
 
+The options of the signup, car and filter forms come from `GET /api/lookups`
+(`cities`, `carburants`, `states`, `origins`), `GET /api/makes`,
+`GET /api/models/{make_id}` and `GET /api/equipment`. Send `id` to the API and
+translate `slug` as above. Cities are sorted by their English name, so sort them
+again by label in the user's language.
+
 Use the slug itself (or the English `name` where the response has one) as the
 fallback when a key is missing. Car makes and models are brand names and are
 not translated.
