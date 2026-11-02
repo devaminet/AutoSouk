@@ -8,6 +8,7 @@ import { carBucketName } from "../../../utils/constants";
 import { createBucket } from "../../../utils/functions";
 import {
   carImageFiles,
+  getListingDetailsAsAdmin,
   signinUser,
   signupUserWithVerification,
 } from "../../../test/helpers";
@@ -244,7 +245,7 @@ describe("confirming added media", () => {
       .expect(200);
 
   const listingStatus = async (listingId: number) => {
-    const details = await request(app).get(`/api/listings/${listingId}`);
+    const details = await getListingDetailsAsAdmin(listingId);
     return details.body.listing.status as string;
   };
 
@@ -302,7 +303,7 @@ const createCarWithUploadedImages = async (extra = 0) => {
 };
 
 const visibleMedia = async (listingId: number) => {
-  const details = await request(app).get(`/api/listings/${listingId}`);
+  const details = await getListingDetailsAsAdmin(listingId);
   return details.body.listing.car.carMedias as DetailsMedia[];
 };
 

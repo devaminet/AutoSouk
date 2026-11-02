@@ -5,6 +5,7 @@ import { carBucketName } from "../../../utils/constants";
 import { createBucket } from "../../../utils/functions";
 import {
   carImageFiles,
+  getListingDetailsAsAdmin,
   signinUser,
   signupUserWithVerification,
 } from "../../../test/helpers";
@@ -62,7 +63,7 @@ it("should require authentication to confirm media", () => {
 
 it("should not show media that was not uploaded yet", async () => {
   const { listingId } = await createListingWithCar();
-  const details = await request(app).get(`/api/listings/${listingId}`);
+  const details = await getListingDetailsAsAdmin(listingId);
   expect(details.body.listing.car.carMedias).toHaveLength(0);
 });
 
@@ -93,7 +94,7 @@ it("should show media once it is uploaded and confirmed", async () => {
   expect(response.body.uploaded).toEqual([carMedia[0].filename]);
   expect(response.body.pending).toHaveLength(2);
 
-  const details = await request(app).get(`/api/listings/${listingId}`);
+  const details = await getListingDetailsAsAdmin(listingId);
   expect(details.body.listing.car.carMedias).toEqual([
     {
       id: expect.any(Number),
@@ -117,7 +118,7 @@ it("should list uploaded media primary first, then in upload order", async () =>
   }
   await confirm(listingId, authUser.accessToken);
 
-  const details = await request(app).get(`/api/listings/${listingId}`);
+  const details = await getListingDetailsAsAdmin(listingId);
   const medias: { id: number; link: string; isPrimary: boolean }[] =
     details.body.listing.car.carMedias;
 

@@ -166,7 +166,7 @@ const sendVerificationEmail = async (
   const registerHTML = await readTemplateFile("register.ejs", {
     ...emailTemplateContext(user.locale),
     firstName: user.firstName,
-    verificationUrl: `${process.env.BACKEND_URL}/api/auth/verify?token=${token}`,
+    verificationUrl: `${process.env.BACKEND_URL}/api/auth/verify?token=${token}&lang=${user.locale}`,
     expirationMinutes: tokenExpirationMinutes,
   });
   await sendMail({
@@ -205,7 +205,7 @@ export const setupUser = async (
     ? await getProfileImageUpload(imageName)
     : undefined;
 
-  return { token, imageUpload };
+  return { imageUpload };
 };
 
 export const resetPassword = async (

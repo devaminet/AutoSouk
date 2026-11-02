@@ -21,6 +21,7 @@ export const listingTable = pgTable("listings", {
   description: varchar().notNull(),
   status: listingStatusEnum("status").default("draft"),
   approvedAt: date("approved_at"),
+  rejectionReason: varchar("rejection_reason"),
   createdAt: date("created_at").defaultNow().notNull(),
   updatedAt: date("updated_at").defaultNow().notNull(),
 });

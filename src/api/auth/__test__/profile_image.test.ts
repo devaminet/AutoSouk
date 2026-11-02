@@ -4,7 +4,11 @@ import { minioClient } from "../../../file_storage/minio";
 import { usersBucketName } from "../../../utils/constants";
 import { createBucket } from "../../../utils/functions";
 import { findUserByEmail } from "../db";
-import { signinUser, testUserCredentials } from "../../../test/helpers";
+import {
+  signinUser,
+  testUserCredentials,
+  verifyEmail,
+} from "../../../test/helpers";
 import { readTemplateFile } from "../../../utils/functions";
 import url from "url";
 
@@ -23,7 +27,8 @@ const registerWithImage = async () => {
   const mockCalls = (readTemplateFile as jest.Mock).mock.calls;
   const { verificationUrl } = mockCalls[mockCalls.length - 1][1];
   const token = url.parse(verificationUrl, true).query.token as string;
-  await request(app).get(`/api/auth/verify?token=${token}`).expect(200);
+  const { status } = await verifyEmail(token);
+  expect(status).toBe("success");
   return response;
 };
 

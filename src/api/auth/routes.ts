@@ -28,7 +28,8 @@ import {
 } from "./services";
 import { InternalServerError } from "../../errors/internal_server_error";
 import { tokenExpirationMinutes } from "../../utils/constants";
-import { localizedMessage } from "../../i18n";
+import { CustomError } from "../../errors/custom_error";
+import { Locale, localizedMessage } from "../../i18n";
 
 const authRouter = Router();
 
@@ -64,7 +65,6 @@ const authRouter = Router();
  *                 - $ref: '#/components/schemas/LocalizedMessage'
  *                 - type: object
  *                   properties:
- *                     token: { type: string }
  *                     imageUpload: { type: object, nullable: true }
  *       400:
  *         description: Validation error
@@ -75,47 +75,67 @@ authRouter.post("/register", async (req, res) => {
     throw new RequestValidationError(validationResult.error.errors);
   }
 
-  const { token, imageUpload } = await setupUser(
-    validationResult.data,
-    req.locale,
-  );
+  const { imageUpload } = await setupUser(validationResult.data, req.locale);
   res.status(201).json({
     ...localizedMessage(req.locale, "auth.account_created"),
-    token,
     imageUpload,
   });
 });
+
+// Verification links are opened in a browser, so the outcome goes to a client
+// page, which translates `code` with its catalogs.
+const verifyEmailPageUrl = (
+  locale: Locale,
+  status: "success" | "error",
+  code: string,
+) => {
+  const query = new URLSearchParams({ status, code, lang: locale });
+  return `${process.env.CLIENT_URL}/verify-email?${query}`;
+};
 
 /**
  * @openapi
  * /api/auth/verify:
  *   get:
  *     tags: [Auth]
- *     summary: Verify a user's email via token
+ *     summary: Verify a user's email via token and redirect to the client
+ *     description: >
+ *       Opened from the link in the verification email, so every outcome
+ *       redirects to the client page `/verify-email` with `status` (`success`
+ *       or `error`), `code` (a key of the `messages` catalog on success, of
+ *       the `errors` catalog on error) and `lang`.
  *     parameters:
  *       - in: query
  *         name: token
  *         required: true
  *         schema: { type: string }
  *     responses:
- *       200:
- *         description: Verified with success
- *         content:
- *           application/json:
- *             schema: { $ref: '#/components/schemas/LocalizedMessage' }
- *       400:
- *         description: Token missing, invalid, or expired
+ *       302:
+ *         description: Redirect to the client's verify-email page
+ *         headers:
+ *           Location:
+ *             schema:
+ *               type: string
+ *               example: https://autosouk.ma/verify-email?status=error&code=auth.link_expired&lang=fr
  */
-authRouter.get("/verify", async (req, res, next) => {
+authRouter.get("/verify", async (req, res) => {
   const { token } = req.query;
-  if (!token) {
-    throw new BadRequestError("auth.token_required");
+  try {
+    if (typeof token !== "string" || !token) {
+      throw new BadRequestError("auth.token_required");
+    }
+    await verifyUser(token);
+    res.redirect(
+      302,
+      verifyEmailPageUrl(req.locale, "success", "auth.account_verified"),
+    );
+  } catch (error) {
+    if (!(error instanceof CustomError)) {
+      console.error("Error verifying an email address:", error);
+    }
+    const code = error instanceof CustomError ? error.code : "unexpected";
+    res.redirect(302, verifyEmailPageUrl(req.locale, "error", code));
   }
-  const result = await verifyUser(token as string);
-  if (!result.success) {
-    throw new BadRequestError("auth.token_invalid_or_expired");
-  }
-  res.status(200).json(localizedMessage(req.locale, "auth.account_verified"));
 });
 
 /**

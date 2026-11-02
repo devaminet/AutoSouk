@@ -117,6 +117,21 @@ Responses that confirm an action carry a code and a message in the same way:
 
 Translate with `t(`messages:${code}`, params)` or show `message`.
 
+## Email verification
+
+The link in the verification email opens the API, which redirects the browser
+to a page the client must provide:
+
+```text
+{CLIENT_URL}/verify-email?status=success&code=auth.account_verified&lang=fr
+{CLIENT_URL}/verify-email?status=error&code=auth.link_expired&lang=fr
+```
+
+Use `lang` for the page language: the user may be on a new device. Translate
+`code` with `messages:` when `status` is `success` and `errors:` when it is
+`error`. Links work once, so for `auth.link_expired` and `auth.token_invalid`
+offer to resend the email (`POST /api/auth/re-verify`).
+
 ## Lookup values and statuses
 
 The API returns lookup values and statuses as slugs, never as labels. Translate
@@ -135,6 +150,12 @@ them with the `enums` namespace:
 | `inspection.status`, `verdict`, `mileageConsistency` | `enums:inspection_status.*`, `enums:inspection_verdict.*`, `enums:mileage_consistency.*` |
 | inspection `sections[].category` and item `status`   | `enums:inspection_category.*`, `enums:inspection_item_status.*`                          |
 | `user.role`                                          | `enums:role.buyer`                                                                       |
+
+The options of the signup, car and filter forms come from `GET /api/lookups`
+(`cities`, `carburants`, `states`, `origins`), `GET /api/makes`,
+`GET /api/models/{make_id}` and `GET /api/equipment`. Send `id` to the API and
+translate `slug` as above. Cities are sorted by their English name, so sort them
+again by label in the user's language.
 
 Use the slug itself (or the English `name` where the response has one) as the
 fallback when a key is missing. Car makes and models are brand names and are

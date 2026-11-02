@@ -84,7 +84,6 @@
   "auth": {
     "token_required": "الرمز مطلوب",
     "token_invalid": "رمز غير صالح",
-    "token_invalid_or_expired": "رمز غير صالح أو منتهي الصلاحية",
     "link_expired": "انتهت صلاحية هذا الرابط",
     "verification_email_failed": "تعذر إرسال رسالة التحقق",
     "forgot_password_email_failed": "تعذر إرسال رسالة إعادة تعيين كلمة المرور",
@@ -110,7 +109,8 @@
     "already_approved": "الإعلان مقبول بالفعل",
     "car_already_attached": "توجد سيارة مرتبطة بهذا الإعلان بالفعل",
     "car_required": "أضف سيارة إلى هذا الإعلان قبل تعديله",
-    "car_required_for_media": "أضف سيارة إلى هذا الإعلان قبل إضافة الوسائط"
+    "car_required_for_media": "أضف سيارة إلى هذا الإعلان قبل إضافة الوسائط",
+    "not_pending": "يمكن رفض الإعلان قيد المراجعة فقط"
   },
   "media": {
     "upload_urls_failed": "تعذر إنشاء روابط الصور",

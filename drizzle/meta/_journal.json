@@ -204,6 +204,13 @@
       "when": 1793544705211,
       "tag": "0029_add_user_locale",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1793606055505,
+      "tag": "0030_add_listing_rejection_reason",
+      "breakpoints": true
     }
   ]
 }
