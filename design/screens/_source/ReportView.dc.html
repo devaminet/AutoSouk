@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk · Inspection report</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; background: var(--paper); color: var(--ink); font-family: var(--font-sans); overflow-x: hidden">
+  <div style="overflow-x: auto">
+    <x-import component-from-global-scope="AutoSouk.NavDesktop" active="Inspections"></x-import>
+  </div>
+  <main style="max-width: 1120px; margin: 0 auto; padding: 40px 24px 96px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+      <a href="MyInspections.dc.html" class="label-m" style="display: flex; gap: 8px; align-items: center; color: var(--ink); text-decoration: none"><x-import component-from-global-scope="AutoSouk.Icon" name="arrow-left" size="{{s16}}"></x-import>My inspections</a>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+        <span class="body-xs" style="display: flex; gap: 6px; align-items: center; color: var(--muted)"><x-import component-from-global-scope="AutoSouk.Icon" name="globe" size="{{s14}}" color="muted"></x-import>PDF in Français, your account language</span>
+        <x-import component-from-global-scope="AutoSouk.Button" variant="secondary" icon="share">Share</x-import>
+        <x-import component-from-global-scope="AutoSouk.Button" variant="dark" icon="download">Download PDF</x-import>
+      </div>
+    </div>
+    <section style="position: relative; overflow: hidden; display: flex; flex-wrap: wrap; gap: 32px; align-items: center; padding: clamp(24px, 4vw, 40px); border-radius: 32px; background: var(--night)">
+      <span aria-hidden="true" style="position: absolute; right: -120px; top: -200px; pointer-events: none"><x-import component-from-global-scope="AutoSouk.ZelligePattern"></x-import></span>
+      <span style="position: relative; padding: 14px; border-radius: 999px; background: var(--surface)"><x-import component-from-global-scope="AutoSouk.ScoreRing" score="{{s92}}" verdict="excellent" size="{{s150}}"></x-import></span>
+      <div style="position: relative; flex: 1 1 320px; display: flex; flex-direction: column; gap: 10px">
+        <span class="overline" style="color: var(--saffron)">Independent inspection · #2038</span>
+        <h1 class="display-l" style="color: var(--surface)">Excellent condition</h1>
+        <p class="body-l" style="color: var(--subtle)">Volkswagen Golf 8 Life 2.0 TDI · 2020 · inspected 10 Oct 2026</p>
+      </div>
+      <div style="position: relative; flex: 0 1 280px; display: flex; flex-direction: column; gap: 10px; padding: 20px; border-radius: 20px; background: var(--night-2)">
+        <x-import component-from-global-scope="AutoSouk.Avatar" initials="GA" size="L"></x-import>
+        <span class="h4" style="color: var(--surface)">Garage Atlas Auto</span>
+        <span style="display: flex; gap: 6px; align-items: center"><span role="img" aria-label="Rated 4.9 out of 5" style="display: flex; gap: 2px"><sc-for list="{{five}}" as="f" hint-placeholder-count="5"><x-import component-from-global-scope="AutoSouk.Icon" name="star" size="{{s14}}" color="saffron" fill="saffron"></x-import></sc-for></span><span class="label-s" style="color: var(--surface)">4.9</span><span class="body-xs" style="color: var(--subtle)">(128)</span></span>
+        <span class="body-xs" style="color: var(--subtle)">Signed by Hamid M., chief mechanic</span>
+      </div>
+    </section>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px">
+      <sc-for list="{{facts}}" as="f" hint-placeholder-count="7">
+        <div style="display: flex; flex-direction: column; gap: 6px; padding: 16px; border-radius: 20px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+          <span class="overline" style="color: var(--muted)">{{f.l}}</span>
+          <span style="display: flex; gap: 6px; align-items: center"><x-import component-from-global-scope="AutoSouk.Icon" name="check-circle" size="{{s14}}" color="success"></x-import><span class="{{f.cls}}">{{f.v}}</span></span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+      <div style="flex: 999 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+        <section style="display: flex; flex-direction: column; gap: 6px; padding: 24px 28px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+          <h2 class="h3">Summary</h2>
+          <p class="body-l" style="color: var(--ink-2)">Very well maintained Golf with full dealer history. Front bumper repainted (paint gauge 210 µm vs 110 µm elsewhere), no structural repairs. DSG shifts smoothly, no fault codes. Front tyres should be replaced soon.</p>
+        </section>
+        <sc-for list="{{sections}}" as="s" hint-placeholder-count="3">
+          <section style="display: flex; flex-direction: column; padding: 8px 28px 12px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 0">
+              <h2 class="h4">{{s.name}}</h2>
+              <div style="display: flex; gap: 6px">
+                <x-import component-from-global-scope="AutoSouk.Badge" tone="success" dot="{{no}}">{{s.pass}}</x-import>
+                <sc-if value="{{s.att}}" hint-placeholder-val="{{no}}"><x-import component-from-global-scope="AutoSouk.Badge" tone="warning" dot="{{no}}">{{s.att}}</x-import></sc-if>
+              </div>
+            </div>
+            <sc-for list="{{s.rows}}" as="r" hint-placeholder-count="2">
+              <x-import component-from-global-scope="AutoSouk.ChecklistRow" status="{{r.st}}" item="{{r.i}}" note="{{r.n}}"></x-import>
+            </sc-for>
+          </section>
+        </sc-for>
+      </div>
+      <aside style="flex: 1 1 300px; max-width: 360px; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 10px; padding: 24px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+          <span class="overline" style="color: var(--muted)">Estimated repairs</span>
+          <span style="display: flex; gap: 6px; align-items: baseline"><span class="price-l">2 400</span><span class="mono-m" style="color: var(--muted)">MAD</span></span>
+          <p class="body-s" style="color: var(--muted)">Use it to negotiate — sellers see the same report.</p>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 24px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+          <h2 class="h4">Inspection photos</h2>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+            <x-import component-from-global-scope="AutoSouk.CarPhoto" tone="sand" fluid="{{yes}}" radius="{{r12}}" alt="Front bumper paint reading"></x-import>
+            <x-import component-from-global-scope="AutoSouk.CarPhoto" tone="night" fluid="{{yes}}" radius="{{r12}}" alt="Engine bay"></x-import>
+            <x-import component-from-global-scope="AutoSouk.CarPhoto" tone="clay" fluid="{{yes}}" radius="{{r12}}" alt="Front tyre tread"></x-import>
+            <x-import component-from-global-scope="AutoSouk.CarPhoto" tone="sky" fluid="{{yes}}" radius="{{r12}}" alt="Dashboard mileage"></x-import>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 24px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+          <h2 class="h4">Rate this garage</h2>
+          <span style="display: flex; gap: 6px"><sc-for list="{{five}}" as="f" hint-placeholder-count="5"><x-import component-from-global-scope="AutoSouk.Icon" name="star" size="{{s28}}" color="saffron" fill="saffron"></x-import></sc-for></span>
+          <a href="ReviewModal.dc.html" class="label-m" style="display: inline-flex; gap: 8px; align-items: center; justify-content: center; height: 44px; border-radius: 999px; background: var(--surface); color: var(--ink); text-decoration: none; box-shadow: inset 0 0 0 1px var(--line-strong)"><x-import component-from-global-scope="AutoSouk.Icon" name="pencil" size="{{s18}}"></x-import>Write a review</a>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      yes: true, no: false, s14: 14, s16: 16, s18: 18, s28: 28, s92: 92, s150: 150, r12: 12, five: [1, 2, 3, 4, 5],
+      facts: [
+        { l: 'Matricule', v: '12345-A-6', cls: 'mono-s' }, { l: 'VIN', v: 'WVWZZZCDZLW012345', cls: 'mono-s' }, { l: 'Carte grise', v: 'Matches seller', cls: 'label-s' },
+        { l: 'Mileage', v: '54 120 km · consistent', cls: 'label-s' }, { l: 'First registration', v: '18 Feb 2020', cls: 'label-s' }, { l: 'Contrôle technique', v: 'Valid · Mar 2027', cls: 'label-s' }, { l: 'Vignette', v: 'Paid 2026', cls: 'label-s' }
+      ],
+      sections: [
+        { name: 'Exterior', pass: '8 pass', att: '1 attention', rows: [{ st: 'pass', i: 'Body panels and gaps', n: 'Original paint except front bumper' }, { st: 'attention', i: 'Tyres', n: 'Front 3 mm, rear 5 mm — ~2 400 MAD' }] },
+        { name: 'Mechanical', pass: '9 pass', att: null, rows: [{ st: 'pass', i: 'Engine and gearbox', n: 'No leaks, DSG smooth, no OBD fault codes' }, { st: 'pass', i: 'Brakes', n: 'Pads 60%, discs within tolerance' }] },
+        { name: 'Road test', pass: '5 pass', att: null, rows: [{ st: 'pass', i: 'Steering and alignment', n: 'Tracks straight, no noise at 120 km/h' }] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

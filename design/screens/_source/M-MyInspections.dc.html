@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk mobile · My inspections</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--paper); color: var(--ink); font-family: var(--font-sans); display: flex; flex-direction: column">
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 28px 20px 120px; overflow: hidden">
+    <h1 class="h1">Inspections</h1>
+    <sc-for list="{{items}}" as="i" hint-placeholder-count="4">
+      <a href="{{i.href}}" style="display: flex; flex-direction: column; gap: 12px; padding: 14px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); text-decoration: none; color: inherit">
+        <span style="display: flex; gap: 12px; align-items: center">
+          <x-import component-from-global-scope="AutoSouk.CarPhoto" tone="{{i.tone}}" width="{{w64}}" height="{{h52}}" radius="{{r12}}"></x-import>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span class="h5" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{i.car}}</span><span class="body-xs" style="color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{i.garage}}</span></span>
+          <x-import component-from-global-scope="AutoSouk.Badge" tone="{{i.bt}}">{{i.label}}</x-import>
+        </span>
+        <span aria-hidden="true" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px">
+          <sc-for list="{{i.bars}}" as="b" hint-placeholder-count="4"><span style="height: 4px; border-radius: 2px; background: {{b}}"></span></sc-for>
+        </span>
+        <span class="body-xs" style="color: var(--muted)">{{i.note}}</span>
+      </a>
+    </sc-for>
+  </main>
+  <div style="position: absolute; left: 0; right: 0; bottom: 0">
+    <x-import component-from-global-scope="AutoSouk.TabBar" active="Inspections"></x-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const bars = (stage) => [0, 1, 2, 3].map((k) => (k < stage || stage === 4 ? 'var(--success)' : k === stage ? 'var(--brand)' : 'var(--line)'));
+    return {
+      w64: 64, h52: 52, r12: 12,
+      items: [
+        { car: 'Volkswagen Golf 8 Life', garage: 'Garage Atlas Auto', tone: 'night', label: 'Completed', bt: 'success', bars: bars(4), note: 'Report ready · score 92', href: 'M-Report.dc.html' },
+        { car: 'Toyota Corolla Hybrid', garage: 'Diagnostic Pro Ain Sebaâ', tone: 'olive', label: 'In progress', bt: 'info', bars: bars(2), note: 'Car at the garage since 10:15', href: 'M-MyInspections.dc.html' },
+        { car: 'Dacia Duster Prestige', garage: 'Speedy Check Anfa', tone: 'sand', label: 'Accepted', bt: 'brand', bars: bars(1), note: 'Appointment confirmed by the garage', href: 'M-MyInspections.dc.html' },
+        { car: 'Fiat 500 Dolcevita', garage: 'Garage Souss Diag', tone: 'saffron', label: 'Pending', bt: 'warning', bars: bars(0), note: 'Waiting for the garage to accept', href: 'M-MyInspections.dc.html' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

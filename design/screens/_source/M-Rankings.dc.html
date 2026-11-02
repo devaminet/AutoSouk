@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk mobile · Top garages</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--paper); color: var(--ink); font-family: var(--font-sans); display: flex; flex-direction: column">
+  <div style="padding-top: 12px"><x-import component-from-global-scope="AutoSouk.MobileHeader" variant="back" title="Mechanics" action="sliders"></x-import></div>
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 16px; padding: 8px 20px 120px; overflow: hidden">
+    <div style="display: flex; flex-direction: column; gap: 6px"><span class="overline" style="color: var(--brand)">Ranked by buyers</span><h1 class="h1">Top garages</h1></div>
+    <button type="button" style="display: flex; gap: 10px; align-items: center; height: 48px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-strong); text-align: left">
+      <x-import component-from-global-scope="AutoSouk.Icon" name="map-pin" size="{{s18}}" color="muted"></x-import><span class="label-m" style="flex: 1">Casablanca</span><x-import component-from-global-scope="AutoSouk.Icon" name="chevron-down" size="{{s18}}" color="muted"></x-import>
+    </button>
+    <a href="M-MechanicProfile.dc.html" style="position: relative; overflow: hidden; display: flex; gap: 14px; align-items: center; padding: 18px; border-radius: 24px; background: var(--night); text-decoration: none">
+      <span aria-hidden="true" style="position: absolute; left: 120px; top: -120px; pointer-events: none"><x-import component-from-global-scope="AutoSouk.ZelligePattern"></x-import></span>
+      <span class="display-l" style="position: relative; color: var(--saffron)">1</span>
+      <span style="position: relative; flex: 1; display: flex; flex-direction: column; gap: 4px"><span class="h4" style="color: var(--surface)">Garage Atlas Auto</span><span style="display: flex; gap: 6px; align-items: center"><span role="img" aria-label="Rated 4.9 out of 5" style="display: flex; gap: 2px"><sc-for list="{{five}}" as="f" hint-placeholder-count="5"><x-import component-from-global-scope="AutoSouk.Icon" name="star" size="{{s14}}" color="saffron" fill="saffron"></x-import></sc-for></span><span class="label-s" style="color: var(--surface)">4.9</span><span class="body-xs" style="color: var(--subtle)">(128)</span></span></span>
+      <span class="h4" style="position: relative; color: var(--surface)">350</span>
+    </a>
+    <sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+      <a href="M-MechanicProfile.dc.html" style="display: flex; gap: 12px; align-items: center; padding: 12px 4px; border-bottom: 1px solid var(--line); text-decoration: none; color: inherit">
+        <span class="h4" style="width: 20px; color: var(--muted)">{{r.rank}}</span>
+        <x-import component-from-global-scope="AutoSouk.Avatar" initials="{{r.ini}}"></x-import>
+        <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span class="h5" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span><x-import component-from-global-scope="AutoSouk.Rating" score="{{r.score}}" count="{{r.count}}"></x-import></span>
+        <span class="label-m">{{r.price}}</span>
+      </a>
+    </sc-for>
+  </main>
+  <div style="position: absolute; left: 0; right: 0; bottom: 0">
+    <x-import component-from-global-scope="AutoSouk.TabBar" active="Explore"></x-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      s14: 14, s18: 18, five: [1, 2, 3, 4, 5],
+      rows: [
+        { rank: 2, ini: 'DP', name: 'Diagnostic Pro Ain Sebaâ', score: '4.8', count: '(96)', price: 300 },
+        { rank: 3, ini: 'CB', name: 'Clinique Auto Bourgogne', score: '4.7', count: '(71)', price: 400 },
+        { rank: 4, ini: 'SC', name: 'Speedy Check Anfa', score: '4.6', count: '(54)', price: 280 },
+        { rank: 5, ini: 'AH', name: 'Atelier Hamza Méca', score: '4.6', count: '(38)', price: 250 },
+        { rank: 6, ini: 'GP', name: 'Garage du Phare', score: '4.5', count: '(61)', price: 320 }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

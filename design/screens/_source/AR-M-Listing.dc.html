@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk · الإعلان</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div dir="rtl" lang="ar" style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--paper); color: var(--ink); font-family: var(--font-sans); display: flex; flex-direction: column">
+  <div style="position: relative; flex: none">
+    <x-import component-from-global-scope="AutoSouk.CarPhoto" tone="night" width="{{w390}}" height="{{h260}}" radius="{{r0}}" alt="Volkswagen Golf 8"></x-import>
+    <div style="position: absolute; top: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between">
+      <a href="AR-Main.dc.html" aria-label="رجوع" style="width: 40px; height: 40px; border-radius: 999px; background: var(--surface); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="arrow-left" size="{{s18}}"></x-import></a>
+      <div style="display: flex; gap: 8px">
+        <button type="button" aria-label="مشاركة" style="width: 40px; height: 40px; border: 0; border-radius: 999px; background: var(--surface); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="share" size="{{s18}}"></x-import></button>
+        <button type="button" aria-label="محفوظة" style="width: 40px; height: 40px; border: 0; border-radius: 999px; background: var(--surface); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="heart" size="{{s18}}" color="danger" fill="danger"></x-import></button>
+      </div>
+    </div>
+    <span class="label-s" style="position: absolute; inset-inline-end: 20px; bottom: 16px; padding: 4px 10px; border-radius: 999px; background: rgba(20,19,15,0.85); color: var(--surface)"><bdi dir="ltr">1 / 12</bdi></span>
+  </div>
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 18px 20px 110px; overflow: hidden">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <div style="display: flex; gap: 6px">
+        <x-import component-from-global-scope="AutoSouk.Badge" tone="success">مفحوصة · 92</x-import>
+        <x-import component-from-global-scope="AutoSouk.Badge" tone="neutral" dot="{{no}}">المالك الأول</x-import>
+      </div>
+      <h1 class="h2"><bdi>Volkswagen Golf 8 Life 2.0 TDI</bdi></h1>
+      <span style="display: flex; gap: 6px; align-items: center"><x-import component-from-global-scope="AutoSouk.Icon" name="map-pin" size="{{s14}}" color="muted"></x-import><span class="body-s" style="color: var(--muted)">الدار البيضاء · المعاريف · منذ 6 أيام</span></span>
+    </div>
+    <div style="display: flex; gap: 6px; align-items: baseline"><bdi dir="ltr" class="price-l">265 000</bdi><span class="mono-m" style="color: var(--muted)">درهم</span></div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 14px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+      <x-import component-from-global-scope="AutoSouk.SpecItem" label="السنة" value="2020" icon="calendar"></x-import>
+      <x-import component-from-global-scope="AutoSouk.SpecItem" label="الكيلومترات" value="54 000 كم" icon="gauge"></x-import>
+      <x-import component-from-global-scope="AutoSouk.SpecItem" label="الوقود" value="ديزل" icon="fuel"></x-import>
+      <x-import component-from-global-scope="AutoSouk.SpecItem" label="ناقل الحركة" value="أوتوماتيكي" icon="gearbox"></x-import>
+    </div>
+    <section style="display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border-radius: 20px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+      <div style="display: flex; justify-content: space-between; align-items: center"><span class="h5">الوصف</span><x-import component-from-global-scope="AutoSouk.Badge" tone="neutral" dot="{{no}}">كما كتبه البائع</x-import></div>
+      <p lang="fr" dir="ltr" class="body-s" style="color: var(--ink-2); text-align: left">Golf 8 achetée neuve chez le concessionnaire officiel à Casablanca, entretien complet chez VW. Jamais accidentée…</p>
+    </section>
+    <a href="AR-M-Report.dc.html" style="display: flex; gap: 14px; align-items: center; padding: 14px 16px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); text-decoration: none; color: inherit">
+      <x-import component-from-global-scope="AutoSouk.ScoreRing" score="{{s92}}" verdict="excellent" size="{{s56}}"></x-import>
+      <span style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+        <span class="overline" style="color: var(--muted)">تقرير الفحص</span>
+        <span class="h5">حالة ممتازة</span>
+        <span class="body-xs" style="color: var(--success)">الكيلومترات: متسق · الفحص التقني ساري</span>
+      </span>
+      <x-import component-from-global-scope="AutoSouk.Icon" name="chevron-right" size="{{s18}}" color="muted"></x-import>
+    </a>
+  </main>
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: 10px; align-items: center; padding: 14px 20px 30px; background: var(--surface); border-top: 1px solid var(--line)">
+    <button type="button" aria-label="اتصل بالبائع" style="width: 52px; height: 52px; border: 0; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="phone" size="{{s20}}"></x-import></button>
+    <a href="RequestInspection.dc.html" class="label-l" style="flex: 1; height: 56px; border-radius: 999px; background: var(--brand); color: var(--on-brand); text-decoration: none; display: flex; gap: 10px; align-items: center; justify-content: center; box-shadow: var(--elevation-brand)"><x-import component-from-global-scope="AutoSouk.Icon" name="shield" size="{{s20}}" color="on-brand"></x-import>اطلب فحصًا</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { no: false, s14: 14, s18: 18, s20: 20, s56: 56, s92: 92, w390: 390, h260: 260, r0: 0 };
+  }
+}
+</script>
+</body>
+</html>

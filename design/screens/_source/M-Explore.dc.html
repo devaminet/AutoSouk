@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk mobile · Explore</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--paper); color: var(--ink); font-family: var(--font-sans); display: flex; flex-direction: column">
+  <div style="padding-top: 12px"><x-import component-from-global-scope="AutoSouk.MobileHeader"></x-import></div>
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 20px; padding: 8px 20px 120px; overflow: hidden">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <span class="body-s" style="color: var(--muted)">Salam Amine 👋</span>
+      <h1 class="h1">Find a car you can trust.</h1>
+    </div>
+    <label style="display: flex; gap: 10px; align-items: center; height: 52px; padding: 0 6px 0 18px; border-radius: 999px; background: var(--surface); box-shadow: var(--elevation-1)">
+      <x-import component-from-global-scope="AutoSouk.Icon" name="search" size="{{s20}}" color="muted"></x-import>
+      <span class="body-m" style="flex: 1; color: var(--subtle)">Make, model or city</span>
+      <a href="M-Filters.dc.html" aria-label="Filters" style="width: 40px; height: 40px; border-radius: 999px; background: var(--ink); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="sliders" size="{{s18}}" color="surface"></x-import></a>
+    </label>
+    <div style="display: flex; gap: 8px; margin-right: -20px; overflow: hidden">
+      <x-import component-from-global-scope="AutoSouk.Chip" selected="{{yes}}" icon="shield">Inspected</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip" icon="map-pin">Casablanca</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip">Automatic</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip">Diesel</x-import>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: flex-end">
+      <h2 class="h3">Recently listed</h2>
+      <a href="M-Listing.dc.html" class="label-m" style="color: var(--brand); text-decoration: none">See all</a>
+    </div>
+    <a href="M-Listing.dc.html" style="display: block; text-decoration: none; color: inherit">
+      <x-import component-from-global-scope="AutoSouk.ListingCard" fluid="{{yes}}" title="Volkswagen Golf 8 Life 2.0 TDI" meta="2020 · 54 000 km · Diesel · Auto" price="265 000" city="Rabat" tone="night" inspected-score="{{s92}}" photos="{{n12}}"></x-import>
+    </a>
+    <x-import component-from-global-scope="AutoSouk.ListingCard" fluid="{{yes}}" title="Dacia Duster 1.5 dCi Prestige" meta="2021 · 68 000 km · Diesel · Manual" price="185 000" city="Casablanca" tone="sand" favorite="{{yes}}" photos="{{n9}}"></x-import>
+  </main>
+  <div style="position: absolute; left: 0; right: 0; bottom: 0">
+    <x-import component-from-global-scope="AutoSouk.TabBar" active="Explore"></x-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { yes: true, s18: 18, s20: 20, s92: 92, n12: 12, n9: 9 };
+  }
+}
+</script>
+</body>
+</html>

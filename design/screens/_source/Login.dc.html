@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk · Log in</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+</style>
+</helmet>
+<div style="position: relative; overflow: hidden; width: 100%; min-height: 100vh; background: var(--paper); color: var(--ink); font-family: var(--font-sans); display: flex; flex-direction: column">
+  <div aria-hidden="true" style="position: absolute; right: -80px; top: 60px; pointer-events: none; opacity: 0.45"><x-import component-from-global-scope="AutoSouk.ZelligePattern" width="{{p680}}" height="{{p840}}"></x-import></div>
+  <header style="position: relative; display: flex; justify-content: space-between; align-items: center; padding: 24px clamp(20px, 4vw, 48px)">
+    <x-import component-from-global-scope="AutoSouk.Logo"></x-import>
+    <span style="display: flex; gap: 8px; align-items: center"><span class="body-s" style="color: var(--muted)">New to AutoSouk?</span><a href="SignUp.dc.html" class="label-s" style="display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 999px; background: var(--surface); color: var(--ink); text-decoration: none; box-shadow: inset 0 0 0 1px var(--line-strong)">Create account</a></span>
+  </header>
+  <main style="position: relative; flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px 20px 64px">
+    <form style="width: 100%; max-width: 480px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px; padding: clamp(24px, 4vw, 40px); border-radius: 28px; background: var(--surface); box-shadow: var(--elevation-2)">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <h1 class="h1">Welcome back</h1>
+        <p class="body-m" style="color: var(--muted)">Log in to manage listings, favorites and inspections.</p>
+      </div>
+      <x-import component-from-global-scope="AutoSouk.Input" label="Email" value="amine@autosouk.ma" icon="mail"></x-import>
+      <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end">
+        <x-import component-from-global-scope="AutoSouk.Input" label="Password" value="••••••••••" icon="lock" state="focus" style="align-self: stretch"></x-import>
+        <a href="ForgotPassword.dc.html" class="label-s">Forgot password?</a>
+      </div>
+      <a href="Main.dc.html" class="label-l" style="display: flex; align-items: center; justify-content: center; height: 56px; border-radius: 999px; background: var(--brand); color: var(--on-brand); text-decoration: none; box-shadow: var(--elevation-brand)">Log in</a>
+      <div style="display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 12px; background: var(--warning-soft)">
+        <x-import component-from-global-scope="AutoSouk.Icon" name="info" size="{{s18}}" color="warning"></x-import>
+        <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span class="label-s">Email not verified yet?</span><span class="body-xs" style="color: var(--ink-2)">We'll send a fresh verification link to your inbox.</span></span>
+        <a href="Verify.dc.html" class="label-s" style="color: var(--warning)">Resend</a>
+      </div>
+    </form>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { s18: 18, p680: 680, p840: 840 };
+  }
+}
+</script>
+</body>
+</html>

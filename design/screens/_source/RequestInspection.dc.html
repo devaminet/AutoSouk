@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk · Request an inspection</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 1440px; height: 900px; overflow: hidden; background: var(--paper); color: var(--ink); font-family: var(--font-sans)">
+  <x-import component-from-global-scope="AutoSouk.NavDesktop" active="Explore cars"></x-import>
+  <div aria-hidden="true" style="padding: 28px 80px; opacity: 0.6"><x-import component-from-global-scope="AutoSouk.CarPhoto" tone="night" width="{{w860}}" height="{{h500}}" radius="{{r28}}"></x-import></div>
+  <div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(15,14,28,0.45)"></div>
+  <section role="dialog" aria-label="Request an inspection" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 640px; display: flex; flex-direction: column; border-radius: 28px; overflow: hidden; background: var(--surface); box-shadow: 0 30px 80px -20px rgba(0,0,0,0.4)">
+    <header style="display: flex; justify-content: space-between; align-items: center; padding: 24px 28px; border-bottom: 1px solid var(--line)">
+      <div style="display: flex; flex-direction: column; gap: 2px"><span class="overline" style="color: var(--brand)">Inspection request</span><h2 class="h3">Request an inspection</h2></div>
+      <a href="Listing.dc.html" aria-label="Close" style="width: 40px; height: 40px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="x" size="{{s18}}"></x-import></a>
+    </header>
+    <div style="display: flex; flex-direction: column; gap: 20px; padding: 24px 28px">
+      <div style="display: flex; gap: 14px; align-items: center; padding: 12px; border-radius: 18px; background: var(--paper)">
+        <x-import component-from-global-scope="AutoSouk.CarPhoto" tone="night" width="{{w96}}" height="{{h72}}" radius="{{r12}}"></x-import>
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span class="h5">Volkswagen Golf 8 Life 2.0 TDI</span><span class="body-s" style="color: var(--muted)">2020 · 54 000 km · Casablanca</span></div>
+        <span style="display: flex; gap: 4px; align-items: baseline"><span class="h4">265 000</span><span class="mono-s" style="color: var(--muted)">MAD</span></span>
+      </div>
+      <fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+        <legend style="display: flex; justify-content: space-between; width: 100%; padding: 0 0 10px"><span class="label-m">Choose a garage in Casablanca</span></legend>
+        <sc-for list="{{garages}}" as="g" hint-placeholder-count="3">
+          <label onClick="{{g.pick}}" style="display: flex; gap: 14px; align-items: center; padding: 14px; border-radius: 16px; background: {{g.bg}}; box-shadow: {{g.ring}}; cursor: pointer">
+            <x-import component-from-global-scope="AutoSouk.Radio" checked="{{g.on}}"></x-import>
+            <x-import component-from-global-scope="AutoSouk.Avatar" initials="{{g.ini}}"></x-import>
+            <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span class="h5">{{g.name}}</span><span class="body-xs" style="color: var(--muted)">{{g.area}}</span><x-import component-from-global-scope="AutoSouk.Rating" score="{{g.score}}" count="{{g.count}}"></x-import></span>
+            <span style="display: flex; flex-direction: column; align-items: flex-end"><span class="h4">{{g.price}} MAD</span><span class="body-xs" style="color: var(--muted)">paid at the garage</span></span>
+          </label>
+        </sc-for>
+      </fieldset>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px">
+        <sc-for list="{{incl}}" as="i" hint-placeholder-count="6"><x-import component-from-global-scope="AutoSouk.Badge" tone="neutral" dot="{{no}}">{{i}}</x-import></sc-for>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--info-soft)">
+        <x-import component-from-global-scope="AutoSouk.Icon" name="info" size="{{s18}}" color="info"></x-import>
+        <span class="body-s" style="color: var(--ink-2)">The seller is notified. A car can only have one active inspection at a time.</span>
+      </div>
+    </div>
+    <footer style="display: flex; justify-content: space-between; align-items: center; padding: 20px 28px; border-top: 1px solid var(--line); background: var(--surface-2)">
+      <div style="display: flex; flex-direction: column"><span class="body-xs" style="color: var(--muted)">Total due at the garage</span><span style="display: flex; gap: 4px; align-items: baseline"><span class="price-m">{{total}}</span><span class="mono-s" style="color: var(--muted)">MAD</span></span></div>
+      <a href="MyInspections.dc.html" class="label-l" style="display: inline-flex; gap: 10px; align-items: center; height: 56px; padding: 0 24px; border-radius: 999px; background: var(--brand); color: var(--on-brand); text-decoration: none; box-shadow: var(--elevation-brand)">Send request <x-import component-from-global-scope="AutoSouk.Icon" name="arrow-right" size="{{s20}}" color="on-brand"></x-import></a>
+    </footer>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { picked: 'GA' }; }
+  renderVals() {
+    const list = [
+      { ini: 'GA', name: 'Garage Atlas Auto', area: 'Maârif, Casablanca', score: '4.9', count: '(128)', price: 350 },
+      { ini: 'DP', name: 'Diagnostic Pro Ain Sebaâ', area: 'Ain Sebaâ, Casablanca', score: '4.8', count: '(96)', price: 300 },
+      { ini: 'SC', name: 'Speedy Check Anfa', area: 'Anfa, Casablanca', score: '4.6', count: '(54)', price: 280 }
+    ];
+    const p = this.state.picked;
+    return {
+      no: false, s18: 18, s20: 20, w860: 860, h500: 500, r28: 28, w96: 96, h72: 72, r12: 12,
+      total: list.find((g) => g.ini === p).price,
+      garages: list.map((g) => ({ ...g, on: g.ini === p, bg: g.ini === p ? 'var(--brand-soft)' : 'var(--surface)', ring: g.ini === p ? 'inset 0 0 0 2px var(--brand)' : 'inset 0 0 0 1px var(--line)', pick: () => this.setState({ picked: g.ini }) })),
+      incl: ['Identity: matricule · VIN · carte grise', 'Mileage consistency', 'CT & vignette', '6-section checklist', 'Road test', 'Signed PDF']
+    };
+  }
+}
+</script>
+</body>
+</html>

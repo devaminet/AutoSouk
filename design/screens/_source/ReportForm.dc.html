@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk · Inspection report form</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; background: var(--paper); color: var(--ink); font-family: var(--font-sans); overflow-x: hidden">
+  <div style="overflow-x: auto">
+    <x-import component-from-global-scope="AutoSouk.NavDesktop" active="Inspections" role="Mechanic" initials="HM"></x-import>
+  </div>
+  <main style="max-width: 1280px; margin: 0 auto; padding: 40px 24px 96px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px">
+      <div style="display: flex; gap: 14px; align-items: center">
+        <x-import component-from-global-scope="AutoSouk.CarPhoto" tone="olive" width="{{w88}}" height="{{h64}}" radius="{{r12}}"></x-import>
+        <div style="display: flex; flex-direction: column; gap: 2px"><span class="overline" style="color: var(--muted)">Inspection #2041 · in progress</span><h1 class="h2">Toyota Corolla Hybrid · 2021</h1></div>
+      </div>
+      <div style="display: flex; gap: 10px">
+        <x-import component-from-global-scope="AutoSouk.Button" variant="ghost">Save draft</x-import>
+        <x-import component-from-global-scope="AutoSouk.Button" icon="check">Submit report</x-import>
+      </div>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start">
+      <form style="flex: 999 1 600px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+        <section style="display: flex; flex-direction: column; gap: 20px; padding: 28px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+          <div style="display: flex; gap: 10px; align-items: center"><x-import component-from-global-scope="AutoSouk.Icon" name="hash" size="{{s20}}" color="brand"></x-import><h2 class="h3">Vehicle identity</h2><span class="body-xs" style="color: var(--muted)">Verified on site</span></div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px">
+            <x-import component-from-global-scope="AutoSouk.Input" label="Matricule" value="45821-B-1" mono="{{yes}}"></x-import>
+            <x-import component-from-global-scope="AutoSouk.Input" label="VIN" value="JTDKB3FU503012345" mono="{{yes}}" icon="check" helper="17 characters · no I, O or Q"></x-import>
+            <x-import component-from-global-scope="AutoSouk.Input" label="Carte grise n°" value="CG-2021-778301" mono="{{yes}}"></x-import>
+            <x-import component-from-global-scope="AutoSouk.Input" label="Mileage (dashboard)" value="72 410" suffix="km" icon="gauge"></x-import>
+            <x-import component-from-global-scope="AutoSouk.Input" label="First registration" value="14 / 03 / 2021" icon="calendar"></x-import>
+            <x-import component-from-global-scope="AutoSouk.Input" label="Inspected at" value="13 Oct 2026 · 11:20" icon="clock"></x-import>
+          </div>
+          <fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+            <legend class="label-m" style="padding: 0 0 10px">Mileage consistency</legend>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px">
+              <label style="display: flex; gap: 10px; align-items: center; padding: 14px; border-radius: 14px; background: var(--success-soft); box-shadow: inset 0 0 0 2px var(--success)"><x-import component-from-global-scope="AutoSouk.Icon" name="check-circle" size="{{s18}}" color="success"></x-import><span class="label-m">Consistent</span></label>
+              <label style="display: flex; gap: 10px; align-items: center; padding: 14px; border-radius: 14px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)"><x-import component-from-global-scope="AutoSouk.Icon" name="alert-triangle" size="{{s18}}" color="warning"></x-import><span class="label-m">Suspicious</span></label>
+              <label style="display: flex; gap: 10px; align-items: center; padding: 14px; border-radius: 14px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)"><x-import component-from-global-scope="AutoSouk.Icon" name="info" size="{{s18}}" color="muted"></x-import><span class="label-m">Unverifiable</span></label>
+            </div>
+            <x-import component-from-global-scope="AutoSouk.Input" value="Matches Toyota service book (70 950 km on 02/09/2026)"></x-import>
+          </fieldset>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px">
+            <label style="display: flex; gap: 12px; align-items: center; padding: 14px 16px; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line)"><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span class="label-m">Contrôle technique valid</span><span class="body-xs" style="color: var(--muted)">Expires 03 / 2027</span></span><x-import component-from-global-scope="AutoSouk.Toggle" on="{{yes}}"></x-import></label>
+            <label style="display: flex; gap: 12px; align-items: center; padding: 14px 16px; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line)"><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span class="label-m">Vignette 2026 paid</span><span class="body-xs" style="color: var(--muted)">Receipt checked</span></span><x-import component-from-global-scope="AutoSouk.Toggle" on="{{yes}}"></x-import></label>
+          </div>
+        </section>
+
+        <section style="display: flex; flex-direction: column; gap: 16px; padding: 28px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+          <div style="display: flex; justify-content: space-between; align-items: center"><h2 class="h3">Checklist</h2><span class="mono-s" style="color: var(--muted)">18 / 42 items</span></div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <x-import component-from-global-scope="AutoSouk.Chip" icon="check-circle">Exterior</x-import>
+            <x-import component-from-global-scope="AutoSouk.Chip" icon="check-circle">Interior</x-import>
+            <x-import component-from-global-scope="AutoSouk.Chip" selected="{{yes}}">Mechanical</x-import>
+            <x-import component-from-global-scope="AutoSouk.Chip">Electrical</x-import>
+            <x-import component-from-global-scope="AutoSouk.Chip">Under vehicle</x-import>
+            <x-import component-from-global-scope="AutoSouk.Chip">Road test</x-import>
+          </div>
+          <sc-for list="{{items}}" as="it" hint-placeholder-count="5">
+            <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line)">
+              <span class="label-m" style="flex: 1 1 180px">{{it.label}}</span>
+              <x-import component-from-global-scope="AutoSouk.Input" value="{{it.note}}" placeholder="Add a note (optional)" style="flex: 1 1 240px"></x-import>
+              <div role="radiogroup" aria-label="{{it.label}} status" style="display: flex; padding: 3px; border-radius: 999px; background: var(--paper); box-shadow: inset 0 0 0 1px var(--line)">
+                <sc-for list="{{it.opts}}" as="o" hint-placeholder-count="3">
+                  <button type="button" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" class="label-s" style="border: 0; padding: 6px 12px; border-radius: 999px; cursor: pointer; background: {{o.bg}}; color: {{o.c}}; box-shadow: {{o.ring}}">{{o.t}}</button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+          <div style="display: flex; gap: 8px">
+            <x-import component-from-global-scope="AutoSouk.Button" variant="secondary" size="S" icon="plus">Add item</x-import>
+            <x-import component-from-global-scope="AutoSouk.Button" variant="ghost" size="S" icon="camera">Attach photos</x-import>
+          </div>
+        </section>
+
+        <section style="display: flex; flex-direction: column; gap: 16px; padding: 28px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+          <h2 class="h3">Verdict and summary</h2>
+          <div role="group" aria-label="Verdict" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px">
+            <button type="button" aria-pressed="false" class="label-m" style="padding: 14px; border: 0; border-radius: 14px; background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line)">Excellent</button>
+            <button type="button" aria-pressed="true" class="label-m" style="padding: 14px; border: 0; border-radius: 14px; background: var(--brand-soft); color: var(--brand); box-shadow: inset 0 0 0 2px var(--brand)">Good</button>
+            <button type="button" aria-pressed="false" class="label-m" style="padding: 14px; border: 0; border-radius: 14px; background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line)">Fair</button>
+            <button type="button" aria-pressed="false" class="label-m" style="padding: 14px; border: 0; border-radius: 14px; background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line)">Poor</button>
+          </div>
+          <x-import component-from-global-scope="AutoSouk.Input" label="Summary" value="Well-maintained hybrid with consistent mileage and a healthy battery. Budget for front brake pads and a rear silencer soon." multiline="{{yes}}" rows="{{r3}}"></x-import>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px">
+            <x-import component-from-global-scope="AutoSouk.Input" label="Estimated repair cost" value="3 800" suffix="MAD"></x-import>
+            <x-import component-from-global-scope="AutoSouk.Input" label="Overall score" value="81" suffix="/ 100" state="focus"></x-import>
+          </div>
+        </section>
+      </form>
+
+      <aside style="flex: 1 1 300px; max-width: 340px; display: flex; flex-direction: column; gap: 16px; position: sticky; top: 24px">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 28px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+          <x-import component-from-global-scope="AutoSouk.ScoreRing" score="{{s81}}" verdict="good" size="{{s150}}"></x-import>
+          <h2 class="h3">Good condition</h2>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center">
+            <x-import component-from-global-scope="AutoSouk.Badge" tone="success" dot="{{no}}">31 pass</x-import>
+            <x-import component-from-global-scope="AutoSouk.Badge" tone="warning" dot="{{no}}">3 attention</x-import>
+            <x-import component-from-global-scope="AutoSouk.Badge" tone="danger" dot="{{no}}">1 fail</x-import>
+          </div>
+        </div>
+        <ul style="list-style: none; margin: 0; display: flex; flex-direction: column; gap: 12px; padding: 20px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+          <sc-for list="{{steps}}" as="s" hint-placeholder-count="5">
+            <li style="display: flex; gap: 10px; align-items: center"><x-import component-from-global-scope="AutoSouk.Icon" name="{{s.icon}}" size="{{s18}}" color="{{s.c}}"></x-import><span class="body-s" style="color: {{s.tc}}">{{s.t}}</span></li>
+          </sc-for>
+        </ul>
+        <x-import component-from-global-scope="AutoSouk.Button" size="L" icon="file" block="{{yes}}">Submit and generate PDF</x-import>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2000}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { status: { oil: 'Pass', battery: 'Pass', brakes: 'Attention', belt: 'Pass', exhaust: 'Fail' } }; }
+  renderVals() {
+    const tone = { Pass: 'success', Attention: 'warning', Fail: 'danger' };
+    const st = this.state.status;
+    const item = (key, label, note) => ({ label, note, opts: ['Pass', 'Attention', 'Fail'].map((t) => {
+      const on = st[key] === t;
+      return { t, on: on ? 'true' : 'false', bg: on ? 'var(--' + tone[t] + '-soft)' : 'transparent', c: on ? 'var(--' + tone[t] + ')' : 'var(--muted)', ring: on ? 'inset 0 0 0 1px var(--' + tone[t] + ')' : 'none', pick: () => this.setState({ status: { ...st, [key]: t } }) };
+    }) });
+    const step = (t, done) => ({ t, icon: done ? 'check-circle' : 'clock', c: done ? 'success' : 'subtle', tc: done ? 'var(--ink)' : 'var(--muted)' });
+    return {
+      yes: true, no: false, s18: 18, s20: 20, s81: 81, s150: 150, w88: 88, h64: 64, r12: 12, r3: 3,
+      items: [item('oil', 'Engine oil and leaks', 'Clean, level OK'), item('battery', 'Hybrid battery health', '94% state of health (OBD)'), item('brakes', 'Brake pads and discs', 'Front pads at 30% — replace within 5 000 km'), item('belt', 'Accessory belt', ''), item('exhaust', 'Exhaust and catalytic converter', 'Rear silencer corroded, small leak')],
+      steps: [step('Identity verified', true), step('Mileage assessed', true), step('CT and vignette', true), step('Checklist complete', false), step('Summary written', true)]
+    };
+  }
+}
+</script>
+</body>
+</html>

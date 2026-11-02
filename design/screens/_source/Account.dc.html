@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk · Account settings</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; background: var(--paper); color: var(--ink); font-family: var(--font-sans); overflow-x: hidden">
+  <div style="overflow-x: auto">
+    <x-import component-from-global-scope="AutoSouk.NavDesktop" active=""></x-import>
+  </div>
+  <main style="max-width: 1200px; margin: 0 auto; padding: 48px 24px 96px; display: flex; flex-direction: column; gap: 32px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <span class="overline" style="color: var(--muted)">Account</span>
+      <h1 class="display-m">Settings</h1>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 48px; align-items: flex-start">
+      <nav aria-label="Settings" style="flex: 1 1 220px; max-width: 240px; display: flex; flex-direction: column; gap: 4px">
+        <sc-for list="{{menu}}" as="m" hint-placeholder-count="5">
+          <a href="#" style="display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 12px; background: {{m.bg}}; box-shadow: {{m.sh}}; text-decoration: none; color: {{m.c}}">
+            <x-import component-from-global-scope="AutoSouk.Icon" name="{{m.icon}}" size="{{s18}}" color="{{m.ic}}"></x-import>
+            <span class="label-m">{{m.t}}</span>
+          </a>
+        </sc-for>
+      </nav>
+      <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+        <section style="display: flex; flex-direction: column; gap: 24px; padding: 32px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+          <div style="display: flex; flex-direction: column; gap: 4px"><h2 class="h3">Profile photo</h2><p class="body-s" style="color: var(--muted)">Shown on your listings, reviews and inspection requests.</p></div>
+          <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: center">
+            <x-import component-from-global-scope="AutoSouk.Avatar" initials="AT" size="XL"></x-import>
+            <div style="flex: 1 1 280px; display: flex; flex-direction: column; gap: 10px">
+              <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+                <span class="h3">Amine Takha</span>
+                <x-import component-from-global-scope="AutoSouk.Badge" tone="brand">Buyer</x-import>
+                <x-import component-from-global-scope="AutoSouk.Badge" tone="success">Email verified</x-import>
+              </div>
+              <span class="body-s" style="color: var(--muted)">Member since May 2025 · Casablanca</span>
+              <div style="display: flex; gap: 8px">
+                <x-import component-from-global-scope="AutoSouk.Button" variant="dark" size="S" icon="camera">Change photo</x-import>
+                <x-import component-from-global-scope="AutoSouk.Button" variant="ghost" size="S">Remove</x-import>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 14px; align-items: center; padding: 14px; border-radius: 14px; background: var(--paper)">
+            <span style="width: 44px; height: 44px; border-radius: 10px; background: var(--brand-soft); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="image" size="{{s20}}" color="brand"></x-import></span>
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 6px">
+              <div style="display: flex; justify-content: space-between"><span class="label-m">portrait-2026.webp</span><span class="mono-s" style="color: var(--muted)">Uploading · 64%</span></div>
+              <div role="progressbar" aria-valuenow="64" aria-valuemin="0" aria-valuemax="100" style="height: 6px; border-radius: 999px; background: var(--line)"><div style="width: 64%; height: 6px; border-radius: 999px; background: var(--brand)"></div></div>
+            </div>
+            <button type="button" aria-label="Cancel upload" style="width: 32px; height: 32px; border: 0; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="x" size="{{s14}}"></x-import></button>
+          </div>
+        </section>
+
+        <section style="display: flex; flex-direction: column; gap: 20px; padding: 32px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+          <h2 class="h3">Personal information</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px">
+            <x-import component-from-global-scope="AutoSouk.Input" label="First name" value="Amine"></x-import>
+            <x-import component-from-global-scope="AutoSouk.Input" label="Last name" value="Takha"></x-import>
+            <x-import component-from-global-scope="AutoSouk.Input" label="Email" value="amine@autosouk.ma" icon="mail" helper="Verified · changing it requires re-verification"></x-import>
+            <x-import component-from-global-scope="AutoSouk.Input" label="Phone" value="+212 6 12 34 56 78" icon="phone"></x-import>
+            <x-import component-from-global-scope="AutoSouk.Input" label="City" value="Casablanca" icon="map-pin" select="{{yes}}"></x-import>
+          </div>
+          <div style="display: flex; gap: 12px; justify-content: flex-end">
+            <x-import component-from-global-scope="AutoSouk.Button" variant="ghost">Cancel</x-import>
+            <x-import component-from-global-scope="AutoSouk.Button">Save changes</x-import>
+          </div>
+        </section>
+
+        <section aria-labelledby="lang-title" style="display: flex; flex-direction: column; gap: 20px; padding: 32px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+          <div style="display: flex; flex-direction: column; gap: 4px"><h2 id="lang-title" class="h3">Language</h2><p class="body-s" style="color: var(--muted)">The language of AutoSouk on this device. Labels, errors and messages from the server follow it too.</p></div>
+          <div style="max-width: 480px"><x-import component-from-global-scope="AutoSouk.LanguageSwitch" variant="segmented" active="en"></x-import></div>
+          <div style="display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; border-radius: 14px; background: var(--paper)">
+            <x-import component-from-global-scope="AutoSouk.Icon" name="mail" size="{{s20}}" color="ink-2"></x-import>
+            <div style="display: flex; flex-direction: column; gap: 2px">
+              <span class="label-m">Emails and inspection reports: Français</span>
+              <span class="body-s" style="color: var(--muted)">Saved when you created your account. Verification and password emails and the inspection report PDF always use it, whatever language you browse in.</span>
+            </div>
+          </div>
+        </section>
+
+        <section style="display: flex; flex-direction: column; gap: 20px; padding: 32px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+          <div style="display: flex; flex-direction: column; gap: 4px"><h2 class="h3">Change password</h2><p class="body-s" style="color: var(--muted)">Use at least 8 characters with upper and lower case, a number and a symbol.</p></div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px">
+            <x-import component-from-global-scope="AutoSouk.Input" label="Current password" value="••••••••" icon="lock"></x-import>
+            <x-import component-from-global-scope="AutoSouk.Input" label="New password" value="••••••••••••" icon="lock" state="focus"></x-import>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center">
+            <a href="ForgotPassword.dc.html" class="label-s">Forgot your current password? Reset it by email</a>
+            <x-import component-from-global-scope="AutoSouk.Button" variant="dark">Update password</x-import>
+          </div>
+        </section>
+
+        <section style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center; padding: 24px 32px; border-radius: 24px; background: var(--danger-soft)">
+          <x-import component-from-global-scope="AutoSouk.Icon" name="logout" size="{{s22}}" color="danger"></x-import>
+          <div style="flex: 1 1 240px; display: flex; flex-direction: column; gap: 2px"><h2 class="h5">Log out of this device</h2><p class="body-s" style="color: var(--ink-2)">Your session ends immediately on this device.</p></div>
+          <x-import component-from-global-scope="AutoSouk.Button" variant="danger">Log out</x-import>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const item = (icon, t, on, danger) => ({ icon, t, bg: on ? 'var(--surface)' : 'transparent', sh: on ? 'var(--elevation-1)' : 'none', c: danger ? 'var(--danger)' : on ? 'var(--ink)' : 'var(--ink-2)', ic: danger ? 'danger' : on ? 'brand' : 'muted' });
+    return {
+      yes: true, s14: 14, s18: 18, s20: 20, s22: 22,
+      menu: [item('user', 'Profile', true), item('lock', 'Security'), item('globe', 'Language'), item('bell', 'Notifications'), item('users', 'Roles & perspective'), item('logout', 'Log out', false, true)]
+    };
+  }
+}
+</script>
+</body>
+</html>

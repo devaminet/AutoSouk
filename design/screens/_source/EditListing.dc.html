@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk · Edit listing</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 1440px; height: 1300px; overflow: hidden; background: var(--paper); color: var(--ink); font-family: var(--font-sans)">
+  <x-import component-from-global-scope="AutoSouk.NavDesktop" active="Sell a car" role="Seller" initials="KE"></x-import>
+  <div style="padding: 48px 80px; opacity: 0.5"><h1 class="display-m">My listings</h1></div>
+  <div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(15,14,28,0.45)"></div>
+  <section role="dialog" aria-label="Edit listing" style="position: absolute; right: 0; top: 0; bottom: 0; width: 560px; display: flex; flex-direction: column; background: var(--surface)">
+    <header style="display: flex; justify-content: space-between; align-items: center; padding: 24px 28px; border-bottom: 1px solid var(--line)">
+      <div style="display: flex; flex-direction: column; gap: 2px"><span class="overline" style="color: var(--muted)">Edit listing</span><h2 class="h3">Volkswagen Golf 8 Life</h2></div>
+      <a href="MyListings.dc.html" aria-label="Close" style="width: 40px; height: 40px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="x" size="{{s18}}"></x-import></a>
+    </header>
+    <form style="flex: 1; display: flex; flex-direction: column; gap: 20px; padding: 28px; overflow: hidden">
+      <div style="display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--warning-soft)">
+        <x-import component-from-global-scope="AutoSouk.Icon" name="info" size="{{s18}}" color="warning"></x-import>
+        <span class="body-s" style="color: var(--ink-2)">Saving these details, equipment included, sends the listing back to review and hides it from search until it is approved again. Deleting photos or changing the cover doesn't.</span>
+      </div>
+      <x-import component-from-global-scope="AutoSouk.Input" label="Title" value="Volkswagen Golf 8 Life 2.0 TDI"></x-import>
+      <x-import component-from-global-scope="AutoSouk.Input" label="Description" value="Golf 8 bought new at the official dealer in Casablanca, full maintenance history at VW. Never accidented…" multiline="{{yes}}" rows="{{r3}}"></x-import>
+      <div style="display: flex; gap: 16px">
+        <x-import component-from-global-scope="AutoSouk.Input" label="Price" value="259 000" suffix="MAD" state="focus" style="flex: 1"></x-import>
+        <x-import component-from-global-scope="AutoSouk.Input" label="Mileage" value="54 300" suffix="km" style="flex: 1"></x-import>
+      </div>
+      <div style="display: flex; gap: 16px">
+        <x-import component-from-global-scope="AutoSouk.Input" label="City" value="Casablanca" icon="map-pin" select="{{yes}}" style="flex: 1"></x-import>
+        <x-import component-from-global-scope="AutoSouk.Input" label="Condition" value="Very good" select="{{yes}}" style="flex: 1"></x-import>
+      </div>
+      <div style="padding: 0 16px; border-radius: 16px; box-shadow: inset 0 0 0 1px var(--line)">
+        <x-import component-from-global-scope="AutoSouk.EquipmentGroup" title="Equipment" icon="check-circle" mode="select" items="{{eq}}" total="{{t72}}" max="{{m7}}" flush="{{yes}}"></x-import>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; justify-content: space-between; align-items: center"><span class="label-m">Photos &amp; videos</span><a href="ManageMedia.dc.html" class="label-s" style="color: var(--brand)">Manage all 10 →</a></div>
+        <x-import component-from-global-scope="AutoSouk.MediaLimits" images="{{n9}}" videos="{{n1}}" compact="{{yes}}"></x-import>
+        <div style="display: flex; gap: 10px">
+          <x-import component-from-global-scope="AutoSouk.UploadTile" state="cover" tone="night" actions="{{yes}}" width="{{w112}}" height="{{h84}}"></x-import>
+          <x-import component-from-global-scope="AutoSouk.UploadTile" state="filled" tone="sand" actions="{{yes}}" width="{{w112}}" height="{{h84}}"></x-import>
+          <x-import component-from-global-scope="AutoSouk.UploadTile" state="filled" tone="sky" actions="{{yes}}" width="{{w112}}" height="{{h84}}"></x-import>
+          <x-import component-from-global-scope="AutoSouk.UploadTile" state="empty" label="Add" width="{{w112}}" height="{{h84}}"></x-import>
+        </div>
+      </div>
+    </form>
+    <footer style="display: flex; justify-content: space-between; padding: 20px 28px; border-top: 1px solid var(--line)">
+      <x-import component-from-global-scope="AutoSouk.Button" variant="danger" icon="trash">Delete listing</x-import>
+      <div style="display: flex; gap: 10px">
+        <x-import component-from-global-scope="AutoSouk.Button" variant="ghost">Cancel</x-import>
+        <x-import component-from-global-scope="AutoSouk.Button">Save changes</x-import>
+      </div>
+    </footer>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const on = ['ABS', 'ESP', 'Adaptive cruise control', 'Lane keep assist', 'Rear parking sensors', 'Automatic climate control', 'Keyless entry', 'Apple CarPlay', 'Android Auto', 'Digital instrument cluster', 'LED headlights', 'Alloy wheels'];
+    const extra = 35;
+    return { yes: true, n1: 1, n9: 9, s18: 18, r3: 3, w112: 112, h84: 84, t72: 72, m7: 7,
+      eq: on.map((name) => ({ name, selected: true })).concat(Array.from({ length: extra }, (_, i) => ({ name: 'item ' + i, selected: true }))) };
+  }
+}
+</script>
+</body>
+</html>

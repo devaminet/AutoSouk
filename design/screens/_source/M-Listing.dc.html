@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk mobile · Listing</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--paper); color: var(--ink); font-family: var(--font-sans); display: flex; flex-direction: column">
+  <div style="position: relative; flex: none">
+    <x-import component-from-global-scope="AutoSouk.CarPhoto" tone="night" width="{{w390}}" height="{{h300}}" radius="{{r0}}" alt="Volkswagen Golf 8"></x-import>
+    <div style="position: absolute; top: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between">
+      <a href="M-Explore.dc.html" aria-label="Back" style="width: 40px; height: 40px; border-radius: 999px; background: var(--surface); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="arrow-left" size="{{s18}}"></x-import></a>
+      <div style="display: flex; gap: 8px">
+        <button type="button" aria-label="Share" style="width: 40px; height: 40px; border: 0; border-radius: 999px; background: var(--surface); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="share" size="{{s18}}"></x-import></button>
+        <button type="button" aria-label="Saved" style="width: 40px; height: 40px; border: 0; border-radius: 999px; background: var(--surface); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="heart" size="{{s18}}" color="danger" fill="danger"></x-import></button>
+      </div>
+    </div>
+    <span class="label-s" style="position: absolute; right: 20px; bottom: 16px; padding: 4px 10px; border-radius: 999px; background: rgba(20,19,15,0.85); color: var(--surface)">1 / 12</span>
+  </div>
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 18px; padding: 20px 20px 110px; overflow: hidden">
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; gap: 6px">
+        <x-import component-from-global-scope="AutoSouk.Badge" tone="success">Inspected · 92</x-import>
+        <x-import component-from-global-scope="AutoSouk.Badge" tone="neutral" dot="{{no}}">1st owner</x-import>
+      </div>
+      <h1 class="h2">Volkswagen Golf 8 Life 2.0 TDI</h1>
+      <span style="display: flex; gap: 6px; align-items: center"><x-import component-from-global-scope="AutoSouk.Icon" name="map-pin" size="{{s14}}" color="muted"></x-import><span class="body-s" style="color: var(--muted)">Casablanca · Maârif · 6 days ago</span></span>
+    </div>
+    <div style="display: flex; gap: 6px; align-items: baseline"><span class="price-l">265 000</span><span class="mono-m" style="color: var(--muted)">MAD</span></div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 16px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+      <x-import component-from-global-scope="AutoSouk.SpecItem" label="Year" value="2020" icon="calendar"></x-import>
+      <x-import component-from-global-scope="AutoSouk.SpecItem" label="Mileage" value="54 000 km" icon="gauge"></x-import>
+      <x-import component-from-global-scope="AutoSouk.SpecItem" label="Fuel" value="Diesel" icon="fuel"></x-import>
+      <x-import component-from-global-scope="AutoSouk.SpecItem" label="Gearbox" value="Automatic" icon="gearbox"></x-import>
+    </div>
+    <button type="button" style="display: flex; gap: 12px; align-items: center; padding: 14px 16px; border: 0; border-radius: 20px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); text-align: left; font: inherit; color: inherit; cursor: pointer">
+      <x-import component-from-global-scope="AutoSouk.Icon" name="check-circle" size="{{s20}}" color="success"></x-import>
+      <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span class="h5">Equipment · 47 items</span><span class="body-xs" style="color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Apple CarPlay · Adaptive cruise control · LED headlights</span></span>
+      <x-import component-from-global-scope="AutoSouk.Icon" name="chevron-right" size="{{s18}}" color="muted"></x-import>
+    </button>
+    <a href="M-Report.dc.html" style="display: flex; gap: 14px; align-items: center; padding: 16px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); text-decoration: none; color: inherit">
+      <x-import component-from-global-scope="AutoSouk.ScoreRing" score="{{s92}}" verdict="excellent" size="{{s64}}"></x-import>
+      <span style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+        <span class="overline" style="color: var(--muted)">Inspection report</span>
+        <span class="h5">Excellent condition</span>
+        <span class="body-xs" style="color: var(--success)">Mileage consistent · CT valid</span>
+      </span>
+      <x-import component-from-global-scope="AutoSouk.Icon" name="chevron-right" size="{{s18}}" color="muted"></x-import>
+    </a>
+  </main>
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: 10px; align-items: center; padding: 14px 20px 30px; background: var(--surface); border-top: 1px solid var(--line)">
+    <button type="button" aria-label="Call seller" style="width: 52px; height: 52px; border: 0; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="phone" size="{{s20}}"></x-import></button>
+    <a href="RequestInspection.dc.html" class="label-l" style="flex: 1; height: 56px; border-radius: 999px; background: var(--brand); color: var(--on-brand); text-decoration: none; display: flex; gap: 10px; align-items: center; justify-content: center; box-shadow: var(--elevation-brand)"><x-import component-from-global-scope="AutoSouk.Icon" name="shield" size="{{s20}}" color="on-brand"></x-import>Request inspection</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { no: false, s14: 14, s18: 18, s20: 20, s64: 64, s92: 92, w390: 390, h300: 300, r0: 0 };
+  }
+}
+</script>
+</body>
+</html>

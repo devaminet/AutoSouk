@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk mobile · Link expired</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--brand)}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--paper); color: var(--ink); font-family: var(--font-sans); display: flex; flex-direction: column">
+  <header style="display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 0">
+    <x-import component-from-global-scope="AutoSouk.Logo" size="{{s28}}"></x-import>
+    <x-import component-from-global-scope="AutoSouk.LanguageSwitch" active="en"></x-import>
+  </header>
+  <main style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 22px; padding: 72px 24px 40px; text-align: center">
+    <span style="width: 104px; height: 104px; border-radius: 999px; background: var(--warning-soft); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="clock" size="{{s48}}" color="warning"></x-import></span>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <h1 class="h1">This link has expired</h1>
+      <p class="body-m" style="color: var(--muted)">Verification links work once and expire after a while. Enter your email and we'll send you a new one.</p>
+    </div>
+    <form style="width: 100%; display: flex; flex-direction: column; gap: 14px; text-align: start">
+      <x-import component-from-global-scope="AutoSouk.Input" label="Email" value="amine@autosouk.ma" icon="mail"></x-import>
+      <x-import component-from-global-scope="AutoSouk.Button" size="L" icon="mail" block="{{yes}}">Send a new link</x-import>
+    </form>
+    <span class="body-s" style="color: var(--muted)">Already verified? <a href="M-Login.dc.html" class="label-m">Log in</a></span>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { yes: true, s28: 28, s48: 48 };
+  }
+}
+</script>
+</body>
+</html>

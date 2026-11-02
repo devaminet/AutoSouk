@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk mobile · Log in</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--brand)}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--paper); color: var(--ink); font-family: var(--font-sans)">
+  <form style="display: flex; flex-direction: column; gap: 24px; padding: 24px 20px 32px">
+    <div style="position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 12px; padding: 24px; border-radius: 28px; background: var(--night)">
+      <div aria-hidden="true" style="position: absolute; left: 0; top: 0; pointer-events: none"><x-import component-from-global-scope="AutoSouk.ZelligePattern" width="{{p400}}" height="{{p500}}"></x-import></div>
+      <div style="position: relative"><x-import component-from-global-scope="AutoSouk.Logo" tone="dark"></x-import></div>
+      <p class="display-m" style="position: relative; color: var(--surface)">Inspected cars.<br>Honest prices.</p>
+    </div>
+    <h1 class="h1">Welcome back</h1>
+    <x-import component-from-global-scope="AutoSouk.Input" label="Email" value="amine@autosouk.ma" icon="mail"></x-import>
+    <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end">
+      <x-import component-from-global-scope="AutoSouk.Input" label="Password" value="••••••••••" icon="lock" state="focus" style="align-self: stretch"></x-import>
+      <a href="ForgotPassword.dc.html" class="label-s">Forgot password?</a>
+    </div>
+    <a href="M-Explore.dc.html" class="label-l" style="display: flex; align-items: center; justify-content: center; height: 56px; border-radius: 999px; background: var(--brand); color: var(--on-brand); text-decoration: none; box-shadow: var(--elevation-brand)">Log in</a>
+    <p class="body-s" style="color: var(--muted); text-align: center">New here? <a href="M-SignUp.dc.html" class="label-m">Create an account</a></p>
+  </form>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { p400: 400, p500: 500 };
+  }
+}
+</script>
+</body>
+</html>

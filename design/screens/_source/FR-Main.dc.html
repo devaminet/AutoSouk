@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk · Explorer</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+</style>
+</helmet>
+<div lang="fr" style="width: 100%; min-height: 100vh; background: var(--paper); color: var(--ink); font-family: var(--font-sans); overflow-x: hidden">
+  <div style="position: relative; z-index: 5">
+    <x-import component-from-global-scope="AutoSouk.NavDesktop" active="Explore cars" role="Buyer" lang="fr" lang-open="{{yes}}"></x-import>
+  </div>
+
+  <section style="padding: 24px 24px 0">
+    <div style="position: relative; overflow: hidden; border-radius: 36px; background: var(--night); padding: clamp(32px, 5vw, 64px); display: flex; flex-direction: column; gap: 24px">
+      <div aria-hidden="true" style="position: absolute; left: 0; top: 0; pointer-events: none">
+        <x-import component-from-global-scope="AutoSouk.ZelligePattern" width="{{patW}}" height="{{patH}}"></x-import>
+      </div>
+      <x-import component-from-global-scope="AutoSouk.Badge" tone="saffron">12 480 voitures · 340 garages vérifiés</x-import>
+      <h1 class="display-l" style="position: relative; color: var(--surface); max-width: 760px">Trouvez une voiture digne de <span style="color: var(--saffron)">confiance.</span></h1>
+      <p class="body-l" style="position: relative; color: var(--subtle); max-width: 620px">Parcourez les annonces partout au Maroc et réservez une inspection indépendante chez un mécanicien noté, dans la ville de la voiture.</p>
+      <form role="search" style="position: relative; max-width: 860px; display: flex; flex-wrap: wrap; align-items: center; background: var(--surface); border-radius: 32px; padding: 8px 8px 8px 24px; box-shadow: var(--elevation-2)">
+        <label style="flex: 1 1 120px; display: flex; flex-direction: column; gap: 2px; padding: 6px 16px 6px 0"><span class="overline" style="color: var(--muted)">Marque</span><span class="label-m">Volkswagen</span></label>
+        <label style="flex: 1 1 120px; display: flex; flex-direction: column; gap: 2px; padding: 6px 16px; border-left: 1px solid var(--line)"><span class="overline" style="color: var(--muted)">Modèle</span><span class="label-m" style="color: var(--muted)">Tous les modèles</span></label>
+        <label style="flex: 1 1 120px; display: flex; flex-direction: column; gap: 2px; padding: 6px 16px; border-left: 1px solid var(--line)"><span class="overline" style="color: var(--muted)">Ville</span><span class="label-m">Casablanca</span></label>
+        <label style="flex: 1 1 120px; display: flex; flex-direction: column; gap: 2px; padding: 6px 16px; border-left: 1px solid var(--line)"><span class="overline" style="color: var(--muted)">Prix max</span><span class="label-m">300 000 MAD</span></label>
+        <button type="submit" aria-label="Rechercher" style="width: 56px; height: 56px; border: 0; border-radius: 999px; background: var(--brand); display: flex; align-items: center; justify-content: center; box-shadow: var(--elevation-brand); cursor: pointer"><x-import component-from-global-scope="AutoSouk.Icon" name="search" size="{{s22}}" color="on-brand"></x-import></button>
+      </form>
+    </div>
+  </section>
+
+  <section style="max-width: 1280px; margin: 0 auto; padding: 48px 24px 96px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span class="overline" style="color: var(--brand)">Nouveautés à Casablanca</span>
+        <h2 class="h1">Annonces récentes</h2>
+      </div>
+      <button type="button" style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-strong); cursor: pointer">
+        <span class="body-s" style="color: var(--muted)">Trier</span><span class="label-m">Plus récentes</span><x-import component-from-global-scope="AutoSouk.Icon" name="chevron-down" size="{{s16}}"></x-import>
+      </button>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 28px 24px">
+      <sc-for list="{{cars}}" as="c" hint-placeholder-count="4">
+        <x-import component-from-global-scope="AutoSouk.ListingCard" lang="fr" fluid="{{yes}}" title="{{c.title}}" meta="{{c.meta}}" price="{{c.price}}" city="{{c.city}}" tone="{{c.tone}}" inspected-score="{{c.score}}" favorite="{{c.fav}}" photos="{{c.photos}}"></x-import>
+      </sc-for>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1250}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const car = (title, meta, price, city, tone, score, fav, photos) => ({ title, meta, price, city, tone, score, fav, photos });
+    return {
+      yes: true, s16: 16, s22: 22, patW: 1440, patH: 640,
+      cars: [
+        car('Dacia Duster 1.5 dCi Prestige', '2021 · 68 000 km · Diesel · Manuelle', '185 000', 'Casablanca', 'sand', 92, false, 9),
+        car('Volkswagen Golf 8 Life', '2020 · 54 000 km · Diesel · Automatique', '265 000', 'Rabat', 'night', 92, true, 12),
+        car('Peugeot 3008 GT Line', '2019 · 98 000 km · Diesel · Automatique', '238 000', 'Marrakech', 'clay', null, false, 7),
+        car('Renault Clio 5 Intens', '2022 · 31 000 km · Essence · Manuelle', '159 000', 'Tanger', 'sky', 95, false, 10)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

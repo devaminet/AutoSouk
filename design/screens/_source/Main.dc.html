@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk · Explore</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; background: var(--paper); color: var(--ink); font-family: var(--font-sans); overflow-x: hidden">
+  <div style="overflow-x: auto">
+    <x-import component-from-global-scope="AutoSouk.NavDesktop" active="Explore cars" role="Buyer"></x-import>
+  </div>
+
+  <section style="padding: 24px 24px 0">
+    <div style="position: relative; overflow: hidden; border-radius: 36px; background: var(--night); padding: clamp(32px, 5vw, 72px); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: 48px; align-items: center">
+      <div aria-hidden="true" style="position: absolute; left: 0; top: 0; pointer-events: none">
+        <x-import component-from-global-scope="AutoSouk.ZelligePattern" width="{{patW}}" height="{{patH}}"></x-import>
+      </div>
+      <div style="position: relative; display: flex; flex-direction: column; gap: 28px">
+        <x-import component-from-global-scope="AutoSouk.Badge" tone="saffron">12 480 cars · 340 verified garages</x-import>
+        <h1 class="display-xl" style="color: var(--surface)">Find a car<br>you can <span style="color: var(--saffron)">trust.</span></h1>
+        <p class="body-l" style="color: var(--subtle); max-width: 520px">Browse listings across Morocco and book an independent inspection with a top-rated mechanic in the car's city — in two taps.</p>
+        <form style="display: flex; flex-wrap: wrap; align-items: center; gap: 0; background: var(--surface); border-radius: 32px; padding: 8px 8px 8px 24px; box-shadow: var(--elevation-2)" role="search">
+          <label style="flex: 1 1 120px; display: flex; flex-direction: column; gap: 2px; padding: 6px 16px 6px 0">
+            <span class="overline" style="color: var(--muted)">Make</span>
+            <span class="label-m">Volkswagen</span>
+          </label>
+          <label style="flex: 1 1 120px; display: flex; flex-direction: column; gap: 2px; padding: 6px 16px; border-left: 1px solid var(--line)">
+            <span class="overline" style="color: var(--muted)">Model</span>
+            <span class="label-m" style="color: var(--subtle)">Any model</span>
+          </label>
+          <label style="flex: 1 1 120px; display: flex; flex-direction: column; gap: 2px; padding: 6px 16px; border-left: 1px solid var(--line)">
+            <span class="overline" style="color: var(--muted)">City</span>
+            <span class="label-m">Casablanca</span>
+          </label>
+          <label style="flex: 1 1 120px; display: flex; flex-direction: column; gap: 2px; padding: 6px 16px; border-left: 1px solid var(--line)">
+            <span class="overline" style="color: var(--muted)">Max price</span>
+            <span class="label-m">300 000 MAD</span>
+          </label>
+          <button type="submit" aria-label="Search" style="width: 56px; height: 56px; border: 0; border-radius: 999px; background: var(--brand); display: flex; align-items: center; justify-content: center; box-shadow: var(--elevation-brand); cursor: pointer">
+            <x-import component-from-global-scope="AutoSouk.Icon" name="search" size="{{s22}}" color="on-brand"></x-import>
+          </button>
+        </form>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+          <span class="body-s" style="color: var(--subtle)">Popular:</span>
+          <sc-for list="{{popular}}" as="p" hint-placeholder-count="5">
+            <a href="Search.dc.html" class="label-s" style="color: var(--surface); text-decoration: none; padding: 6px 12px; border-radius: 999px; background: var(--night-2); box-shadow: inset 0 0 0 1px var(--brand-ink)">{{p}}</a>
+          </sc-for>
+        </div>
+      </div>
+      <div style="position: relative; padding: 40px 0 48px 40px">
+        <div style="border-radius: 28px; box-shadow: var(--elevation-2)">
+          <x-import component-from-global-scope="AutoSouk.CarPhoto" tone="majorelle" fluid="{{yes}}" radius="{{r28}}" alt="Volkswagen Golf 8 studio shot"></x-import>
+        </div>
+        <div style="position: absolute; left: 0; bottom: 0; display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: 20px; background: var(--surface); box-shadow: var(--elevation-2)">
+          <x-import component-from-global-scope="AutoSouk.ScoreRing" score="{{s92}}" verdict="excellent" size="{{s60}}"></x-import>
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <span class="overline" style="color: var(--muted)">Inspection report</span>
+            <span class="h5">Excellent condition</span>
+            <span class="body-xs" style="color: var(--success)">Mileage consistent · CT valid</span>
+          </div>
+        </div>
+        <div style="position: absolute; right: 16px; top: 8px; display: flex; align-items: center; gap: 10px; padding: 8px 16px 8px 8px; border-radius: 999px; background: var(--surface); box-shadow: var(--elevation-2)">
+          <x-import component-from-global-scope="AutoSouk.Avatar" initials="HM" size="S"></x-import>
+          <div style="display: flex; flex-direction: column">
+            <span class="label-s">Hamid · Garage Atlas</span>
+            <x-import component-from-global-scope="AutoSouk.Rating" score="4.9" count="(128)"></x-import>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width: 1280px; margin: 0 auto; padding: 56px 24px 0; display: flex; flex-direction: column; gap: 28px">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span class="overline" style="color: var(--brand)">Fresh in Casablanca</span>
+        <h2 class="h1">Recently listed cars</h2>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center">
+        <x-import component-from-global-scope="AutoSouk.Chip" icon="sliders">Newest</x-import>
+        <x-import component-from-global-scope="AutoSouk.Button" variant="secondary" icon-right="arrow-right">View all 1 248</x-import>
+      </div>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px">
+      <x-import component-from-global-scope="AutoSouk.Chip">All cars</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip" selected="{{yes}}" icon="shield">Inspected only</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip">Under 150 000 MAD</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip">Automatic</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip">Diesel</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip">Hybrid</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip">Electric</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip">2020 &amp; newer</x-import>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 28px 24px">
+      <sc-for list="{{cars}}" as="c" hint-placeholder-count="8">
+        <a href="Listing.dc.html" style="text-decoration: none; color: inherit; display: block">
+          <x-import component-from-global-scope="AutoSouk.ListingCard" fluid="{{yes}}" title="{{c.title}}" meta="{{c.meta}}" price="{{c.price}}" city="{{c.city}}" tone="{{c.tone}}" inspected-score="{{c.score}}" favorite="{{c.fav}}" photos="{{c.photos}}"></x-import>
+        </a>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="max-width: 1280px; margin: 0 auto; padding: 96px 24px 0; display: flex; flex-direction: column; gap: 40px">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 24px">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <span class="overline" style="color: var(--brand)">How AutoSouk works</span>
+        <h2 class="display-m">From listing to keys,<br>with proof at every step.</h2>
+      </div>
+      <p class="body-l" style="color: var(--muted); max-width: 440px">Sellers list, buyers request an inspection, an independent garage in the same city delivers a signed PDF report. Everyone sees the same facts.</p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px">
+      <div style="display: flex; flex-direction: column; gap: 40px; padding: 32px; border-radius: 28px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <span style="width: 52px; height: 52px; border-radius: 16px; background: var(--ink); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="search" size="{{s24}}" color="surface"></x-import></span>
+          <span class="display-m" style="color: var(--line-strong)">01</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <h3 class="h2">Find the car</h3>
+          <p class="body-m" style="color: var(--ink-2)">Filter by make, model, city and price. Save favorites to compare later.</p>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 40px; padding: 32px; border-radius: 28px; background: var(--brand-soft)">
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <span style="width: 52px; height: 52px; border-radius: 16px; background: var(--ink); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="wrench" size="{{s24}}" color="surface"></x-import></span>
+          <span class="display-m" style="color: var(--line-strong)">02</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <h3 class="h2">Request an inspection</h3>
+          <p class="body-m" style="color: var(--ink-2)">Pick a verified garage near the car. The price is fixed upfront — no surprises.</p>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 40px; padding: 32px; border-radius: 28px; background: var(--saffron-soft)">
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <span style="width: 52px; height: 52px; border-radius: 16px; background: var(--ink); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="file" size="{{s24}}" color="surface"></x-import></span>
+          <span class="display-m" style="color: var(--line-strong)">03</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <h3 class="h2">Read the report</h3>
+          <p class="body-m" style="color: var(--ink-2)">Matricule, VIN, mileage consistency, CT, vignette and a 0–100 score.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width: 1280px; margin: 0 auto; padding: 96px 24px 0; display: flex; flex-direction: column; gap: 32px">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span class="overline" style="color: var(--brand)">Ranked by buyers</span>
+        <h2 class="h1">Top garages in Casablanca</h2>
+      </div>
+      <a href="Mechanics.dc.html" class="label-m" style="display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: 999px; background: var(--surface); color: var(--ink); text-decoration: none; box-shadow: inset 0 0 0 1px var(--line-strong)">See rankings</a>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: stretch">
+      <div style="flex: 1 1 340px; max-width: 420px; display: flex; flex-direction: column; gap: 16px">
+        <x-import component-from-global-scope="AutoSouk.MechanicCard" width="100%" name="Garage Atlas Auto" address="Maârif, Casablanca" rating="4.9" reviews="{{n128}}" price="350" initials="GA" description="Independent workshop, 15 years on German &amp; French brands. Full 120-point pre-purchase check with diagnostics."></x-import>
+        <x-import component-from-global-scope="AutoSouk.MechanicCard" width="100%" name="Diagnostic Pro Ain Sebaâ" address="Ain Sebaâ, Casablanca" rating="4.8" reviews="{{n96}}" price="300" initials="DP" description="OBD specialists for Dacia, Renault and Peugeot. Report delivered the same day."></x-import>
+        <x-import component-from-global-scope="AutoSouk.MechanicCard" width="100%" name="Clinique Auto Bourgogne" address="Bourgogne, Casablanca" rating="4.7" reviews="{{n71}}" price="400" initials="CB" description="Lift, paint gauge and road test included. Premium and German brands."></x-import>
+      </div>
+      <div style="flex: 999 1 460px; min-width: 0; min-height: 420px; border-radius: 28px; overflow: hidden">
+        <x-import component-from-global-scope="AutoSouk.MapView" height="{{mapH}}" radius="{{r28}}"></x-import>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width: 1280px; margin: 0 auto; padding: 96px 24px">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 40px; padding: clamp(32px, 4vw, 56px) clamp(24px, 5vw, 64px); border-radius: 36px; background: var(--saffron)">
+      <div style="flex: 1 1 420px; display: flex; flex-direction: column; gap: 12px">
+        <span class="overline" style="color: var(--ink-2)">For sellers</span>
+        <h2 class="display-m">Inspected listings sell 2× faster.</h2>
+        <p class="body-l" style="color: var(--ink-2)">List your car in under 5 minutes. Buyers can book an inspection directly — you just hand over the keys.</p>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px">
+        <a href="Sell-CarDetails.dc.html" class="label-l" style="display: inline-flex; align-items: center; height: 56px; padding: 0 24px; border-radius: 999px; background: var(--ink); color: var(--surface); text-decoration: none">List your car</a>
+        <x-import component-from-global-scope="AutoSouk.Button" variant="secondary" size="L">How pricing works</x-import>
+      </div>
+    </div>
+  </section>
+
+  <x-import component-from-global-scope="AutoSouk.Footer"></x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":3700}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      yes: true, s22: 22, s24: 24, s60: 60, s92: 92, r28: 28, patW: 1440, patH: 900, mapH: 520, n128: 128, n96: 96, n71: 71,
+      popular: ['Dacia', 'Renault', 'Peugeot', 'Volkswagen', 'Toyota'],
+      cars: [
+        { title: 'Dacia Duster 1.5 dCi Prestige', meta: '2021 · 68 000 km · Diesel · Manual', price: '185 000', city: 'Casablanca', tone: 'sand', score: 92, fav: false, photos: 9 },
+        { title: 'Volkswagen Golf 8 Life', meta: '2020 · 54 000 km · Diesel · Automatic', price: '265 000', city: 'Rabat', tone: 'night', score: 92, fav: true, photos: 12 },
+        { title: 'Peugeot 3008 GT Line', meta: '2019 · 98 000 km · Diesel · Automatic', price: '238 000', city: 'Marrakech', tone: 'clay', score: null, fav: false, photos: 7 },
+        { title: 'Renault Clio 5 Intens', meta: '2022 · 31 000 km · Petrol · Manual', price: '159 000', city: 'Tanger', tone: 'sky', score: 95, fav: false, photos: 10 },
+        { title: 'Toyota Corolla Hybrid', meta: '2021 · 72 000 km · Hybrid · Automatic', price: '245 000', city: 'Casablanca', tone: 'olive', score: 88, fav: true, photos: 8 },
+        { title: 'Hyundai Tucson Executive', meta: '2020 · 88 000 km · Diesel · Automatic', price: '279 000', city: 'Fès', tone: 'majorelle', score: null, fav: false, photos: 14 },
+        { title: 'Mercedes C 220d AMG Line', meta: '2018 · 126 000 km · Diesel · Automatic', price: '335 000', city: 'Casablanca', tone: 'night', score: 83, fav: false, photos: 16 },
+        { title: 'Fiat 500 Dolcevita', meta: '2022 · 18 000 km · Petrol · Manual', price: '139 000', city: 'Agadir', tone: 'saffron', score: null, fav: true, photos: 6 }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

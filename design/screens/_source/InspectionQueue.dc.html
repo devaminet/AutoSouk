@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk · Inspection queue</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; background: var(--paper); color: var(--ink); font-family: var(--font-sans); overflow-x: hidden">
+  <div style="overflow-x: auto">
+    <x-import component-from-global-scope="AutoSouk.NavDesktop" active="Inspections" role="Mechanic" initials="HM"></x-import>
+  </div>
+  <main style="max-width: 1344px; margin: 0 auto; padding: 40px 24px 80px; display: flex; flex-direction: column; gap: 28px">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px"><span class="overline" style="color: var(--brand)">Garage Atlas Auto</span><h1 class="display-m">Inspection queue</h1></div>
+      <div style="display: flex; gap: 10px; align-items: center">
+        <x-import component-from-global-scope="AutoSouk.Badge" tone="success">Accepting requests</x-import>
+        <a href="Workshop.dc.html" class="label-m" style="display: inline-flex; gap: 8px; align-items: center; height: 44px; padding: 0 18px; border-radius: 999px; background: var(--surface); color: var(--ink); text-decoration: none; box-shadow: inset 0 0 0 1px var(--line-strong)"><x-import component-from-global-scope="AutoSouk.Icon" name="wrench" size="{{s18}}"></x-import>Workshop profile</a>
+      </div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px">
+      <x-import component-from-global-scope="AutoSouk.StatCard" label="New requests" value="2" trend="Reply within 2 h to rank higher" icon="inbox" tone="warning"></x-import>
+      <x-import component-from-global-scope="AutoSouk.StatCard" label="This week" value="11" trend="+3 vs last week" icon="calendar"></x-import>
+      <x-import component-from-global-scope="AutoSouk.StatCard" label="Average rating" value="4.9" trend="128 reviews" icon="star"></x-import>
+      <x-import component-from-global-scope="AutoSouk.StatCard" label="Inspections (Oct)" value="18" trend="6 300 MAD at list price" icon="award"></x-import>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; align-items: start">
+      <sc-for list="{{cols}}" as="col" hint-placeholder-count="4">
+        <section style="display: flex; flex-direction: column; gap: 12px; padding: 14px; border-radius: 24px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line)">
+          <header style="display: flex; justify-content: space-between; align-items: center; padding: 4px 4px 8px">
+            <span style="display: flex; gap: 8px; align-items: center"><span style="width: 8px; height: 8px; border-radius: 50%; background: {{col.dot}}"></span><h2 class="h5">{{col.title}}</h2></span>
+            <span class="mono-s" style="padding: 0 6px; border-radius: 999px; background: var(--line); color: var(--ink-2)">{{col.n}}</span>
+          </header>
+          <sc-for list="{{col.cards}}" as="c" hint-placeholder-count="1">
+            <article style="display: flex; flex-direction: column; gap: 12px; padding: 12px; border-radius: 20px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+              <x-import component-from-global-scope="AutoSouk.CarPhoto" tone="{{c.tone}}" fluid="{{yes}}" ratio="16 / 7" radius="{{r14}}"></x-import>
+              <div style="display: flex; flex-direction: column; gap: 4px"><h3 class="h5">{{c.car}}</h3><span class="body-xs" style="color: var(--muted)">{{c.who}}</span></div>
+              <sc-if value="{{c.extra}}" hint-placeholder-val="{{no}}"><span style="display: flex; gap: 6px; align-items: center"><x-import component-from-global-scope="AutoSouk.Icon" name="phone" size="{{s14}}" color="muted"></x-import><span class="body-xs" style="color: var(--muted)">{{c.extra}}</span></span></sc-if>
+              <sc-if value="{{c.progress}}" hint-placeholder-val="{{no}}">
+                <div style="display: flex; flex-direction: column; gap: 6px">
+                  <span style="display: flex; justify-content: space-between"><span class="body-xs" style="color: var(--muted)">Checklist</span><span class="mono-s">18 / 42</span></span>
+                  <span role="progressbar" aria-valuenow="43" aria-valuemin="0" aria-valuemax="100" style="height: 6px; border-radius: 3px; background: var(--line)"><span style="display: block; width: 43%; height: 6px; border-radius: 3px; background: var(--info)"></span></span>
+                </div>
+              </sc-if>
+              <div style="display: flex; justify-content: space-between; align-items: center"><span class="label-m">350 MAD</span><span class="body-xs" style="color: var(--muted)">{{c.when}}</span></div>
+              <div style="display: flex; gap: 8px">
+                <sc-for list="{{c.actions}}" as="a" hint-placeholder-count="1">
+                  <x-import component-from-global-scope="AutoSouk.Button" variant="{{a.v}}" size="S" icon="{{a.i}}" block="{{yes}}" style="flex: 1">{{a.t}}</x-import>
+                </sc-for>
+              </div>
+            </article>
+          </sc-for>
+        </section>
+      </sc-for>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const acceptReject = [{ t: 'Accept', v: 'success', i: 'check' }, { t: 'Reject', v: 'secondary', i: 'x' }];
+    const card = (car, who, tone, when, actions, more) => ({ car, who, tone, when, actions, extra: null, progress: false, ...(more || {}) });
+    return {
+      yes: true, no: false, s14: 14, s18: 18, r14: 14,
+      cols: [
+        { title: 'New requests', n: 2, dot: 'var(--warning)', cards: [card('Fiat 500 Dolcevita', 'Amine T. · 2 h ago', 'saffron', 'Today', acceptReject), card('Renault Clio 5 Intens', 'Nadia R. · 35 min ago', 'sky', 'Today', acceptReject)] },
+        { title: 'Accepted', n: 1, dot: 'var(--brand)', cards: [card('Dacia Duster Prestige', 'Omar L. · seller Karim E.', 'sand', 'Tomorrow 10:00', [{ t: 'Start inspection', v: 'dark', i: 'play' }], { extra: 'Seller: 06 70 11 22 33' })] },
+        { title: 'In progress', n: 1, dot: 'var(--info)', cards: [card('Toyota Corolla Hybrid', 'Amine T.', 'olive', 'Started 10:15', [{ t: 'Complete report', v: 'primary', i: 'file' }], { progress: true })] },
+        { title: 'Completed', n: 8, dot: 'var(--success)', cards: [card('Volkswagen Golf 8 Life', 'Amine T. · score 92 · Excellent', 'night', 'Today 18:40', [{ t: 'Open PDF', v: 'secondary', i: 'download' }])] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

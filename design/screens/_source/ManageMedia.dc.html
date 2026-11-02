@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk · Photos &amp; videos</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; background: var(--paper); color: var(--ink); font-family: var(--font-sans); overflow-x: hidden">
+  <div style="overflow-x: auto">
+    <x-import component-from-global-scope="AutoSouk.NavDesktop" active="Sell a car" role="Seller" initials="KE"></x-import>
+  </div>
+  <main style="max-width: 1280px; margin: 0 auto; padding: 40px 24px 140px; display: flex; flex-direction: column; gap: 28px">
+    <nav aria-label="Breadcrumb" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+      <a href="MyListings.dc.html" class="label-m" style="display: flex; gap: 8px; align-items: center; color: var(--ink); text-decoration: none"><x-import component-from-global-scope="AutoSouk.Icon" name="arrow-left" size="{{s16}}"></x-import>My listings</a>
+      <span style="color: var(--subtle)">/</span><span class="label-m" style="color: var(--muted)">Volkswagen Golf 8 Life</span>
+    </nav>
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span class="overline" style="color: var(--brand)">Listing media</span>
+        <h1 class="display-m">Photos &amp; videos</h1>
+      </div>
+      <x-import component-from-global-scope="AutoSouk.Badge" tone="success">Approved · live</x-import>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start">
+      <section style="flex: 999 1 600px; min-width: 0; display: flex; flex-direction: column; gap: 24px; padding: clamp(20px, 3vw, 32px); border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+        <x-import component-from-global-scope="AutoSouk.MediaLimits" images="{{n9}}" videos="{{n1}}" pending="{{n3}}"></x-import>
+        <div role="status" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 14px 16px; border-radius: 16px; background: var(--warning-soft)">
+          <x-import component-from-global-scope="AutoSouk.Icon" name="info" size="{{s18}}" color="warning"></x-import>
+          <span class="body-s" style="flex: 1 1 280px; color: var(--ink-2)">New files stay hidden until you confirm them. Confirming sends the listing back to review, usually under 24 h. Deleting files or changing the cover keeps it live.</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px">
+          <sc-for list="{{tiles}}" as="t" hint-placeholder-count="14">
+            <x-import component-from-global-scope="AutoSouk.UploadTile" state="{{t.st}}" tone="{{t.tone}}" video="{{t.vid}}" duration="{{t.dur}}" progress="{{t.pr}}" actions="{{yes}}" fluid="{{yes}}" ratio="4 / 3"></x-import>
+          </sc-for>
+          <x-import component-from-global-scope="AutoSouk.UploadTile" state="empty" label="Add photos or videos" hint="7 files left · JPG, PNG, MP4" fluid="{{yes}}" ratio="4 / 3"></x-import>
+        </div>
+      </section>
+
+      <aside style="flex: 1 1 300px; max-width: 360px; display: flex; flex-direction: column; gap: 16px">
+        <span class="overline" style="color: var(--muted)">How it looks in search</span>
+        <x-import component-from-global-scope="AutoSouk.ListingCard" fluid="{{yes}}" title="Volkswagen Golf 8 Life 2.0 TDI" meta="2020 · 54 000 km · Diesel · Automatic" price="265 000" city="Casablanca" tone="night" inspected-score="{{s92}}" photos="{{n10}}"></x-import>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+          <span class="h5">Rules</span>
+          <sc-for list="{{rules}}" as="r" hint-placeholder-count="4">
+            <span style="display: flex; gap: 10px; align-items: flex-start"><x-import component-from-global-scope="AutoSouk.Icon" name="{{r.i}}" size="{{s16}}" color="brand"></x-import><span class="body-s" style="color: var(--ink-2)">{{r.t}}</span></span>
+          </sc-for>
+        </div>
+      </aside>
+    </div>
+  </main>
+  <div style="position: sticky; bottom: 0; background: var(--surface); border-top: 1px solid var(--line); box-shadow: var(--elevation-2)">
+    <div style="max-width: 1280px; margin: 0 auto; padding: 16px 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+      <span class="body-s" style="color: var(--ink-2)"><span class="label-m">1 file ready</span> · 1 uploading · 1 failed</span>
+      <div style="display: flex; gap: 10px">
+        <x-import component-from-global-scope="AutoSouk.Button" variant="ghost">Discard new files</x-import>
+        <x-import component-from-global-scope="AutoSouk.Button" icon="check">Confirm and send to review</x-import>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const t = (st, tone, vid, dur, pr) => ({ st, tone, vid: !!vid, dur: dur || '', pr: pr || 0 });
+    return {
+      yes: true, s16: 16, s18: 18, s92: 92, n3: 3, n9: 9, n10: 10,
+      tiles: [
+        t('cover', 'night'), t('filled', 'sand'), t('filled', 'sky'), t('filled', 'clay'), t('filled', 'olive', true, '0:42'),
+        t('filled', 'majorelle'), t('filled', 'saffron'), t('filled', 'sand'), t('filled', 'sky'), t('filled', 'clay'),
+        t('new', 'olive'), t('uploading', 'night', false, '', 64), t('failed', 'sand')
+      ],
+      rules: [
+        { i: 'image', t: 'Keep at least 3 photos. Add a replacement before deleting one.' },
+        { i: 'star', t: 'The cover is always a photo. If you delete it, your oldest photo becomes the cover.' },
+        { i: 'hash', t: 'Up to 20 files per car, videos included. Files still uploading count too.' },
+        { i: 'shield', t: 'Only confirmed files appear on the listing.' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

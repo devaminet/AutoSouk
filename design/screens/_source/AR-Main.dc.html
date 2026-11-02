@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk · استكشاف</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+</style>
+</helmet>
+<div dir="rtl" lang="ar" style="width: 100%; min-height: 100vh; background: var(--paper); color: var(--ink); font-family: var(--font-sans); overflow-x: hidden">
+  <div style="overflow-x: auto">
+    <x-import component-from-global-scope="AutoSouk.NavDesktop" active="Explore cars" role="Buyer" lang="ar"></x-import>
+  </div>
+
+  <section style="padding: 24px 24px 0">
+    <div style="position: relative; overflow: hidden; border-radius: 36px; background: var(--night); padding: clamp(32px, 5vw, 72px); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: 48px; align-items: center">
+      <div aria-hidden="true" style="position: absolute; inset-inline-start: 0; top: 0; pointer-events: none">
+        <x-import component-from-global-scope="AutoSouk.ZelligePattern" width="{{patW}}" height="{{patH}}" fade-x="15%" fade-y="20%"></x-import>
+      </div>
+      <div style="position: relative; display: flex; flex-direction: column; gap: 28px">
+        <x-import component-from-global-scope="AutoSouk.Badge" tone="saffron">12 480 سيارة · 340 ورشة موثّقة</x-import>
+        <h1 class="display-xl" style="color: var(--surface); line-height: 1.15">اعثر على سيارة<br>تستحق <span style="color: var(--saffron)">ثقتك.</span></h1>
+        <p class="body-l" style="color: var(--subtle); max-width: 520px">تصفّح الإعلانات في كل أنحاء المغرب، واحجز فحصًا مستقلًا لدى ميكانيكي موثوق في مدينة السيارة، بنقرتين فقط.</p>
+        <form role="search" style="display: flex; flex-wrap: wrap; align-items: center; background: var(--surface); border-radius: 32px; padding: 8px 24px 8px 8px; box-shadow: var(--elevation-2)">
+          <label style="flex: 1 1 120px; display: flex; flex-direction: column; gap: 2px; padding: 6px 0 6px 16px">
+            <span class="overline" style="color: var(--muted)">الماركة</span>
+            <span class="label-m">Volkswagen</span>
+          </label>
+          <label style="flex: 1 1 120px; display: flex; flex-direction: column; gap: 2px; padding: 6px 16px; border-inline-start: 1px solid var(--line)">
+            <span class="overline" style="color: var(--muted)">الطراز</span>
+            <span class="label-m" style="color: var(--muted)">كل الطرازات</span>
+          </label>
+          <label style="flex: 1 1 120px; display: flex; flex-direction: column; gap: 2px; padding: 6px 16px; border-inline-start: 1px solid var(--line)">
+            <span class="overline" style="color: var(--muted)">المدينة</span>
+            <span class="label-m">الدار البيضاء</span>
+          </label>
+          <label style="flex: 1 1 120px; display: flex; flex-direction: column; gap: 2px; padding: 6px 16px; border-inline-start: 1px solid var(--line)">
+            <span class="overline" style="color: var(--muted)">أقصى سعر</span>
+            <span class="label-m"><bdi dir="ltr">300 000</bdi> درهم</span>
+          </label>
+          <button type="submit" aria-label="بحث" style="width: 56px; height: 56px; border: 0; border-radius: 999px; background: var(--brand); display: flex; align-items: center; justify-content: center; box-shadow: var(--elevation-brand); cursor: pointer">
+            <x-import component-from-global-scope="AutoSouk.Icon" name="search" size="{{s22}}" color="on-brand"></x-import>
+          </button>
+        </form>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+          <span class="body-s" style="color: var(--subtle)">الأكثر بحثًا:</span>
+          <sc-for list="{{popular}}" as="p" hint-placeholder-count="5">
+            <a href="Search.dc.html" class="label-s" style="color: var(--surface); text-decoration: none; padding: 6px 12px; border-radius: 999px; background: var(--night-2); box-shadow: inset 0 0 0 1px var(--brand-ink)">{{p}}</a>
+          </sc-for>
+        </div>
+      </div>
+      <div style="position: relative; padding: 40px 40px 48px 0">
+        <div style="border-radius: 28px; box-shadow: var(--elevation-2)">
+          <x-import component-from-global-scope="AutoSouk.CarPhoto" tone="majorelle" fluid="{{yes}}" radius="{{r28}}" alt="صورة Volkswagen Golf 8"></x-import>
+        </div>
+        <div style="position: absolute; inset-inline-start: 0; bottom: 0; display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: 20px; background: var(--surface); box-shadow: var(--elevation-2)">
+          <x-import component-from-global-scope="AutoSouk.ScoreRing" score="{{s92}}" verdict="excellent" size="{{s60}}"></x-import>
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <span class="overline" style="color: var(--muted)">تقرير الفحص</span>
+            <span class="h5">حالة ممتازة</span>
+            <span class="body-xs" style="color: var(--success)">عدد الكيلومترات متسق · الفحص التقني ساري</span>
+          </div>
+        </div>
+        <div style="position: absolute; inset-inline-end: 16px; top: 8px; display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 16px; border-radius: 999px; background: var(--surface); box-shadow: var(--elevation-2)">
+          <x-import component-from-global-scope="AutoSouk.Avatar" initials="HM" size="S"></x-import>
+          <div style="display: flex; flex-direction: column">
+            <span class="label-s">حميد · Garage Atlas</span>
+            <x-import component-from-global-scope="AutoSouk.Rating" score="4.9" count="(128)"></x-import>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width: 1280px; margin: 0 auto; padding: 56px 24px 0; display: flex; flex-direction: column; gap: 28px">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span class="overline" style="color: var(--brand)">جديد في الدار البيضاء</span>
+        <h2 class="h1">سيارات أُضيفت مؤخرًا</h2>
+      </div>
+      <x-import component-from-global-scope="AutoSouk.Button" variant="secondary" icon-right="arrow-right">عرض الكل</x-import>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px">
+      <x-import component-from-global-scope="AutoSouk.Chip">كل السيارات</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip" selected="{{yes}}" icon="shield">المفحوصة فقط</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip">أقل من 150 000 درهم</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip">أوتوماتيكي</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip">ديزل</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip">هجين</x-import>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 28px 24px">
+      <sc-for list="{{cars}}" as="c" hint-placeholder-count="8">
+        <a href="AR-M-Listing.dc.html" style="text-decoration: none; color: inherit; display: block">
+          <x-import component-from-global-scope="AutoSouk.ListingCard" lang="ar" fluid="{{yes}}" title="{{c.title}}" meta="{{c.meta}}" price="{{c.price}}" city="{{c.city}}" tone="{{c.tone}}" inspected-score="{{c.score}}" favorite="{{c.fav}}" photos="{{c.photos}}"></x-import>
+        </a>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="max-width: 1280px; margin: 0 auto; padding: 96px 24px">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 40px; padding: clamp(32px, 4vw, 56px) clamp(24px, 5vw, 64px); border-radius: 36px; background: var(--saffron)">
+      <div style="flex: 1 1 420px; display: flex; flex-direction: column; gap: 12px">
+        <span class="overline" style="color: var(--ink-2)">للبائعين</span>
+        <h2 class="display-m" style="line-height: 1.2">السيارات المفحوصة تُباع أسرع بمرتين.</h2>
+        <p class="body-l" style="color: var(--ink-2)">أضف سيارتك في أقل من 5 دقائق. يمكن للمشترين حجز الفحص مباشرة، وما عليك إلا تسليم المفاتيح.</p>
+      </div>
+      <a href="Sell-CarDetails.dc.html" class="label-l" style="display: inline-flex; align-items: center; height: 56px; padding: 0 24px; border-radius: 999px; background: var(--ink); color: var(--surface); text-decoration: none">أضف سيارتك</a>
+    </div>
+  </section>
+
+  <x-import component-from-global-scope="AutoSouk.Footer" lang="ar"></x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const car = (title, meta, price, city, tone, score, fav, photos) => ({ title, meta, price, city, tone, score, fav, photos });
+    return {
+      yes: true, s22: 22, s60: 60, s92: 92, r28: 28, patW: 1440, patH: 900,
+      popular: ['Dacia', 'Renault', 'Peugeot', 'Volkswagen', 'Toyota'],
+      cars: [
+        car('Dacia Duster 1.5 dCi Prestige', '2021 · 68 000 كم · ديزل · يدوي', '185 000', 'الدار البيضاء', 'sand', 92, false, 9),
+        car('Volkswagen Golf 8 Life', '2020 · 54 000 كم · ديزل · أوتوماتيكي', '265 000', 'الرباط', 'night', 92, true, 12),
+        car('Peugeot 3008 GT Line', '2019 · 98 000 كم · ديزل · أوتوماتيكي', '238 000', 'مراكش', 'clay', null, false, 7),
+        car('Renault Clio 5 Intens', '2022 · 31 000 كم · بنزين · يدوي', '159 000', 'طنجة', 'sky', 95, false, 10),
+        car('Toyota Corolla Hybrid', '2021 · 72 000 كم · هجين · أوتوماتيكي', '245 000', 'الدار البيضاء', 'olive', 88, true, 8),
+        car('Hyundai Tucson Executive', '2020 · 88 000 كم · ديزل · أوتوماتيكي', '279 000', 'فاس', 'majorelle', null, false, 14),
+        car('Mercedes C 220d AMG Line', '2018 · 126 000 كم · ديزل · أوتوماتيكي', '335 000', 'الدار البيضاء', 'night', 83, false, 16),
+        car('Fiat 500 Dolcevita', '2022 · 18 000 كم · بنزين · يدوي', '139 000', 'أكادير', 'saffron', null, true, 6)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

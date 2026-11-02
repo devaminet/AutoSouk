@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk mobile · My listings</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--paper); color: var(--ink); font-family: var(--font-sans); display: flex; flex-direction: column">
+  <div style="padding-top: 12px"><x-import component-from-global-scope="AutoSouk.MobileHeader" initials="KE"></x-import></div>
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 16px; padding: 8px 20px 120px; overflow: hidden">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end">
+      <h1 class="h1">My listings</h1>
+      <a href="M-Sell-Photos.dc.html" aria-label="New listing" style="width: 44px; height: 44px; border-radius: 999px; background: var(--brand); display: flex; align-items: center; justify-content: center; box-shadow: var(--elevation-brand)"><x-import component-from-global-scope="AutoSouk.Icon" name="plus" size="{{s20}}" color="on-brand"></x-import></a>
+    </div>
+    <div style="display: flex; gap: 8px; margin-right: -20px; overflow: hidden">
+      <x-import component-from-global-scope="AutoSouk.Chip" selected="{{yes}}">All 6</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip">Approved 1</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip">Pending 1</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip">Draft 1</x-import>
+    </div>
+    <sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+      <div style="display: flex; gap: 12px; align-items: center; padding: 8px; border-radius: 24px; background: var(--surface); box-shadow: var(--elevation-1)">
+        <x-import component-from-global-scope="AutoSouk.CarPhoto" tone="{{r.tone}}" width="{{w92}}" height="{{h76}}" radius="{{r14}}"></x-import>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+          <span class="h5" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.title}}</span>
+          <span style="display: flex; gap: 4px; align-items: baseline"><span class="h4">{{r.price}}</span><span class="mono-s" style="color: var(--muted)">MAD</span></span>
+          <x-import component-from-global-scope="AutoSouk.Badge" tone="{{r.bt}}">{{r.status}}</x-import>
+          <sc-if value="{{r.reason}}" hint-placeholder-val="{{no}}"><span class="body-xs" style="color: var(--danger); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden">{{r.reason}}</span></sc-if>
+        </div>
+        <button type="button" aria-label="More actions" style="width: 32px; height: 32px; border: 0; border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="more-horizontal" size="{{s16}}"></x-import></button>
+      </div>
+    </sc-for>
+  </main>
+  <div style="position: absolute; left: 0; right: 0; bottom: 0">
+    <x-import component-from-global-scope="AutoSouk.TabBar" active="Account"></x-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      yes: true, no: false, s16: 16, s20: 20, w92: 92, h76: 76, r14: 14,
+      rows: [
+        { title: 'Volkswagen Golf 8 Life', price: '265 000', status: 'Approved', bt: 'success', tone: 'night', reason: null },
+        { title: 'Dacia Duster Prestige', price: '185 000', status: 'Pending review', bt: 'warning', tone: 'sand', reason: null },
+        { title: 'Peugeot 208 Allure', price: '129 000', status: 'Rejected', bt: 'danger', tone: 'clay', reason: 'Add a photo of the dashboard so the mileage can be checked.' },
+        { title: 'Renault Mégane 4', price: '142 000', status: 'Draft', bt: 'neutral', tone: 'sky', reason: null }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

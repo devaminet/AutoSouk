@@ -1,0 +1,687 @@
+{
+  "attachments": {},
+  "boards": {
+    "AR-M-Listing.dc.html": {
+      "h": 844,
+      "page": "i18n",
+      "title": "Listing · العربية · mobile",
+      "w": 390,
+      "x": 0,
+      "y": 2520
+    },
+    "AR-M-Report.dc.html": {
+      "h": 844,
+      "page": "i18n",
+      "title": "Report · العربية · mobile",
+      "w": 390,
+      "x": 470,
+      "y": 2520
+    },
+    "AR-Main.dc.html": {
+      "expand": "fill",
+      "h": 2100,
+      "page": "i18n",
+      "title": "Explore (home) · العربية, right to left",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Account.dc.html": {
+      "expand": "fill",
+      "h": 1960,
+      "page": "auth",
+      "title": "Account settings",
+      "w": 1440,
+      "x": 7600,
+      "y": 0
+    },
+    "Admin.dc.html": {
+      "expand": "fill",
+      "h": 1500,
+      "page": "admin",
+      "title": "Listing moderation (admin)",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "EditListing.dc.html": {
+      "h": 1300,
+      "page": "sell",
+      "title": "Edit listing · drawer",
+      "w": 1440,
+      "x": 4560,
+      "y": 0
+    },
+    "FR-M-SignUp.dc.html": {
+      "h": 844,
+      "page": "i18n",
+      "title": "Sign up errors · Français · mobile",
+      "w": 390,
+      "x": 940,
+      "y": 2520
+    },
+    "FR-Main.dc.html": {
+      "expand": "fill",
+      "h": 1250,
+      "page": "i18n",
+      "title": "Explore · Français, language menu open",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "Favorites.dc.html": {
+      "expand": "fill",
+      "h": 1800,
+      "page": "market",
+      "title": "Favorites",
+      "w": 1440,
+      "x": 4560,
+      "y": 0
+    },
+    "ForgotPassword.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "page": "auth",
+      "title": "Forgot password",
+      "w": 1440,
+      "x": 4560,
+      "y": 0
+    },
+    "InspectionQueue.dc.html": {
+      "expand": "fill",
+      "h": 1150,
+      "page": "insp",
+      "title": "Inspection queue (mechanic)",
+      "w": 1440,
+      "x": 3040,
+      "y": 0
+    },
+    "Listing.dc.html": {
+      "expand": "fill",
+      "h": 3300,
+      "page": "market",
+      "title": "Listing detail",
+      "w": 1440,
+      "x": 3040,
+      "y": 0
+    },
+    "Login.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "page": "auth",
+      "title": "Log in",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "M-Account.dc.html": {
+      "h": 844,
+      "page": "auth",
+      "title": "Account · mobile",
+      "w": 390,
+      "x": 1410,
+      "y": 2120
+    },
+    "M-Equipment.dc.html": {
+      "h": 844,
+      "page": "market",
+      "title": "Equipment filter · mobile",
+      "w": 390,
+      "x": 2350,
+      "y": 4120
+    },
+    "M-Explore.dc.html": {
+      "h": 844,
+      "page": "market",
+      "title": "Explore · mobile",
+      "w": 390,
+      "x": 0,
+      "y": 4120
+    },
+    "M-Favorites-Empty.dc.html": {
+      "h": 844,
+      "page": "market",
+      "title": "Favorites empty · mobile",
+      "w": 390,
+      "x": 1880,
+      "y": 4120
+    },
+    "M-Favorites.dc.html": {
+      "h": 844,
+      "page": "market",
+      "title": "Favorites · mobile",
+      "w": 390,
+      "x": 1410,
+      "y": 4120
+    },
+    "M-Filters.dc.html": {
+      "h": 844,
+      "page": "market",
+      "title": "Filters sheet · mobile",
+      "w": 390,
+      "x": 470,
+      "y": 4120
+    },
+    "M-Language.dc.html": {
+      "h": 844,
+      "page": "i18n",
+      "title": "Language picker · mobile",
+      "w": 390,
+      "x": 1410,
+      "y": 2520
+    },
+    "M-Listing.dc.html": {
+      "h": 844,
+      "page": "market",
+      "title": "Listing detail · mobile",
+      "w": 390,
+      "x": 940,
+      "y": 4120
+    },
+    "M-Login.dc.html": {
+      "h": 844,
+      "page": "auth",
+      "title": "Log in · mobile",
+      "w": 390,
+      "x": 470,
+      "y": 2120
+    },
+    "M-ManageMedia.dc.html": {
+      "h": 844,
+      "page": "sell",
+      "title": "Photos at the 3-photo minimum · mobile",
+      "w": 390,
+      "x": 1880,
+      "y": 2620
+    },
+    "M-MechanicProfile.dc.html": {
+      "h": 844,
+      "page": "mech",
+      "title": "Mechanic profile · mobile",
+      "w": 390,
+      "x": 0,
+      "y": 2320
+    },
+    "M-MyInspections.dc.html": {
+      "h": 844,
+      "page": "insp",
+      "title": "My inspections · mobile",
+      "w": 390,
+      "x": 940,
+      "y": 2420
+    },
+    "M-MyListings.dc.html": {
+      "h": 844,
+      "page": "sell",
+      "title": "My listings · mobile",
+      "w": 390,
+      "x": 1410,
+      "y": 2620
+    },
+    "M-Queue.dc.html": {
+      "h": 844,
+      "page": "insp",
+      "title": "Queue · mobile",
+      "w": 390,
+      "x": 470,
+      "y": 2420
+    },
+    "M-Rankings.dc.html": {
+      "h": 844,
+      "page": "mech",
+      "title": "Rankings · mobile",
+      "w": 390,
+      "x": 470,
+      "y": 2320
+    },
+    "M-Report.dc.html": {
+      "h": 844,
+      "page": "insp",
+      "title": "Report · mobile",
+      "w": 390,
+      "x": 0,
+      "y": 2420
+    },
+    "M-Sell-Equipment.dc.html": {
+      "h": 844,
+      "page": "sell",
+      "title": "Equipment · mobile",
+      "w": 390,
+      "x": 0,
+      "y": 2620
+    },
+    "M-Sell-Photos.dc.html": {
+      "h": 844,
+      "page": "sell",
+      "title": "Add photos · mobile",
+      "w": 390,
+      "x": 470,
+      "y": 2620
+    },
+    "M-SignUp.dc.html": {
+      "h": 844,
+      "page": "auth",
+      "title": "Sign up · mobile",
+      "w": 390,
+      "x": 0,
+      "y": 2120
+    },
+    "M-Submitted.dc.html": {
+      "h": 844,
+      "page": "sell",
+      "title": "Listing submitted · mobile",
+      "w": 390,
+      "x": 940,
+      "y": 2620
+    },
+    "M-Verify.dc.html": {
+      "h": 844,
+      "page": "auth",
+      "title": "Verify email · mobile",
+      "w": 390,
+      "x": 940,
+      "y": 2120
+    },
+    "M-VerifyExpired.dc.html": {
+      "h": 844,
+      "page": "auth",
+      "title": "Verification link expired · mobile",
+      "w": 390,
+      "x": 1880,
+      "y": 2120
+    },
+    "M-WorkshopSetup.dc.html": {
+      "h": 844,
+      "page": "mech",
+      "title": "Workshop setup · mobile",
+      "w": 390,
+      "x": 940,
+      "y": 2320
+    },
+    "Main.dc.html": {
+      "expand": "fill",
+      "h": 3700,
+      "page": "market",
+      "title": "Explore (home)",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "ManageMedia.dc.html": {
+      "expand": "fill",
+      "h": 1300,
+      "page": "sell",
+      "title": "Photos & videos (manage)",
+      "w": 1440,
+      "x": 6080,
+      "y": 0
+    },
+    "MechanicProfile.dc.html": {
+      "expand": "fill",
+      "h": 1600,
+      "page": "mech",
+      "title": "Mechanic profile & reviews",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "Mechanics.dc.html": {
+      "expand": "fill",
+      "h": 1800,
+      "page": "mech",
+      "title": "Mechanics & rankings",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "MyInspections.dc.html": {
+      "expand": "fill",
+      "h": 1100,
+      "page": "insp",
+      "title": "My inspections (buyer)",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "MyListings.dc.html": {
+      "expand": "fill",
+      "h": 1195,
+      "page": "sell",
+      "title": "My listings (seller)",
+      "w": 1440,
+      "x": 3040,
+      "y": 0
+    },
+    "NewPassword.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "page": "auth",
+      "title": "Set new password",
+      "w": 1440,
+      "x": 6080,
+      "y": 0
+    },
+    "ReportForm.dc.html": {
+      "expand": "fill",
+      "h": 2000,
+      "is_interactive": true,
+      "page": "insp",
+      "title": "Inspection report · form",
+      "w": 1440,
+      "x": 4560,
+      "y": 0
+    },
+    "ReportView.dc.html": {
+      "expand": "fill",
+      "h": 1800,
+      "page": "insp",
+      "title": "Inspection report · view",
+      "w": 1440,
+      "x": 6080,
+      "y": 0
+    },
+    "RequestInspection.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "page": "insp",
+      "title": "Request inspection · modal",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "ReviewModal.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "page": "mech",
+      "title": "Write / edit review",
+      "w": 1440,
+      "x": 3040,
+      "y": 0
+    },
+    "Search.dc.html": {
+      "expand": "fill",
+      "h": 2050,
+      "page": "market",
+      "title": "Search results & filters",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "Sell-CarDetails.dc.html": {
+      "expand": "fill",
+      "h": 2200,
+      "page": "sell",
+      "title": "Create listing · car details",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Sell-Photos.dc.html": {
+      "expand": "fill",
+      "h": 1280,
+      "page": "sell",
+      "title": "Create listing · photos",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "SignUp.dc.html": {
+      "expand": "fill",
+      "h": 1420,
+      "page": "auth",
+      "title": "Sign up",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Verify.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "page": "auth",
+      "title": "Verify email",
+      "w": 1440,
+      "x": 3040,
+      "y": 0
+    },
+    "VerifyResult.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "page": "auth",
+      "title": "Email verified · link landing page",
+      "w": 1440,
+      "x": 9120,
+      "y": 0
+    },
+    "Workshop.dc.html": {
+      "expand": "fill",
+      "h": 1900,
+      "page": "mech",
+      "title": "Workshop profile (mechanic)",
+      "w": 1440,
+      "x": 4560,
+      "y": 0
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-13T17:20:00Z",
+    "v": 1
+  },
+  "designSystems": [
+    {
+      "artifact": "https://claude.ai/artifact/LAzpZTDLku1vb79WnVo5F7",
+      "copiedAt": "2026-11-02T10:40:00Z",
+      "namespace": "autosouk",
+      "title": "AutoSouk",
+      "version": "1793601228-d4d2"
+    }
+  ],
+  "launch": {
+    "page": "market",
+    "view": "canvas"
+  },
+  "notes": {
+    "admin-d": {
+      "kind": "title1",
+      "maxW": 1440,
+      "page": "admin",
+      "text": "Admin · desktop",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "auth-d": {
+      "kind": "title1",
+      "maxW": 9560,
+      "page": "auth",
+      "text": "Auth & account · desktop",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "auth-m": {
+      "kind": "title1",
+      "maxW": 2270,
+      "page": "auth",
+      "text": "Auth & account · mobile",
+      "w": 240,
+      "x": 0,
+      "y": 1820
+    },
+    "i18n-d": {
+      "kind": "title1",
+      "maxW": 2960,
+      "page": "i18n",
+      "text": "Languages · desktop",
+      "x": 0,
+      "y": -300
+    },
+    "i18n-m": {
+      "kind": "title1",
+      "maxW": 1800,
+      "page": "i18n",
+      "text": "Languages · mobile",
+      "x": 0,
+      "y": 2220
+    },
+    "insp-d": {
+      "kind": "title1",
+      "maxW": 7520,
+      "page": "insp",
+      "text": "Inspections · desktop",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "insp-m": {
+      "kind": "title1",
+      "maxW": 1330,
+      "page": "insp",
+      "text": "Inspections · mobile",
+      "w": 240,
+      "x": 0,
+      "y": 2120
+    },
+    "mech-d": {
+      "kind": "title1",
+      "maxW": 6000,
+      "page": "mech",
+      "text": "Mechanics & reviews · desktop",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "mech-m": {
+      "kind": "title1",
+      "maxW": 1330,
+      "page": "mech",
+      "text": "Mechanics · mobile",
+      "w": 240,
+      "x": 0,
+      "y": 2020
+    },
+    "mkt-d": {
+      "kind": "title1",
+      "maxW": 6000,
+      "page": "market",
+      "text": "Marketplace · desktop (fluid pages)",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "mkt-m": {
+      "kind": "title1",
+      "maxW": 2740,
+      "page": "market",
+      "text": "Marketplace · mobile",
+      "w": 240,
+      "x": 0,
+      "y": 3820
+    },
+    "sell-d": {
+      "kind": "title1",
+      "maxW": 7520,
+      "page": "sell",
+      "text": "Sell & listings · desktop",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "sell-m": {
+      "kind": "title1",
+      "maxW": 2270,
+      "page": "sell",
+      "text": "Sell & listings · mobile",
+      "w": 240,
+      "x": 0,
+      "y": 2320
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Search.dc.html",
+    "Listing.dc.html",
+    "Favorites.dc.html",
+    "M-Explore.dc.html",
+    "M-Filters.dc.html",
+    "M-Listing.dc.html",
+    "M-Favorites.dc.html",
+    "M-Favorites-Empty.dc.html",
+    "M-Equipment.dc.html",
+    "SignUp.dc.html",
+    "Login.dc.html",
+    "Verify.dc.html",
+    "VerifyResult.dc.html",
+    "ForgotPassword.dc.html",
+    "NewPassword.dc.html",
+    "Account.dc.html",
+    "M-SignUp.dc.html",
+    "M-Login.dc.html",
+    "M-Verify.dc.html",
+    "M-VerifyExpired.dc.html",
+    "M-Account.dc.html",
+    "Mechanics.dc.html",
+    "MechanicProfile.dc.html",
+    "ReviewModal.dc.html",
+    "Workshop.dc.html",
+    "M-MechanicProfile.dc.html",
+    "M-Rankings.dc.html",
+    "M-WorkshopSetup.dc.html",
+    "RequestInspection.dc.html",
+    "MyInspections.dc.html",
+    "InspectionQueue.dc.html",
+    "ReportForm.dc.html",
+    "ReportView.dc.html",
+    "M-Report.dc.html",
+    "M-Queue.dc.html",
+    "M-MyInspections.dc.html",
+    "Admin.dc.html",
+    "Sell-CarDetails.dc.html",
+    "Sell-Photos.dc.html",
+    "MyListings.dc.html",
+    "EditListing.dc.html",
+    "ManageMedia.dc.html",
+    "M-Sell-Equipment.dc.html",
+    "M-Sell-Photos.dc.html",
+    "M-Submitted.dc.html",
+    "M-MyListings.dc.html",
+    "M-ManageMedia.dc.html",
+    "AR-Main.dc.html",
+    "FR-Main.dc.html",
+    "AR-M-Listing.dc.html",
+    "AR-M-Report.dc.html",
+    "FR-M-SignUp.dc.html",
+    "M-Language.dc.html"
+  ],
+  "pages": [
+    {
+      "id": "auth",
+      "name": "01 · Auth & Account"
+    },
+    {
+      "id": "market",
+      "name": "02 · Marketplace"
+    },
+    {
+      "id": "sell",
+      "name": "03 · Sell & Listings"
+    },
+    {
+      "id": "mech",
+      "name": "04 · Mechanics & Reviews"
+    },
+    {
+      "id": "insp",
+      "name": "05 · Inspections"
+    },
+    {
+      "id": "admin",
+      "name": "06 · Admin"
+    },
+    {
+      "id": "i18n",
+      "name": "07 · Languages"
+    }
+  ],
+  "title": "AutoSouk — Product Design",
+  "v": 3
+}

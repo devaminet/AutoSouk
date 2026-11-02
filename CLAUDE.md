@@ -61,6 +61,10 @@ The dev stack (`docker-compose.yml`) also runs MinIO for object storage (car/mec
 - `.agents/rules/` and `AGENTS.md` are the authoritative day-to-day conventions; `.specify/memory/constitution.md` is the longer-form ratified constitution behind them — both agree on the layered architecture and validation rules above.
 - Spec-driven feature work lives under `specs/<NNN-feature-name>/`, following `.specify/templates/` (spec, plan, tasks, checklist templates) — check there for in-flight feature specs before starting related work.
 
+## Design
+
+The frontend design spec (brand rules, tokens, components, every screen with the endpoints it uses) lives in `design/`. Before any UI work, read `design/CLAUDE.md` and follow it.
+
 ## Tech Stack
 
 - Frontend: React with typescript

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk mobile · Listing submitted</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--paper); color: var(--ink); font-family: var(--font-sans)">
+  <main style="display: flex; flex-direction: column; gap: 20px; padding: 72px 20px 32px">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center">
+      <span style="position: relative; width: 132px; height: 132px; border-radius: 999px; background: var(--success-soft); display: flex; align-items: center; justify-content: center">
+        <x-import component-from-global-scope="AutoSouk.Icon" name="check" size="{{s60}}" color="success"></x-import>
+        <span style="position: absolute; right: -4px; top: 4px; width: 40px; height: 40px; border-radius: 999px; background: var(--saffron); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="clock" size="{{s20}}"></x-import></span>
+      </span>
+      <h1 class="h1">Submitted for review</h1>
+      <p class="body-m" style="color: var(--muted); max-width: 300px">Our team checks every listing — usually in under 24 hours. We'll notify you when it's live.</p>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: center; padding: 8px; border-radius: 24px; background: var(--surface); box-shadow: var(--elevation-1)">
+      <x-import component-from-global-scope="AutoSouk.CarPhoto" tone="night" width="{{w96}}" height="{{h76}}" radius="{{r14}}"></x-import>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 4px">
+        <span class="h5">Volkswagen Golf 8 Life 2.0 TDI</span>
+        <span style="display: flex; gap: 4px; align-items: baseline"><span class="h4">265 000</span><span class="mono-s" style="color: var(--muted)">MAD</span></span>
+        <x-import component-from-global-scope="AutoSouk.Badge" tone="warning">Pending review</x-import>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <a href="M-MyListings.dc.html" class="label-l" style="display: flex; align-items: center; justify-content: center; height: 56px; border-radius: 999px; background: var(--ink); color: var(--surface); text-decoration: none">Go to my listings</a>
+      <a href="M-Sell-Photos.dc.html" class="label-l" style="display: flex; gap: 10px; align-items: center; justify-content: center; height: 56px; border-radius: 999px; color: var(--ink); text-decoration: none"><x-import component-from-global-scope="AutoSouk.Icon" name="plus" size="{{s20}}"></x-import>List another car</a>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { s20: 20, s60: 60, w96: 96, h76: 76, r14: 14 };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk · Workshop profile</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; background: var(--paper); color: var(--ink); font-family: var(--font-sans); overflow-x: hidden">
+  <div style="overflow-x: auto">
+    <x-import component-from-global-scope="AutoSouk.NavDesktop" active="Inspections" role="Mechanic" initials="HM"></x-import>
+  </div>
+  <main style="max-width: 1280px; margin: 0 auto; padding: 48px 24px 96px; display: flex; flex-wrap: wrap; gap: 48px; align-items: flex-start">
+    <nav aria-label="Mechanic space" style="flex: 1 1 220px; max-width: 240px; display: flex; flex-direction: column; gap: 4px">
+      <sc-for list="{{menu}}" as="m" hint-placeholder-count="5">
+        <a href="{{m.href}}" style="display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 12px; background: {{m.bg}}; box-shadow: {{m.sh}}; text-decoration: none; color: var(--ink)">
+          <x-import component-from-global-scope="AutoSouk.Icon" name="{{m.icon}}" size="{{s18}}" color="{{m.ic}}"></x-import>
+          <span class="label-m" style="flex: 1">{{m.t}}</span>
+          <sc-if value="{{m.n}}" hint-placeholder-val="{{no}}"><span class="mono-s" style="padding: 0 6px; border-radius: 999px; background: var(--line); color: var(--ink-2)">{{m.n}}</span></sc-if>
+        </a>
+      </sc-for>
+    </nav>
+    <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 6px"><span class="overline" style="color: var(--brand)">Mechanic space</span><h1 class="display-m">Workshop profile</h1></div>
+        <div style="display: flex; gap: 10px">
+          <a href="MechanicProfile.dc.html" class="label-m" style="display: inline-flex; gap: 8px; align-items: center; height: 44px; padding: 0 18px; border-radius: 999px; background: var(--surface); color: var(--ink); text-decoration: none; box-shadow: inset 0 0 0 1px var(--line-strong)"><x-import component-from-global-scope="AutoSouk.Icon" name="eye" size="{{s18}}"></x-import>View public page</a>
+          <x-import component-from-global-scope="AutoSouk.Button">Save changes</x-import>
+        </div>
+      </div>
+      <section style="position: relative; overflow: hidden; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; padding: 20px 24px; border-radius: 24px; background: var(--night)">
+        <span aria-hidden="true" style="position: absolute; right: -60px; top: -200px; pointer-events: none"><x-import component-from-global-scope="AutoSouk.ZelligePattern"></x-import></span>
+        <span style="position: relative; width: 48px; height: 48px; border-radius: 999px; background: var(--success); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="power" size="{{s22}}" color="on-brand"></x-import></span>
+        <div style="position: relative; flex: 1 1 300px; display: flex; flex-direction: column; gap: 2px"><h2 class="h4" style="color: var(--surface)">Accepting inspection requests</h2><p class="body-s" style="color: var(--subtle)">Visible in search, rankings and on listings in Casablanca. Turn off when you're fully booked.</p></div>
+        <span style="position: relative"><x-import component-from-global-scope="AutoSouk.Toggle" on="{{yes}}"></x-import></span>
+      </section>
+      <section style="display: flex; flex-direction: column; gap: 20px; padding: 28px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+        <h2 class="h3">Identity</h2>
+        <div style="display: flex; gap: 20px; align-items: center">
+          <x-import component-from-global-scope="AutoSouk.Avatar" initials="GA" size="XL"></x-import>
+          <div style="display: flex; flex-direction: column; gap: 8px"><span class="label-m">Workshop logo or photo</span><div style="display: flex; gap: 8px"><x-import component-from-global-scope="AutoSouk.Button" variant="dark" size="S" icon="upload">Upload</x-import><x-import component-from-global-scope="AutoSouk.Button" variant="ghost" size="S">Remove</x-import></div></div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px">
+          <x-import component-from-global-scope="AutoSouk.Input" label="Workshop name" value="Garage Atlas Auto"></x-import>
+          <x-import component-from-global-scope="AutoSouk.Input" label="Phone" value="06 61 23 45 67" icon="phone"></x-import>
+          <x-import component-from-global-scope="AutoSouk.Input" label="Inspection price" value="350" suffix="MAD" state="focus"></x-import>
+        </div>
+        <x-import component-from-global-scope="AutoSouk.Input" label="Description" value="Independent workshop founded in 2009, specialised in German and French brands. Full 120-point pre-purchase check with OBD diagnostics, paint-thickness gauge and road test." multiline="{{yes}}" rows="{{r3}}"></x-import>
+      </section>
+      <section style="display: flex; flex-direction: column; gap: 20px; padding: 28px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 4px"><h2 class="h3">Location</h2><p class="body-s" style="color: var(--muted)">Drag the pin to your workshop entrance. Buyers see it on listings in the same city.</p></div>
+          <x-import component-from-global-scope="AutoSouk.Button" variant="secondary" size="S" icon="map-pin">Use my location</x-import>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px">
+          <x-import component-from-global-scope="AutoSouk.Input" label="City" value="Casablanca" icon="map-pin" select="{{yes}}"></x-import>
+          <x-import component-from-global-scope="AutoSouk.Input" label="Address" value="27 Rue Ibnou Mounir, Maârif"></x-import>
+        </div>
+        <div style="position: relative; border-radius: 18px; overflow: hidden">
+          <x-import component-from-global-scope="AutoSouk.MapView" height="{{h260}}" radius="{{r18}}" pins="{{pin}}"></x-import>
+          <div style="position: absolute; left: 16px; bottom: 16px; display: flex; gap: 8px">
+            <span class="mono-s" style="padding: 6px 10px; border-radius: 999px; background: var(--surface)">lat 33.5803</span>
+            <span class="mono-s" style="padding: 6px 10px; border-radius: 999px; background: var(--surface)">lng −7.6331</span>
+          </div>
+        </div>
+      </section>
+      <section style="display: flex; flex-direction: column; gap: 20px; padding: 28px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 4px"><h2 class="h3">Garage photos</h2><p class="body-s" style="color: var(--muted)">Show your lift, diagnostic tools and reception. 5 of 12.</p></div>
+          <x-import component-from-global-scope="AutoSouk.Button" variant="dark" size="S" icon="plus">Add photos</x-import>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px">
+          <x-import component-from-global-scope="AutoSouk.UploadTile" state="cover" tone="sand" width="{{w146}}" height="{{h110}}"></x-import>
+          <x-import component-from-global-scope="AutoSouk.UploadTile" state="filled" tone="night" width="{{w146}}" height="{{h110}}"></x-import>
+          <x-import component-from-global-scope="AutoSouk.UploadTile" state="filled" tone="clay" width="{{w146}}" height="{{h110}}"></x-import>
+          <x-import component-from-global-scope="AutoSouk.UploadTile" state="filled" tone="olive" width="{{w146}}" height="{{h110}}"></x-import>
+          <x-import component-from-global-scope="AutoSouk.UploadTile" state="filled" tone="sky" width="{{w146}}" height="{{h110}}"></x-import>
+          <x-import component-from-global-scope="AutoSouk.UploadTile" state="empty" width="{{w146}}" height="{{h110}}"></x-import>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const item = (icon, t, href, on, n) => ({ icon, t, href, n: n || null, bg: on ? 'var(--surface)' : 'transparent', sh: on ? 'var(--elevation-1)' : 'none', ic: on ? 'brand' : 'muted' });
+    return {
+      yes: true, no: false, s18: 18, s22: 22, r3: 3, r18: 18, h260: 260, w146: 146, h110: 110,
+      pin: [{ x: 48, y: 52, active: true }],
+      menu: [item('inbox', 'Inspection queue', 'InspectionQueue.dc.html', false, '4'), item('file', 'Reports', 'ReportForm.dc.html'), item('wrench', 'Workshop profile', 'Workshop.dc.html', true), item('star', 'Reviews', 'MechanicProfile.dc.html', false, '128'), item('user', 'Account', 'Account.dc.html')]
+    };
+  }
+}
+</script>
+</body>
+</html>

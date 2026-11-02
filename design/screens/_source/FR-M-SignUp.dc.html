@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk · Créer un compte</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--brand)}
+</style>
+</helmet>
+<div lang="fr" style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--paper); color: var(--ink); font-family: var(--font-sans); display: flex; flex-direction: column">
+  <div style="padding-top: 12px"><x-import component-from-global-scope="AutoSouk.MobileHeader" variant="back" title="Créer un compte"></x-import></div>
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 16px; padding: 4px 20px 120px; overflow: hidden">
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <span class="label-m">Langue</span>
+      <x-import component-from-global-scope="AutoSouk.LanguageSwitch" variant="segmented" active="fr" lang="fr"></x-import>
+      <span class="body-xs" style="color: var(--muted)">Votre e-mail de vérification et vos rapports d’inspection seront en français.</span>
+    </div>
+    <div role="alert" style="display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 14px; background: var(--danger-soft)">
+      <x-import component-from-global-scope="AutoSouk.Icon" name="alert-triangle" size="{{s18}}" color="danger"></x-import>
+      <span class="body-s" style="color: var(--ink-2)">Corrigez les 3 champs signalés pour continuer.</span>
+    </div>
+    <div style="display: flex; gap: 12px">
+      <x-import component-from-global-scope="AutoSouk.Input" label="Prénom" value="A" state="error" helper="Doit contenir au moins 2 caractères"></x-import>
+      <x-import component-from-global-scope="AutoSouk.Input" label="Nom" value="Takha"></x-import>
+    </div>
+    <x-import component-from-global-scope="AutoSouk.Input" label="E-mail" value="amine@autosouk.ma" icon="mail" state="error" helper="Cette adresse e-mail est déjà utilisée"></x-import>
+    <x-import component-from-global-scope="AutoSouk.Input" label="Mot de passe" value="••••••••••••" icon="lock"></x-import>
+    <x-import component-from-global-scope="AutoSouk.Input" label="Confirmer le mot de passe" value="•••••••••" icon="lock" state="error" helper="Le mot de passe et sa confirmation doivent être identiques"></x-import>
+    <span class="body-s" style="color: var(--muted)">Déjà inscrit ? <a href="M-Login.dc.html" class="label-m">Se connecter</a></span>
+  </main>
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 20px 30px; background: var(--surface); border-top: 1px solid var(--line)">
+    <x-import component-from-global-scope="AutoSouk.Button" size="L" block="{{yes}}" icon-right="arrow-right">Créer mon compte</x-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { yes: true, s18: 18 };
+  }
+}
+</script>
+</body>
+</html>

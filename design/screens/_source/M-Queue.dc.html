@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk mobile · Inspection queue</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--paper); color: var(--ink); font-family: var(--font-sans); display: flex; flex-direction: column">
+  <div style="padding-top: 12px"><x-import component-from-global-scope="AutoSouk.MobileHeader" initials="HM"></x-import></div>
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 16px; padding: 8px 20px 120px; overflow: hidden">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end">
+      <div style="display: flex; flex-direction: column; gap: 4px"><h1 class="h1">Queue</h1><span class="body-s" style="color: var(--muted)">2 new · 1 accepted · 1 in progress</span></div>
+      <label style="display: flex; gap: 8px; align-items: center"><span class="label-s" style="color: var(--success)">Accepting</span><x-import component-from-global-scope="AutoSouk.Toggle" on="{{yes}}"></x-import></label>
+    </div>
+    <div style="display: flex; gap: 8px; margin-right: -20px; overflow: hidden">
+      <x-import component-from-global-scope="AutoSouk.Chip" selected="{{yes}}">New 2</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip">Accepted 1</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip">In progress 1</x-import>
+      <x-import component-from-global-scope="AutoSouk.Chip">Done 8</x-import>
+    </div>
+    <sc-for list="{{cards}}" as="c" hint-placeholder-count="2">
+      <article style="display: flex; flex-direction: column; gap: 12px; padding: 12px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+        <x-import component-from-global-scope="AutoSouk.CarPhoto" tone="{{c.tone}}" fluid="{{yes}}" ratio="326 / 120" radius="{{r14}}"></x-import>
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <div style="display: flex; flex-direction: column; gap: 2px"><h2 class="h5">{{c.car}}</h2><span class="body-xs" style="color: var(--muted)">{{c.who}}</span></div>
+          <span class="label-m">350 MAD</span>
+        </div>
+        <div style="display: flex; gap: 8px">
+          <x-import component-from-global-scope="AutoSouk.Button" variant="success" icon="check" block="{{yes}}" style="flex: 1">Accept</x-import>
+          <x-import component-from-global-scope="AutoSouk.Button" variant="secondary" icon="x" block="{{yes}}" style="flex: 1">Reject</x-import>
+        </div>
+      </article>
+    </sc-for>
+  </main>
+  <div style="position: absolute; left: 0; right: 0; bottom: 0">
+    <x-import component-from-global-scope="AutoSouk.TabBar" role="mechanic" active="Queue"></x-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { yes: true, r14: 14, cards: [{ car: 'Fiat 500 Dolcevita', who: 'Amine T. · 2 h ago', tone: 'saffron' }, { car: 'Renault Clio 5 Intens', who: 'Nadia R. · 35 min ago', tone: 'sky' }] };
+  }
+}
+</script>
+</body>
+</html>

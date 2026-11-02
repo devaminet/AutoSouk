@@ -1,0 +1,48 @@
+/* AutoSouk design tokens as CSS variables, font faces and text styles. Generated from tokens.json. */
+@font-face{font-family:'Geist';font-weight:400;font-display:swap;src:url(./fonts/geist-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Geist';font-weight:500;font-display:swap;src:url(./fonts/geist-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Geist';font-weight:600;font-display:swap;src:url(./fonts/geist-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Geist Mono';font-weight:400;font-display:swap;src:url(./fonts/geist-mono-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Geist Mono';font-weight:500;font-display:swap;src:url(./fonts/geist-mono-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:500;font-display:swap;src:url(./fonts/bricolage-grotesque-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:600;font-display:swap;src:url(./fonts/bricolage-grotesque-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Sans Arabic';font-weight:400;font-display:swap;src:url(./fonts/ibm-plex-sans-arabic-400-normal.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Sans Arabic';font-weight:500;font-display:swap;src:url(./fonts/ibm-plex-sans-arabic-500-normal.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Sans Arabic';font-weight:600;font-display:swap;src:url(./fonts/ibm-plex-sans-arabic-600-normal.woff2) format('woff2')}
+:root{
+--ink:#14130F;--ink-2:#3A3933;--muted:#77756B;--subtle:#A8A59A;--line:#E6E1D6;--line-strong:#D3CCBD;
+--paper:#F6F2EA;--surface:#FFFFFF;--surface-2:#FBF9F4;--night:#0F0E1C;--night-2:#1B1A2E;
+--brand:#3F2FD6;--brand-hover:#3224B8;--brand-soft:#ECE9FF;--brand-ink:#1D1470;--on-brand:#FFFFFF;
+--saffron:#F2A93B;--saffron-soft:#FDF1DC;--success:#0F7A55;--success-soft:#E3F4EC;--warning:#B86E00;--warning-soft:#FCF0DA;
+--danger:#C2362B;--danger-soft:#FBE6E3;--info:#1F6FB8;--info-soft:#E4EFFA;
+--elevation-1:0 1px 2px rgba(20,18,13,0.06), 0 4px 12px -2px rgba(20,18,13,0.05);
+--elevation-2:0 2px 6px rgba(20,18,13,0.08), 0 20px 48px -8px rgba(20,18,13,0.12);
+--elevation-brand:0 8px 24px -6px rgba(63,47,214,0.30);
+--space-2:2px;--space-4:4px;--space-8:8px;--space-12:12px;--space-16:16px;--space-20:20px;--space-24:24px;--space-32:32px;--space-40:40px;--space-48:48px;--space-64:64px;--space-80:80px;--space-96:96px;
+--radius-xs:6px;--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:24px;--radius-2xl:32px;--radius-full:999px;
+--font-display:"Bricolage Grotesque","IBM Plex Sans Arabic","Geist",system-ui,sans-serif;--font-sans:"Geist","IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",sans-serif;--font-mono:"Geist Mono","IBM Plex Sans Arabic",ui-monospace,"SF Mono",Menlo,monospace;
+}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-sans);-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,h5,p{margin:0}
+.display-xl{font-family:var(--font-display);font-size:80px;line-height:84px;font-weight:600;letter-spacing:-0.03em}
+.display-l{font-family:var(--font-display);font-size:60px;line-height:64px;font-weight:600;letter-spacing:-0.025em}
+.display-m{font-family:var(--font-display);font-size:44px;line-height:48px;font-weight:600;letter-spacing:-0.02em}
+.h1{font-family:var(--font-display);font-size:36px;line-height:42px;font-weight:600;letter-spacing:-0.015em}
+.h2{font-family:var(--font-display);font-size:28px;line-height:34px;font-weight:600;letter-spacing:-0.01em}
+.h3{font-family:var(--font-display);font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.005em}
+.price-l{font-family:var(--font-display);font-size:32px;line-height:36px;font-weight:600;letter-spacing:-0.01em}
+.price-m{font-family:var(--font-display);font-size:22px;line-height:26px;font-weight:600;letter-spacing:-0.005em}
+.h4{font-family:var(--font-sans);font-size:18px;line-height:24px;font-weight:600;letter-spacing:-0.005em}
+.h5{font-family:var(--font-sans);font-size:16px;line-height:22px;font-weight:600;letter-spacing:-0.003em}
+.body-l{font-family:var(--font-sans);font-size:18px;line-height:28px;font-weight:400;letter-spacing:-0.01em}
+.body-m{font-family:var(--font-sans);font-size:16px;line-height:24px;font-weight:400}
+.body-s{font-family:var(--font-sans);font-size:14px;line-height:20px;font-weight:400}
+.body-xs{font-family:var(--font-sans);font-size:12px;line-height:16px;font-weight:400}
+.label-l{font-family:var(--font-sans);font-size:16px;line-height:24px;font-weight:500}
+.label-m{font-family:var(--font-sans);font-size:14px;line-height:20px;font-weight:500}
+.label-s{font-family:var(--font-sans);font-size:12px;line-height:16px;font-weight:500}
+.overline{font-family:var(--font-mono);font-size:11px;line-height:16px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase}
+.mono-m{font-family:var(--font-mono);font-size:14px;line-height:20px;font-weight:400}
+.mono-s{font-family:var(--font-mono);font-size:12px;line-height:16px;font-weight:400}
+@media (max-width:720px){.display-xl{font-size:48px;line-height:52px}.display-l{font-size:40px;line-height:44px}.display-m{font-size:32px;line-height:36px}}
+:lang(ar),:lang(ar) *{letter-spacing:0!important}:lang(ar) .overline{text-transform:none}:lang(ar) .body-l,:lang(ar) .body-m,:lang(ar) .body-s{line-height:1.7}

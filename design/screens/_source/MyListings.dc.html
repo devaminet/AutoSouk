@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk · My listings</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; background: var(--paper); color: var(--ink); font-family: var(--font-sans); overflow-x: hidden">
+  <div style="overflow-x: auto">
+    <x-import component-from-global-scope="AutoSouk.NavDesktop" active="Sell a car" role="Seller" initials="KE"></x-import>
+  </div>
+  <main style="max-width: 1280px; margin: 0 auto; padding: 48px 24px 96px; display: flex; flex-direction: column; gap: 32px">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span class="overline" style="color: var(--brand)">Seller dashboard</span>
+        <h1 class="display-m">My listings</h1>
+      </div>
+      <a href="Sell-CarDetails.dc.html" class="label-l" style="display: inline-flex; gap: 10px; align-items: center; height: 56px; padding: 0 24px; border-radius: 999px; background: var(--brand); color: var(--on-brand); text-decoration: none; box-shadow: var(--elevation-brand)"><x-import component-from-global-scope="AutoSouk.Icon" name="plus" size="{{s20}}" color="on-brand"></x-import>New listing</a>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px">
+      <x-import component-from-global-scope="AutoSouk.StatCard" label="Approved &amp; live" value="1" trend="1 inspection completed" icon="car"></x-import>
+      <x-import component-from-global-scope="AutoSouk.StatCard" label="Pending review" value="1" trend="Usually under 24 h" icon="clock" tone="warning"></x-import>
+      <x-import component-from-global-scope="AutoSouk.StatCard" label="Drafts" value="1" trend="Finish to publish" icon="pencil" tone="muted"></x-import>
+      <x-import component-from-global-scope="AutoSouk.StatCard" label="Sold" value="1" trend="255 000 MAD" icon="award"></x-import>
+    </div>
+    <section style="display: flex; flex-direction: column; padding: 8px 24px 16px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+      <div style="overflow-x: auto"><x-import component-from-global-scope="AutoSouk.Tabs" items="{{tabs}}" active="All"></x-import></div>
+      <p class="body-s" style="display: flex; gap: 8px; align-items: center; padding: 14px 16px 4px; color: var(--muted)"><x-import component-from-global-scope="AutoSouk.Icon" name="eye" size="{{s16}}" color="muted"></x-import>Only approved listings appear in search. Drafts, pending and rejected listings are visible to you only.</p>
+      <div style="overflow-x: auto">
+        <table style="width: 100%; min-width: 820px; border-collapse: collapse">
+          <thead>
+            <tr>
+              <th class="overline" style="text-align: left; padding: 12px 16px; color: var(--muted); border-bottom: 1px solid var(--line)">Listing</th>
+              <th class="overline" style="text-align: left; padding: 12px 16px; color: var(--muted); border-bottom: 1px solid var(--line)">Price</th>
+              <th class="overline" style="text-align: left; padding: 12px 16px; color: var(--muted); border-bottom: 1px solid var(--line)">Status</th>
+              <th class="overline" style="text-align: left; padding: 12px 16px; color: var(--muted); border-bottom: 1px solid var(--line)">Inspections</th>
+              <th class="overline" style="text-align: left; padding: 12px 16px; color: var(--muted); border-bottom: 1px solid var(--line)">Updated</th>
+              <th style="border-bottom: 1px solid var(--line)"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+              <tr>
+                <td style="padding: 14px 16px; border-bottom: 1px solid var(--line)">
+                  <div style="display: flex; gap: 14px; align-items: center">
+                    <x-import component-from-global-scope="AutoSouk.CarPhoto" tone="{{r.tone}}" width="{{w88}}" height="{{h64}}" radius="{{r12}}"></x-import>
+                    <div style="display: flex; flex-direction: column; gap: 2px">
+                      <span class="h5">{{r.title}}</span>
+                      <span class="body-s" style="color: var(--muted)">{{r.meta}}</span>
+                      <sc-if value="{{r.reason}}" hint-placeholder-val="{{no}}"><span class="body-xs" style="display: block; max-width: 420px; margin-top: 4px; padding: 8px 10px; border-radius: 10px; background: var(--danger-soft); color: var(--ink-2)"><span style="color: var(--danger); font-weight: 600">Why it was rejected: </span>{{r.reason}}</span></sc-if>
+                    </div>
+                  </div>
+                </td>
+                <td style="padding: 14px 16px; border-bottom: 1px solid var(--line); white-space: nowrap"><span class="h4">{{r.price}}</span> <span class="mono-s" style="color: var(--muted)">MAD</span></td>
+                <td style="padding: 14px 16px; border-bottom: 1px solid var(--line)"><x-import component-from-global-scope="AutoSouk.Badge" tone="{{r.tone2}}">{{r.status}}</x-import></td>
+                <td class="body-s" style="padding: 14px 16px; border-bottom: 1px solid var(--line); color: var(--ink-2)">{{r.ins}}</td>
+                <td class="body-s" style="padding: 14px 16px; border-bottom: 1px solid var(--line); color: var(--muted)">{{r.up}}</td>
+                <td style="padding: 14px 16px; border-bottom: 1px solid var(--line)">
+                  <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center">
+                    <x-import component-from-global-scope="AutoSouk.Button" variant="{{r.av}}" size="S" icon="{{r.ai}}">{{r.action}}</x-import>
+                    <a href="ManageMedia.dc.html" aria-label="Manage photos and videos" title="Photos &amp; videos" style="width: 34px; height: 34px; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="image" size="{{s16}}"></x-import></a>
+                    <button type="button" aria-label="More actions" style="width: 34px; height: 34px; border: 0; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="more-horizontal" size="{{s16}}"></x-import></button>
+                  </div>
+                </td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const row = (title, meta, price, tone2, status, ins, tone, up, action, av, ai, reason) => ({ title, meta, price, tone2, status, ins, tone, up, action, av, ai, reason: reason || null });
+    return {
+      no: false, s16: 16, s20: 20, w88: 88, h64: 64, r12: 12,
+      tabs: [{ label: 'All', count: 6 }, { label: 'Approved', count: 1 }, { label: 'Pending', count: 1 }, { label: 'Draft', count: 1 }, { label: 'Rejected', count: 1 }, { label: 'Withdrawn', count: 1 }, { label: 'Sold', count: 1 }],
+      rows: [
+        row('Volkswagen Golf 8 Life', '2020 · 54 000 km', '265 000', 'success', 'Approved', '1 completed', 'night', 'Today', 'Edit', 'secondary', 'pencil'),
+        row('Dacia Duster Prestige', '2021 · 68 000 km', '185 000', 'warning', 'Pending review', '—', 'sand', 'Yesterday', 'Edit', 'secondary', 'pencil'),
+        row('Peugeot 208 Allure', '2019 · 87 000 km', '129 000', 'danger', 'Rejected', '—', 'clay', '3 Oct', 'Edit & resubmit', 'dark', 'pencil', 'Please add a photo of the dashboard with the engine on, so the mileage can be checked.'),
+        row('Renault Mégane 4', '2018 · 120 000 km', '142 000', 'neutral', 'Draft', '—', 'sky', '28 Sep', 'Continue', 'dark', 'arrow-right'),
+        row('Kia Sportage GT-Line', '2020 · 81 000 km', '255 000', 'dark', 'Sold', '2 completed', 'olive', '12 Sep', 'View', 'secondary', 'eye'),
+        row('Seat Ibiza FR', '2017 · 140 000 km', '98 000', 'info', 'Withdrawn', '—', 'saffron', '2 Sep', 'Edit & resubmit', 'secondary', 'pencil')
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

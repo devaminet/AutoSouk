@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk · Saved cars</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; background: var(--paper); color: var(--ink); font-family: var(--font-sans); overflow-x: hidden">
+  <div style="overflow-x: auto">
+    <x-import component-from-global-scope="AutoSouk.NavDesktop" active="Explore cars"></x-import>
+  </div>
+  <main style="max-width: 1280px; margin: 0 auto; padding: 48px 24px 96px; display: flex; flex-direction: column; gap: 32px">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span class="overline" style="color: var(--brand)">Your shortlist</span>
+        <h1 class="display-m">Saved cars</h1>
+        <p class="body-m" style="color: var(--muted)">8 cars · 4 already inspected · tap the heart to remove</p>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+        <x-import component-from-global-scope="AutoSouk.Chip" selected="{{yes}}">All 8</x-import>
+        <x-import component-from-global-scope="AutoSouk.Chip" icon="shield">Inspected 4</x-import>
+        <x-import component-from-global-scope="AutoSouk.Chip">Not inspected 4</x-import>
+        <x-import component-from-global-scope="AutoSouk.Button" variant="secondary" icon="sliders">Recently saved</x-import>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center; padding: 18px 22px; border-radius: 20px; background: var(--brand-soft)">
+      <span style="width: 44px; height: 44px; border-radius: 999px; background: var(--brand); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="shield" size="{{s22}}" color="on-brand"></x-import></span>
+      <div style="flex: 1 1 320px; display: flex; flex-direction: column; gap: 2px">
+        <span class="h5">4 saved cars haven't been inspected yet</span>
+        <span class="body-s" style="color: var(--ink-2)">Book a garage in the car's city before you meet the seller — prices from 250 MAD.</span>
+      </div>
+      <a href="RequestInspection.dc.html" class="label-m" style="display: inline-flex; align-items: center; height: 44px; padding: 0 18px; border-radius: 999px; background: var(--brand); color: var(--on-brand); text-decoration: none; box-shadow: var(--elevation-brand)">Request inspections</a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 28px 24px">
+      <sc-for list="{{cars}}" as="c" hint-placeholder-count="7">
+        <a href="Listing.dc.html" style="text-decoration: none; color: inherit; display: block">
+          <x-import component-from-global-scope="AutoSouk.ListingCard" fluid="{{yes}}" title="{{c.title}}" meta="{{c.meta}}" price="{{c.price}}" city="{{c.city}}" tone="{{c.tone}}" inspected-score="{{c.score}}" favorite="{{yes}}" photos="{{c.photos}}"></x-import>
+        </a>
+      </sc-for>
+      <article style="position: relative; display: flex; flex-direction: column; padding: 8px; border-radius: 24px; background: var(--surface); box-shadow: var(--elevation-1)">
+        <div style="position: relative">
+          <x-import component-from-global-scope="AutoSouk.CarPhoto" tone="sand" fluid="{{yes}}" ratio="25 / 18" alt="Kia Sportage, no longer available"></x-import>
+          <span style="position: absolute; inset: 0; border-radius: 18px; background: rgba(246,242,234,0.6)"></span>
+          <span style="position: absolute; left: 12px; top: 12px"><x-import component-from-global-scope="AutoSouk.Badge" tone="dark" dot="{{no}}">Sold</x-import></span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; padding: 14px 8px 8px; opacity: 0.55">
+          <span class="h5">Kia Sportage GT-Line</span>
+          <span class="body-s" style="color: var(--muted)">2020 · 81 000 km · Diesel · Automatic</span>
+          <span style="display: flex; gap: 4px; align-items: baseline"><span class="price-m">255 000</span><span class="mono-s" style="color: var(--muted)">MAD</span></span>
+        </div>
+        <div style="display: flex; gap: 8px; padding: 4px 8px 8px">
+          <x-import component-from-global-scope="AutoSouk.Button" variant="secondary" size="S" icon="trash">Remove</x-import>
+          <x-import component-from-global-scope="AutoSouk.Button" variant="ghost" size="S" icon="search">Find similar</x-import>
+        </div>
+      </article>
+    </div>
+    <p class="body-s" style="color: var(--muted); text-align: center">You've reached the end of your saved cars</p>
+  </main>
+  <x-import component-from-global-scope="AutoSouk.Footer"></x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      yes: true, no: false, s22: 22,
+      cars: [
+        { title: 'Volkswagen Golf 8 Life 2.0 TDI', meta: '2020 · 54 000 km · Diesel · Automatic', price: '265 000', city: 'Rabat', tone: 'night', score: 92, photos: 12 },
+        { title: 'Toyota Corolla Hybrid', meta: '2021 · 72 000 km · Hybrid · Automatic', price: '245 000', city: 'Casablanca', tone: 'olive', score: 88, photos: 8 },
+        { title: 'Fiat 500 Dolcevita', meta: '2022 · 18 000 km · Petrol · Manual', price: '139 000', city: 'Agadir', tone: 'saffron', score: null, photos: 6 },
+        { title: 'Peugeot 3008 GT Line', meta: '2019 · 98 000 km · Diesel · Automatic', price: '238 000', city: 'Marrakech', tone: 'clay', score: null, photos: 7 },
+        { title: 'Dacia Duster 1.5 dCi Prestige', meta: '2021 · 68 000 km · Diesel · Manual', price: '185 000', city: 'Casablanca', tone: 'sand', score: 92, photos: 9 },
+        { title: 'Renault Clio 5 Intens', meta: '2022 · 31 000 km · Petrol · Manual', price: '159 000', city: 'Tanger', tone: 'sky', score: 95, photos: 10 },
+        { title: 'Hyundai Tucson Executive', meta: '2020 · 88 000 km · Diesel · Automatic', price: '279 000', city: 'Fès', tone: 'majorelle', score: null, photos: 14 }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

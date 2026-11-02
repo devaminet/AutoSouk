@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk mobile · Account</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--paper); color: var(--ink); font-family: var(--font-sans); display: flex; flex-direction: column">
+  <div style="padding-top: 12px"><x-import component-from-global-scope="AutoSouk.MobileHeader" variant="back" title="Account"></x-import></div>
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 16px; padding: 8px 20px 110px; overflow: hidden">
+    <section style="display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 20px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+      <x-import component-from-global-scope="AutoSouk.Avatar" initials="AT" size="XL"></x-import>
+      <h1 class="h3">Amine Takha</h1>
+      <div style="display: flex; gap: 6px">
+        <x-import component-from-global-scope="AutoSouk.Badge" tone="brand">Buyer</x-import>
+        <x-import component-from-global-scope="AutoSouk.Badge" tone="success">Verified</x-import>
+      </div>
+      <x-import component-from-global-scope="AutoSouk.Button" variant="secondary" size="S" icon="camera">Change photo</x-import>
+    </section>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <span class="overline" style="color: var(--muted)">Perspective</span>
+      <x-import component-from-global-scope="AutoSouk.RoleSwitch" active="Buyer"></x-import>
+    </div>
+    <nav aria-label="Account" style="display: flex; flex-direction: column; border-radius: 20px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden">
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+        <a href="{{r.href}}" style="display: flex; gap: 12px; align-items: center; padding: 16px; border-bottom: 1px solid var(--line); text-decoration: none; color: {{r.c}}">
+          <x-import component-from-global-scope="AutoSouk.Icon" name="{{r.icon}}" size="{{s20}}" color="{{r.ic}}"></x-import>
+          <span class="label-l" style="flex: 1">{{r.t}}</span>
+          <x-import component-from-global-scope="AutoSouk.Icon" name="chevron-right" size="{{s18}}" color="subtle"></x-import>
+        </a>
+      </sc-for>
+    </nav>
+  </main>
+  <div style="position: absolute; left: 0; right: 0; bottom: 0">
+    <x-import component-from-global-scope="AutoSouk.TabBar" active="Account"></x-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const row = (icon, t, href, danger) => ({ icon, t, href, c: danger ? 'var(--danger)' : 'var(--ink)', ic: danger ? 'danger' : 'ink' });
+    return {
+      s18: 18, s20: 20,
+      rows: [row('user', 'Personal information', 'Account.dc.html'), row('globe', 'Language · English', 'M-Language.dc.html'), row('lock', 'Change password', 'Account.dc.html'), row('heart', 'Saved cars', 'M-Favorites.dc.html'), row('shield', 'My inspections', 'M-MyInspections.dc.html'), row('logout', 'Log out', 'M-Login.dc.html', true)]
+    };
+  }
+}
+</script>
+</body>
+</html>

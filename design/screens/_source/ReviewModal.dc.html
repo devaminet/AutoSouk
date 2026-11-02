@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk · Write a review</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 1440px; height: 900px; overflow: hidden; background: var(--paper); color: var(--ink); font-family: var(--font-sans)">
+  <x-import component-from-global-scope="AutoSouk.NavDesktop" active="Mechanics"></x-import>
+  <div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(15,14,28,0.45)"></div>
+  <section role="dialog" aria-label="Review Garage Atlas Auto" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 560px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px; padding: 32px; border-radius: 28px; background: var(--surface); box-shadow: 0 30px 80px -20px rgba(0,0,0,0.4)">
+    <header style="display: flex; justify-content: space-between; align-items: flex-start">
+      <div style="display: flex; gap: 14px; align-items: center">
+        <x-import component-from-global-scope="AutoSouk.Avatar" initials="GA" size="L"></x-import>
+        <div style="display: flex; flex-direction: column; gap: 2px"><span class="overline" style="color: var(--muted)">Review</span><h2 class="h3">Garage Atlas Auto</h2></div>
+      </div>
+      <a href="MechanicProfile.dc.html" aria-label="Close" style="width: 40px; height: 40px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="x" size="{{s18}}"></x-import></a>
+    </header>
+    <fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+      <legend class="label-m" style="padding: 0 0 10px">How was your inspection?</legend>
+      <div style="display: flex; gap: 8px; align-items: center">
+        <sc-for list="{{stars}}" as="s" hint-placeholder-count="5">
+          <button type="button" aria-label="{{s.label}}" onClick="{{s.pick}}" style="border: 0; padding: 0; background: none; cursor: pointer"><x-import component-from-global-scope="AutoSouk.Icon" name="star" size="{{s40}}" color="{{s.c}}" fill="{{s.f}}"></x-import></button>
+        </sc-for>
+        <span class="h4" style="margin-left: 8px">{{word}}</span>
+      </div>
+    </fieldset>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <x-import component-from-global-scope="AutoSouk.Input" label="Your review" value="Arrived on time, clear explanations. Found a small oil leak and worn front tyres. Report delivered the same evening." state="focus" multiline="{{yes}}" rows="{{r4}}"></x-import>
+      <div style="display: flex; justify-content: space-between; gap: 12px"><span class="body-xs" style="color: var(--muted)">Keep it respectful — reviews with offensive language are blocked automatically.</span><span class="mono-s" style="color: var(--muted)">132 / 1000</span></div>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--danger-soft)">
+      <x-import component-from-global-scope="AutoSouk.Icon" name="alert-triangle" size="{{s18}}" color="danger"></x-import>
+      <span class="body-s" style="color: var(--danger)">Example error: “Review message contains inappropriate content”</span>
+    </div>
+    <footer style="display: flex; justify-content: space-between">
+      <x-import component-from-global-scope="AutoSouk.Button" variant="ghost">Cancel</x-import>
+      <x-import component-from-global-scope="AutoSouk.Button" icon="check">Publish review</x-import>
+    </footer>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { rating: 4 }; }
+  renderVals() {
+    const r = this.state.rating;
+    const words = ['', 'Poor', 'Fair', 'Good', 'Very good', 'Excellent'];
+    return {
+      yes: true, s18: 18, s40: 40, r4: 4, word: words[r],
+      stars: [1, 2, 3, 4, 5].map((i) => ({ label: i + ' star' + (i > 1 ? 's' : ''), c: i <= r ? 'saffron' : 'line-strong', f: i <= r ? 'saffron' : null, pick: () => this.setState({ rating: i }) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

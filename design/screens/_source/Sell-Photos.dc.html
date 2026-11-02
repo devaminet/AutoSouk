@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk · New listing · Photos</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; background: var(--paper); color: var(--ink); font-family: var(--font-sans); overflow-x: hidden">
+  <div style="overflow-x: auto">
+    <x-import component-from-global-scope="AutoSouk.NavDesktop" active="Sell a car" role="Seller" initials="KE"></x-import>
+  </div>
+  <main style="max-width: 1280px; margin: 0 auto; padding: 40px 24px 96px; display: flex; flex-direction: column; gap: 32px">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+      <nav aria-label="Breadcrumb" style="display: flex; gap: 8px; align-items: center">
+        <a href="MyListings.dc.html" class="label-m" style="display: flex; gap: 8px; align-items: center; color: var(--ink); text-decoration: none"><x-import component-from-global-scope="AutoSouk.Icon" name="arrow-left" size="{{s16}}"></x-import>My listings</a>
+        <span style="color: var(--subtle)">/</span><span class="label-m" style="color: var(--muted)">New listing</span>
+      </nav>
+      <div style="display: flex; gap: 10px">
+        <x-import component-from-global-scope="AutoSouk.Button" variant="ghost">Save draft</x-import>
+        <x-import component-from-global-scope="AutoSouk.Button" variant="secondary" icon="x">Discard</x-import>
+      </div>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 20px 28px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); overflow-x: auto">
+      <x-import component-from-global-scope="AutoSouk.Stepper" step="{{st3}}"></x-import>
+      <span class="mono-s" style="color: var(--muted)">Step 3 of 4</span>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start">
+      <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+        <section style="display: flex; flex-direction: column; gap: 24px; padding: clamp(20px, 3vw, 32px); border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px">
+            <div style="display: flex; flex-direction: column; gap: 4px"><h1 class="h2">Photos &amp; videos</h1><p class="body-m" style="color: var(--muted)">At least 3 photos, up to 20 files with videos. The cover is shown first in search and must be a photo.</p></div>
+          </div>
+          <x-import component-from-global-scope="AutoSouk.MediaLimits" images="{{n5}}" videos="{{n1}}" pending="{{n2}}"></x-import>
+          <label style="display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 36px; border-radius: 20px; border: 1.5px dashed var(--brand); background: var(--brand-soft); text-align: center; cursor: pointer">
+            <span style="width: 56px; height: 56px; border-radius: 999px; background: var(--brand); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="upload" size="{{s24}}" color="on-brand"></x-import></span>
+            <span class="h4">Drop photos here or <span style="color: var(--brand)">browse</span></span>
+            <span class="body-s" style="color: var(--muted)">JPG, PNG, WEBP · videos MP4</span>
+          </label>
+          <div style="display: flex; flex-wrap: wrap; gap: 16px">
+            <x-import component-from-global-scope="AutoSouk.UploadTile" state="cover" tone="night" actions="{{yes}}" width="{{w196}}" height="{{h150}}"></x-import>
+            <x-import component-from-global-scope="AutoSouk.UploadTile" state="filled" tone="sand" actions="{{yes}}" width="{{w196}}" height="{{h150}}"></x-import>
+            <x-import component-from-global-scope="AutoSouk.UploadTile" state="filled" tone="sky" actions="{{yes}}" width="{{w196}}" height="{{h150}}"></x-import>
+            <x-import component-from-global-scope="AutoSouk.UploadTile" state="filled" tone="clay" actions="{{yes}}" width="{{w196}}" height="{{h150}}"></x-import>
+            <x-import component-from-global-scope="AutoSouk.UploadTile" state="filled" tone="majorelle" actions="{{yes}}" width="{{w196}}" height="{{h150}}"></x-import>
+            <x-import component-from-global-scope="AutoSouk.UploadTile" state="filled" tone="olive" video="{{yes}}" duration="0:38" actions="{{yes}}" width="{{w196}}" height="{{h150}}"></x-import>
+            <x-import component-from-global-scope="AutoSouk.UploadTile" state="uploading" tone="sky" progress="{{p72}}" width="{{w196}}" height="{{h150}}"></x-import>
+            <x-import component-from-global-scope="AutoSouk.UploadTile" state="uploading" tone="saffron" progress="{{p38}}" width="{{w196}}" height="{{h150}}"></x-import>
+            <x-import component-from-global-scope="AutoSouk.UploadTile" state="empty" label="Add photo or video" hint="12 files left" width="{{w196}}" height="{{h150}}"></x-import>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px 16px">
+            <sc-for list="{{shots}}" as="s" hint-placeholder-count="6">
+              <span style="display: flex; gap: 6px; align-items: center"><x-import component-from-global-scope="AutoSouk.Icon" name="{{s.icon}}" size="{{s14}}" color="{{s.c}}"></x-import><span class="body-xs" style="color: {{s.tc}}">{{s.t}}</span></span>
+            </sc-for>
+          </div>
+        </section>
+        <div style="display: flex; justify-content: space-between; gap: 12px">
+          <a href="Sell-CarDetails.dc.html" class="label-l" style="display: inline-flex; gap: 10px; align-items: center; height: 56px; padding: 0 24px; border-radius: 999px; background: var(--surface); color: var(--ink); text-decoration: none; box-shadow: inset 0 0 0 1px var(--line-strong)"><x-import component-from-global-scope="AutoSouk.Icon" name="arrow-left" size="{{s20}}"></x-import>Back</a>
+          <x-import component-from-global-scope="AutoSouk.Button" size="L" icon-right="arrow-right">Review listing</x-import>
+        </div>
+      </div>
+      <aside style="flex: 1 1 320px; max-width: 380px; display: flex; flex-direction: column; gap: 16px">
+        <span class="overline" style="color: var(--muted)">Live preview</span>
+        <x-import component-from-global-scope="AutoSouk.ListingCard" fluid="{{yes}}" title="Volkswagen Golf 8 Life 2.0 TDI" meta="2020 · 54 000 km · Diesel · Automatic" price="265 000" city="Casablanca" tone="night" photos="{{n6}}"></x-import>
+        <div style="display: flex; gap: 12px; align-items: flex-start; padding: 16px; border-radius: 16px; background: var(--info-soft)">
+          <x-import component-from-global-scope="AutoSouk.Icon" name="info" size="{{s18}}" color="info"></x-import>
+          <p class="body-s" style="color: var(--ink-2)">Photos upload straight to secure storage. Hide your matricule and carte grise numbers — the inspector checks them in person.</p>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1280}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const shot = (t, done) => ({ t, icon: done ? 'check-circle' : 'info', c: done ? 'success' : 'subtle', tc: done ? 'var(--ink-2)' : 'var(--muted)' });
+    return {
+      n1: 1, n2: 2, n5: 5,
+      yes: true, s14: 14, s16: 16, s18: 18, s20: 20, s24: 24, st3: 3, w196: 196, h150: 150, p72: 72, p38: 38, n6: 6,
+      shots: [shot('Front ¾', true), shot('Rear ¾', true), shot('Interior', true), shot('Dashboard (mileage)', false), shot('Engine bay', false), shot('Tyres', false)]
+    };
+  }
+}
+</script>
+</body>
+</html>

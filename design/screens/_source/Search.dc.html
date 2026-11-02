@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk · Search results</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; background: var(--paper); color: var(--ink); font-family: var(--font-sans); overflow-x: hidden">
+  <div style="overflow-x: auto">
+    <x-import component-from-global-scope="AutoSouk.NavDesktop" active="Explore cars"></x-import>
+  </div>
+  <main style="max-width: 1280px; margin: 0 auto; padding: 40px 24px 96px; display: flex; flex-direction: column; gap: 24px">
+    <nav aria-label="Breadcrumb" style="display: flex; gap: 8px; align-items: center">
+      <a href="Main.dc.html" class="label-s" style="color: var(--muted); text-decoration: none">Explore</a>
+      <x-import component-from-global-scope="AutoSouk.Icon" name="chevron-right" size="{{s14}}" color="subtle"></x-import>
+      <span class="label-s">Volkswagen</span>
+    </nav>
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h1 class="display-m">Volkswagen in Casablanca</h1>
+        <p class="body-m" style="color: var(--muted)">21 cars · 15 inspected · updated 4 min ago</p>
+      </div>
+      <div style="position: relative; display: flex; gap: 10px; align-items: center">
+        <button type="button" style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-strong); cursor: pointer">
+          <span class="body-s" style="color: var(--muted)">Sort</span>
+          <span class="label-m">Newest first</span>
+          <x-import component-from-global-scope="AutoSouk.Icon" name="chevron-down" size="{{s16}}"></x-import>
+        </button>
+        <div role="group" aria-label="View" style="display: flex; gap: 2px; padding: 4px; border-radius: 999px; background: var(--paper); box-shadow: inset 0 0 0 1px var(--line)">
+          <button type="button" aria-label="Grid view" style="width: 36px; height: 36px; border: 0; border-radius: 999px; background: var(--surface); box-shadow: var(--elevation-1); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="grid" size="{{s16}}"></x-import></button>
+          <button type="button" aria-label="List view" style="width: 36px; height: 36px; border: 0; border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="menu" size="{{s16}}" color="muted"></x-import></button>
+        </div>
+        <div role="menu" aria-label="Sort by" style="position: absolute; right: 0; top: 52px; z-index: 5; width: 220px; padding: 6px; border-radius: 16px; background: var(--surface); box-shadow: var(--elevation-2), inset 0 0 0 1px var(--line); display: flex; flex-direction: column; gap: 2px">
+          <span role="menuitem" class="label-m" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 10px; background: var(--brand-soft); color: var(--brand)">Newest first <x-import component-from-global-scope="AutoSouk.Icon" name="check" size="{{s16}}" color="brand"></x-import></span>
+          <span role="menuitem" class="label-m" style="padding: 10px 12px; border-radius: 10px">Oldest first</span>
+          <span role="menuitem" class="label-m" style="padding: 10px 12px; border-radius: 10px">Price: low to high</span>
+          <span role="menuitem" class="label-m" style="padding: 10px 12px; border-radius: 10px">Price: high to low</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start">
+      <aside aria-label="Filters" style="flex: 1 1 280px; max-width: 320px; display: flex; flex-direction: column; gap: 24px; padding: 24px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <span style="display: flex; gap: 8px; align-items: center"><x-import component-from-global-scope="AutoSouk.Icon" name="sliders" size="{{s18}}"></x-import><span class="h4">Filters</span></span>
+          <button type="button" class="label-s" style="border: 0; background: none; color: var(--brand); cursor: pointer">Reset</button>
+        </div>
+        <x-import component-from-global-scope="AutoSouk.Input" label="Make" value="Volkswagen" select="{{yes}}"></x-import>
+        <x-import component-from-global-scope="AutoSouk.Input" label="Model" placeholder="Any model" select="{{yes}}"></x-import>
+        <x-import component-from-global-scope="AutoSouk.Input" label="City" value="Casablanca" icon="map-pin" select="{{yes}}"></x-import>
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; justify-content: space-between"><span class="label-m">Price (MAD)</span><span class="mono-s" style="color: var(--muted)">80k – 300k</span></div>
+          <div aria-hidden="true" style="display: flex; align-items: flex-end; gap: 3px; height: 44px">
+            <sc-for list="{{hist}}" as="b" hint-placeholder-count="15">
+              <span style="flex: 1; border-radius: 3px; height: {{b.h}}; background: {{b.c}}"></span>
+            </sc-for>
+          </div>
+          <div aria-hidden="true" style="position: relative; height: 20px">
+            <span style="position: absolute; left: 0; right: 0; top: 8px; height: 4px; border-radius: 2px; background: var(--line)"></span>
+            <span style="position: absolute; left: 13%; width: 54%; top: 8px; height: 4px; background: var(--brand)"></span>
+            <span style="position: absolute; left: 11%; top: 0; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); box-shadow: inset 0 0 0 2px var(--brand), var(--elevation-1)"></span>
+            <span style="position: absolute; left: 62%; top: 0; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); box-shadow: inset 0 0 0 2px var(--brand), var(--elevation-1)"></span>
+          </div>
+          <div style="display: flex; gap: 10px">
+            <x-import component-from-global-scope="AutoSouk.Input" value="80 000" suffix="MAD"></x-import>
+            <x-import component-from-global-scope="AutoSouk.Input" value="300 000" suffix="MAD"></x-import>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <span class="label-m">Transmission</span>
+          <x-import component-from-global-scope="AutoSouk.Segmented" items="{{gear}}" active="Automatic"></x-import>
+        </div>
+        <fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+          <legend class="label-m" style="padding: 0 0 10px">Fuel</legend>
+          <sc-for list="{{fuels}}" as="f" hint-placeholder-count="5">
+            <label style="display: flex; gap: 10px; align-items: center">
+              <x-import component-from-global-scope="AutoSouk.Checkbox" checked="{{f.on}}"></x-import>
+              <span class="body-s" style="flex: 1">{{f.name}}</span>
+              <span class="mono-s" style="color: var(--subtle)">{{f.n}}</span>
+            </label>
+          </sc-for>
+        </fieldset>
+        <fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+          <legend style="display: flex; justify-content: space-between; align-items: baseline; width: 100%; padding: 0 0 10px"><span class="label-m">Equipment</span><span class="body-xs" style="color: var(--muted)">Car must have all</span></legend>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <sc-for list="{{eqf}}" as="e" hint-placeholder-count="8">
+              <x-import component-from-global-scope="AutoSouk.EquipmentPill" selected="{{e.on}}">{{e.name}}</x-import>
+            </sc-for>
+          </div>
+          <button type="button" class="label-s" style="align-self: flex-start; display: flex; gap: 4px; align-items: center; padding: 6px 0; border: 0; background: none; color: var(--brand); cursor: pointer">Browse all 72 items <x-import component-from-global-scope="AutoSouk.Icon" name="chevron-right" size="{{s14}}" color="brand"></x-import></button>
+        </fieldset>
+        <div style="display: flex; gap: 12px; align-items: center; padding: 14px; border-radius: 16px; background: var(--success-soft)">
+          <x-import component-from-global-scope="AutoSouk.Icon" name="shield" size="{{s20}}" color="success"></x-import>
+          <span style="flex: 1; display: flex; flex-direction: column"><span class="label-m">Inspected only</span><span class="body-xs" style="color: var(--ink-2)">Show cars with a report</span></span>
+          <x-import component-from-global-scope="AutoSouk.Toggle" on="{{yes}}"></x-import>
+        </div>
+        <x-import component-from-global-scope="AutoSouk.Button" variant="dark" block="{{yes}}">Show 21 cars</x-import>
+      </aside>
+
+      <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+          <x-import component-from-global-scope="AutoSouk.Chip" removable="{{yes}}">Volkswagen</x-import>
+          <x-import component-from-global-scope="AutoSouk.Chip" removable="{{yes}}">Casablanca</x-import>
+          <x-import component-from-global-scope="AutoSouk.Chip" removable="{{yes}}">80k – 300k MAD</x-import>
+          <x-import component-from-global-scope="AutoSouk.Chip" removable="{{yes}}">Automatic</x-import>
+          <x-import component-from-global-scope="AutoSouk.Chip" removable="{{yes}}">Inspected only</x-import>
+          <x-import component-from-global-scope="AutoSouk.Chip" removable="{{yes}}">Apple CarPlay</x-import>
+          <x-import component-from-global-scope="AutoSouk.Chip" removable="{{yes}}">Rear camera</x-import>
+          <button type="button" class="label-s" style="border: 0; background: none; color: var(--brand); cursor: pointer">Clear all</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px 20px">
+          <sc-for list="{{cars}}" as="c" hint-placeholder-count="9">
+            <a href="Listing.dc.html" style="text-decoration: none; color: inherit; display: block">
+              <x-import component-from-global-scope="AutoSouk.ListingCard" fluid="{{yes}}" title="{{c.title}}" meta="{{c.meta}}" price="{{c.price}}" city="Casablanca" tone="{{c.tone}}" inspected-score="{{c.score}}" favorite="{{c.fav}}" photos="{{c.photos}}"></x-import>
+            </a>
+          </sc-for>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; padding-top: 16px">
+          <span class="body-s" style="color: var(--muted)">Showing 1–9 of 21</span>
+          <x-import component-from-global-scope="AutoSouk.Pagination" page="{{p1}}" pages="{{p3}}"></x-import>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2050}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const hs = [8, 14, 22, 30, 40, 36, 44, 38, 28, 24, 18, 12, 9, 6, 4];
+    return {
+      yes: true, s14: 14, s16: 16, s18: 18, s20: 20, p1: 1, p3: 3,
+      eqf: [{ name: 'Apple CarPlay', on: true }, { name: 'Rear camera', on: true }, { name: 'Automatic climate control', on: false }, { name: 'Cruise control', on: false }, { name: 'Leather seats', on: false }, { name: 'Panoramic roof', on: false }, { name: 'Keyless entry', on: false }, { name: 'Alloy wheels', on: false }],
+      gear: ['Any', 'Manual', 'Automatic'],
+      hist: hs.map((h, i) => ({ h: h + 'px', c: i >= 2 && i <= 10 ? 'var(--brand)' : 'var(--line)' })),
+      fuels: [{ name: 'Diesel', on: true, n: 32 }, { name: 'Petrol', on: true, n: 11 }, { name: 'Hybrid', on: false, n: 4 }, { name: 'Electric', on: false, n: 1 }, { name: 'LPG', on: false, n: 0 }],
+      cars: [
+        { title: 'Volkswagen Golf 8 Life 2.0 TDI', meta: '2020 · 54 000 km · Diesel · Automatic', price: '265 000', tone: 'night', score: 92, fav: true, photos: 12 },
+        { title: 'Volkswagen Tiguan R-Line', meta: '2021 · 47 000 km · Diesel · Automatic', price: '389 000', tone: 'sand', score: 90, fav: false, photos: 15 },
+        { title: 'Volkswagen Polo Life', meta: '2022 · 22 000 km · Petrol · Manual', price: '185 000', tone: 'sky', score: null, fav: false, photos: 9 },
+        { title: 'Volkswagen T-Roc Style', meta: '2021 · 61 000 km · Petrol · Automatic', price: '279 000', tone: 'clay', score: 86, fav: false, photos: 11 },
+        { title: 'Volkswagen Passat Elegance', meta: '2019 · 112 000 km · Diesel · Automatic', price: '248 000', tone: 'olive', score: null, fav: true, photos: 8 },
+        { title: 'Volkswagen Golf 7 GTD', meta: '2017 · 139 000 km · Diesel · Automatic', price: '199 000', tone: 'majorelle', score: 78, fav: false, photos: 13 },
+        { title: 'Volkswagen Touareg V6', meta: '2018 · 128 000 km · Diesel · Automatic', price: '449 000', tone: 'night', score: 81, fav: false, photos: 18 },
+        { title: 'Volkswagen Caddy Maxi', meta: '2020 · 96 000 km · Diesel · Manual', price: '215 000', tone: 'saffron', score: null, fav: false, photos: 7 },
+        { title: 'Volkswagen Golf 8 R-Line', meta: '2023 · 9 000 km · Petrol · Automatic', price: '345 000', tone: 'sky', score: 97, fav: false, photos: 14 }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

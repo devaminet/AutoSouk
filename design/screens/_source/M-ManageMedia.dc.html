@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk mobile · Photos at the minimum</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--paper); color: var(--ink); font-family: var(--font-sans); display: flex; flex-direction: column">
+  <div style="padding-top: 12px"><x-import component-from-global-scope="AutoSouk.MobileHeader" variant="back" title="Photos &amp; videos"></x-import></div>
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 18px; padding: 8px 20px 120px; overflow: hidden">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <span class="overline" style="color: var(--muted)">VW Golf 8 Life</span>
+      <h1 class="h1">Photos &amp; videos</h1>
+    </div>
+    <x-import component-from-global-scope="AutoSouk.MediaLimits" images="{{n3}}"></x-import>
+    <div role="alert" style="display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: 16px; background: var(--danger-soft)">
+      <x-import component-from-global-scope="AutoSouk.Icon" name="lock" size="{{s18}}" color="danger"></x-import>
+      <span style="display: flex; flex-direction: column; gap: 2px"><span class="label-m" style="color: var(--danger)">Can't delete this photo</span><span class="body-s" style="color: var(--ink-2)">A listing needs at least 3 photos. Upload and confirm a new one first, then delete this one.</span></span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <x-import component-from-global-scope="AutoSouk.UploadTile" state="cover" tone="night" locked="{{yes}}" width="{{w170}}" height="{{h130}}"></x-import>
+      <x-import component-from-global-scope="AutoSouk.UploadTile" state="filled" tone="sand" actions="{{yes}}" locked="{{yes}}" width="{{w170}}" height="{{h130}}"></x-import>
+      <x-import component-from-global-scope="AutoSouk.UploadTile" state="filled" tone="sky" actions="{{yes}}" locked="{{yes}}" width="{{w170}}" height="{{h130}}"></x-import>
+      <x-import component-from-global-scope="AutoSouk.UploadTile" state="empty" label="Add photo" width="{{w170}}" height="{{h130}}"></x-import>
+    </div>
+  </main>
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 20px 30px; background: var(--surface); border-top: 1px solid var(--line)">
+    <x-import component-from-global-scope="AutoSouk.Button" size="L" icon="upload" block="{{yes}}">Upload a replacement</x-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { yes: true, n3: 3, s18: 18, w170: 170, h130: 130 };
+  }
+}
+</script>
+</body>
+</html>

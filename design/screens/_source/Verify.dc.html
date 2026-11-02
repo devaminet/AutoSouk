@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk · Verify your email</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+</style>
+</helmet>
+<div style="position: relative; overflow: hidden; width: 100%; min-height: 100vh; background: var(--paper); color: var(--ink); font-family: var(--font-sans); display: flex; flex-direction: column">
+  <div aria-hidden="true" style="position: absolute; right: -80px; top: 60px; pointer-events: none; opacity: 0.45"><x-import component-from-global-scope="AutoSouk.ZelligePattern" width="{{p680}}" height="{{p840}}"></x-import></div>
+  <header style="position: relative; display: flex; justify-content: space-between; align-items: center; padding: 24px clamp(20px, 4vw, 48px)">
+    <x-import component-from-global-scope="AutoSouk.Logo"></x-import>
+    <span style="display: flex; gap: 8px; align-items: center"><span class="body-s" style="color: var(--muted)">Wrong address?</span><x-import component-from-global-scope="AutoSouk.Button" variant="secondary" size="S">Log out</x-import></span>
+  </header>
+  <main style="position: relative; flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px 20px 64px">
+    <section style="width: 100%; max-width: 480px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 24px; padding: clamp(24px, 4vw, 40px); border-radius: 28px; background: var(--surface); box-shadow: var(--elevation-2); text-align: center">
+      <span style="position: relative; width: 112px; height: 112px; border-radius: 999px; background: var(--brand-soft); display: flex; align-items: center; justify-content: center">
+        <x-import component-from-global-scope="AutoSouk.Icon" name="mail" size="{{s48}}" color="brand"></x-import>
+        <span style="position: absolute; right: -2px; top: 4px; width: 36px; height: 36px; border-radius: 999px; background: var(--saffron); display: flex; align-items: center; justify-content: center"><x-import component-from-global-scope="AutoSouk.Icon" name="check" size="{{s18}}"></x-import></span>
+      </span>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <h1 class="h1">Check your inbox</h1>
+        <p class="body-m" style="color: var(--muted)">We sent a verification link to amine@autosouk.ma. Click it to activate your account — the link expires in 24 hours.</p>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; width: 100%">
+        <x-import component-from-global-scope="AutoSouk.Button" variant="dark" icon="mail" block="{{yes}}" style="flex: 1 1 160px">Open Gmail</x-import>
+        <x-import component-from-global-scope="AutoSouk.Button" variant="secondary" icon="refresh" block="{{yes}}" disabled="{{yes}}" style="flex: 1 1 160px">Resend in 0:42</x-import>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: center; width: 100%; box-sizing: border-box; padding: 14px; border-radius: 14px; background: var(--success-soft); text-align: left">
+        <x-import component-from-global-scope="AutoSouk.Icon" name="check-circle" size="{{s22}}" color="success"></x-import>
+        <span style="display: flex; flex-direction: column; gap: 2px"><span class="label-m" style="color: var(--success)">After clicking: email verified</span><span class="body-xs" style="color: var(--ink-2)">You're redirected here and signed in automatically.</span></span>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { yes: true, s18: 18, s22: 22, s48: 48, p680: 680, p840: 840 };
+  }
+}
+</script>
+</body>
+</html>

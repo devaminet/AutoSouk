@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoSouk mobile · Inspection report</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="as-tokens.css">
+<link rel="stylesheet" href="ds/autosouk/components/bundle.css">
+<script src="ds/autosouk/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--paper); color: var(--ink); font-family: var(--font-sans); display: flex; flex-direction: column">
+  <div style="padding-top: 12px"><x-import component-from-global-scope="AutoSouk.MobileHeader" variant="back" title="Report" action="download"></x-import></div>
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 8px 20px 110px; overflow: hidden">
+    <section style="position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 22px; border-radius: 28px; background: var(--night); text-align: center">
+      <span aria-hidden="true" style="position: absolute; left: -100px; top: -200px; pointer-events: none"><x-import component-from-global-scope="AutoSouk.ZelligePattern"></x-import></span>
+      <span style="position: relative; padding: 10px; border-radius: 999px; background: var(--surface)"><x-import component-from-global-scope="AutoSouk.ScoreRing" score="{{s92}}" verdict="excellent" size="{{s110}}"></x-import></span>
+      <h1 class="h2" style="position: relative; color: var(--surface)">Excellent condition</h1>
+      <span class="body-s" style="position: relative; color: var(--subtle)">VW Golf 8 · Garage Atlas Auto · 10 Oct</span>
+    </section>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+      <sc-for list="{{facts}}" as="f" hint-placeholder-count="4">
+        <div style="display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 16px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+          <span class="overline" style="color: var(--muted)">{{f.l}}</span>
+          <span style="display: flex; gap: 6px; align-items: center"><x-import component-from-global-scope="AutoSouk.Icon" name="check-circle" size="{{s14}}" color="success"></x-import><span class="label-s">{{f.v}}</span></span>
+        </div>
+      </sc-for>
+    </div>
+    <section style="padding: 4px 16px; border-radius: 20px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)">
+      <x-import component-from-global-scope="AutoSouk.ChecklistRow" status="pass" item="Engine &amp; gearbox" note="No leaks, no fault codes"></x-import>
+      <x-import component-from-global-scope="AutoSouk.ChecklistRow" status="attention" item="Tyres" note="~2 400 MAD"></x-import>
+      <x-import component-from-global-scope="AutoSouk.ChecklistRow" status="pass" item="Bodywork" note="Front bumper repainted"></x-import>
+    </section>
+  </main>
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 20px 30px; background: var(--surface); border-top: 1px solid var(--line)">
+    <x-import component-from-global-scope="AutoSouk.Button" variant="dark" size="L" icon="download" block="{{yes}}">Download PDF</x-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { yes: true, s14: 14, s92: 92, s110: 110, facts: [{ l: 'Mileage', v: 'Consistent' }, { l: 'CT', v: 'Valid' }, { l: 'Vignette', v: 'Paid' }, { l: 'Carte grise', v: 'Matches' }] };
+  }
+}
+</script>
+</body>
+</html>
