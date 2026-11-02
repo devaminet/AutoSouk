@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   createCarSchema,
   getListingsQuerySchema,
+  getMyListingsQuerySchema,
   updateListingSchema,
 } from "./request_schema";
 import {
@@ -148,6 +149,57 @@ export const findListings = async (
   );
 
   return { listings, totalCountResult };
+};
+
+// A seller's listings in every status. Drafts have no car yet, and filters and
+// sorting only use listing columns, so this stays a relational query.
+export const findListingsBySeller = async (
+  userId: number,
+  options: z.infer<typeof getMyListingsQuerySchema>,
+) => {
+  const { page, limit, status } = options;
+  const where = and(
+    eq(listingTable.userId, userId),
+    status ? eq(listingTable.status, status) : undefined,
+  );
+
+  const listings = await db.query.listingTable.findMany({
+    columns: {
+      id: true,
+      title: true,
+      description: true,
+      status: true,
+      approvedAt: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+    with: {
+      car: {
+        columns: { id: true, price: true, year: true },
+        with: {
+          make: { columns: { name: true } },
+          model: { columns: { name: true } },
+          city: { columns: { name: true, slug: true } },
+          carMedias: {
+            columns: { id: true, type: true, link: true, isPrimary: true },
+            where: eq(carMediaTable.isUploaded, true),
+            orderBy: [desc(carMediaTable.isPrimary), asc(carMediaTable.id)],
+          },
+        },
+      },
+    },
+    where,
+    orderBy: [desc(listingTable.createdAt), desc(listingTable.id)],
+    limit,
+    offset: (page - 1) * limit,
+  });
+
+  const [{ total }] = await db
+    .select({ total: count() })
+    .from(listingTable)
+    .where(where);
+
+  return { listings, total };
 };
 
 export const insertListing = async (

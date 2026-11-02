@@ -7,6 +7,7 @@ import {
   createCarSchema,
   createListingSchema,
   getListingsQuerySchema,
+  getMyListingsQuerySchema,
   updateListingSchema,
 } from "./request_schema";
 import { listingMechanicsQuerySchema } from "../mechanics/request_schema";
@@ -17,6 +18,7 @@ import {
   getListingDetails,
   saveListing,
   getListings,
+  getMyListings,
   deleteListing,
   attachCarToListing,
   confirmListingMedia,
@@ -90,6 +92,101 @@ listingRouter.get("/", async (req: Request, res: Response) => {
   const result = await getListings(validationResult.data);
   res.status(200).json(result);
 });
+
+/**
+ * @openapi
+ * /api/listings/mine:
+ *   get:
+ *     tags: [Listings]
+ *     summary: List the seller's own listings, in every status
+ *     description: >
+ *       Newest first. Drafts have no car yet, so `car` can be null.
+ *       `car.carMedias` lists uploaded media, primary first.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, minimum: 1, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, minimum: 1, maximum: 100, default: 10 }
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [draft, pending, approved, withdrawn, rejected, sold]
+ *     responses:
+ *       200:
+ *         description: The seller's listings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 listings:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id: { type: integer }
+ *                       title: { type: string }
+ *                       description: { type: string }
+ *                       status: { type: string, description: "Translate with enums:listing_status.<status>" }
+ *                       approvedAt: { type: string, format: date, nullable: true }
+ *                       createdAt: { type: string, format: date }
+ *                       updatedAt: { type: string, format: date }
+ *                       car:
+ *                         type: object
+ *                         nullable: true
+ *                         properties:
+ *                           id: { type: integer }
+ *                           price: { type: integer }
+ *                           year: { type: integer }
+ *                           make: { type: object, properties: { name: { type: string } } }
+ *                           model: { type: object, properties: { name: { type: string } } }
+ *                           city: { type: object, properties: { name: { type: string }, slug: { type: string } } }
+ *                           carMedias:
+ *                             type: array
+ *                             items:
+ *                               type: object
+ *                               properties:
+ *                                 id: { type: integer }
+ *                                 type: { type: string, enum: [image, video] }
+ *                                 link: { type: string, description: Presigned download URL }
+ *                                 isPrimary: { type: boolean }
+ *                 meta:
+ *                   type: object
+ *                   properties:
+ *                     total: { type: integer }
+ *                     page: { type: integer }
+ *                     limit: { type: integer }
+ *                     totalPages: { type: integer }
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not a seller
+ */
+// Declared before "/:id" so that "mine" is not read as a listing id.
+listingRouter.get(
+  "/mine",
+  isAuthenticated,
+  isSeller,
+  async (req: Request, res: Response) => {
+    const validationResult = getMyListingsQuerySchema.safeParse(req.query);
+    if (!validationResult.success) {
+      throw new RequestValidationError(validationResult.error.errors);
+    }
+
+    const result = await getMyListings(
+      req.currentUser!.id,
+      validationResult.data,
+    );
+    res.status(200).json(result);
+  },
+);
 
 /**
  * @openapi

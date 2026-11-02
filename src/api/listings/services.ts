@@ -11,6 +11,7 @@ import {
 import {
   createCarSchema,
   getListingsQuerySchema,
+  getMyListingsQuerySchema,
   updateListingSchema,
 } from "./request_schema";
 import { BadRequestError } from "../../errors/bad_request_error";
@@ -44,6 +45,7 @@ import {
   type CarReferenceIds,
   findListingCarId,
   findListings,
+  findListingsBySeller,
   getListingDetailsById,
   getUserListing,
   insertListing,
@@ -490,14 +492,10 @@ export const approveListing = async (listingId: number) => {
   return result;
 };
 
-export const getListings = async (
-  query: z.infer<typeof getListingsQuerySchema>,
+const signCarMediaLinks = async (
+  listings: { car: { carMedias: { link: string }[] } | null }[],
 ) => {
-  const { limit, page } = query;
-  const { listings: foundListings, totalCountResult } =
-    await findListings(query);
-
-  for (const listing of foundListings) {
+  for (const listing of listings) {
     const carMedias = listing.car?.carMedias;
     if (carMedias) {
       const filenames = carMedias.map((media) => media.link);
@@ -507,6 +505,31 @@ export const getListings = async (
       }
     }
   }
+};
+
+export const getMyListings = async (
+  userId: number,
+  query: z.infer<typeof getMyListingsQuerySchema>,
+) => {
+  const { limit, page } = query;
+  const { listings, total } = await findListingsBySeller(userId, query);
+
+  await signCarMediaLinks(listings);
+
+  return {
+    listings,
+    meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+  };
+};
+
+export const getListings = async (
+  query: z.infer<typeof getListingsQuerySchema>,
+) => {
+  const { limit, page } = query;
+  const { listings: foundListings, totalCountResult } =
+    await findListings(query);
+
+  await signCarMediaLinks(foundListings);
 
   const listings = await Promise.all(
     foundListings.map(async (listing) => ({

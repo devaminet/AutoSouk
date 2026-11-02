@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { listingStatusEnum } from "../../db/schema/listing";
 import { messageKey } from "../../i18n/zod_issues";
 import { allowedFileTypes, getFileType } from "../../utils/functions";
 import {
@@ -130,6 +131,12 @@ export const getListingsQuerySchema = z.object({
   sort: z
     .enum(["price_asc", "price_desc", "newest", "oldest"])
     .default("newest"),
+});
+
+export const getMyListingsQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(10),
+  status: z.enum(listingStatusEnum.enumValues).optional(),
 });
 
 export const addCarMediaSchema = z.object({
