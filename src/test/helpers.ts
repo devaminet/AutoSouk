@@ -44,6 +44,23 @@ export const signupUser = async (options?: {
   };
 };
 
+// Opens a verification link: every outcome redirects to the client page, so
+// callers must check the returned status.
+export const verifyEmail = async (token?: string) => {
+  const query = token ? `?token=${token}` : "";
+  const response = await request(app)
+    .get(`/api/auth/verify${query}`)
+    .expect(302);
+  const { origin, pathname, searchParams } = new URL(response.headers.location);
+  return {
+    origin,
+    pathname,
+    status: searchParams.get("status"),
+    code: searchParams.get("code"),
+    lang: searchParams.get("lang"),
+  };
+};
+
 export const signupUserWithVerification = async (options?: {
   userType?: TestUserRole;
   email?: string;
@@ -63,7 +80,8 @@ export const signupUserWithVerification = async (options?: {
   const mockCalls = (readTemplateFile as jest.Mock).mock.calls;
   const { verificationUrl } = mockCalls[mockCalls.length - 1][1];
   const token = url.parse(verificationUrl, true).query.token as string;
-  await request(app).get(`/api/auth/verify?token=${token}`).send().expect(200);
+  const { status } = await verifyEmail(token);
+  expect(status).toBe("success");
 
   return {
     formData,

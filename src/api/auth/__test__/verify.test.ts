@@ -5,27 +5,76 @@ import {
   signupUser,
   signupUserWithVerification,
   testUserCredentials,
+  verifyEmail,
 } from "../../../test/helpers";
 import { readTemplateFile, sendMail } from "../../../utils/functions";
+import * as authDb from "../db";
 
-it("should fail when not providing a token", () => {
-  return request(app).get("/api/auth/verify").send().expect(400);
+it("should redirect with an error when not providing a token", async () => {
+  expect(await verifyEmail()).toMatchObject({
+    status: "error",
+    code: "auth.token_required",
+  });
 });
 
-it("should fail when providing an invalid token", () => {
-  return request(app)
-    .get("/api/auth/verify?token=isenfcolkfcalo")
-    .send()
-    .expect(400);
+it("should redirect with an error when providing an invalid token", async () => {
+  expect(await verifyEmail("isenfcolkfcalo")).toMatchObject({
+    status: "error",
+    code: "auth.token_invalid",
+  });
 });
 
-it("should return 200 on success account verification", async () => {
+it("should redirect to the client page on success account verification", async () => {
   await signupUser();
   const { verificationUrl } = (readTemplateFile as jest.Mock).mock.calls[0][1];
   const token = url.parse(verificationUrl, true).query.token as string;
   expect(token).toBeDefined();
 
-  return request(app).get(`/api/auth/verify?token=${token}`).send().expect(200);
+  const redirect = await verifyEmail(token);
+
+  expect(`${redirect.origin}${redirect.pathname}`).toBe(
+    `${process.env.CLIENT_URL}/verify-email`,
+  );
+  expect(redirect).toMatchObject({
+    status: "success",
+    code: "auth.account_verified",
+  });
+});
+
+it("should open the client page in the language of the emailed link", async () => {
+  await request(app)
+    .post("/api/auth/register?lang=ar")
+    .send({
+      firstName: "John",
+      lastName: "Doe",
+      email: testUserCredentials.email,
+      password: testUserCredentials.password,
+      phone: "+212685412593",
+      userType: "buyer",
+      cityId: 1,
+    })
+    .expect(201);
+  const { verificationUrl } = (readTemplateFile as jest.Mock).mock.calls[0][1];
+  const { path } = url.parse(verificationUrl);
+
+  const response = await request(app)
+    .get(path as string)
+    .expect(302);
+
+  expect(new URL(response.headers.location).searchParams.get("lang")).toBe(
+    "ar",
+  );
+});
+
+it("should redirect with a generic error when verification crashes", async () => {
+  const findToken = jest
+    .spyOn(authDb, "getVerificationToken")
+    .mockRejectedValueOnce(new Error("database is down"));
+
+  const redirect = await verifyEmail("any-token");
+  findToken.mockRestore();
+
+  expect(redirect).toMatchObject({ status: "error", code: "unexpected" });
 });
 
 it("should verify that isVerified field of user object is true after success verification", async () => {
@@ -37,7 +86,7 @@ it("should verify that isVerified field of user object is true after success ver
 
   const { verificationUrl } = (readTemplateFile as jest.Mock).mock.calls[0][1];
   const token = url.parse(verificationUrl, true).query.token as string;
-  await request(app).get(`/api/auth/verify?token=${token}`).send().expect(200);
+  await verifyEmail(token);
 
   const { body } = await request(app)
     .post("/api/auth/login")
@@ -119,10 +168,10 @@ it("should fail when trying to verify with a token of different user", async () 
   const token1 = url.parse(template1.verificationUrl, true).query
     .token as string;
 
-  return request(app)
-    .get(`/api/auth/verify?token=${token1}`)
-    .send()
-    .expect(400);
+  expect(await verifyEmail(token1)).toMatchObject({
+    status: "error",
+    code: "auth.token_invalid",
+  });
 });
 
 it("should fail when using the same token twice", async () => {
@@ -131,9 +180,12 @@ it("should fail when using the same token twice", async () => {
   const { verificationUrl } = (readTemplateFile as jest.Mock).mock.calls[0][1];
   const token = url.parse(verificationUrl, true).query.token as string;
 
-  await request(app).get(`/api/auth/verify?token=${token}`).send().expect(200);
+  expect((await verifyEmail(token)).status).toBe("success");
 
-  return request(app).get(`/api/auth/verify?token=${token}`).send().expect(400);
+  expect(await verifyEmail(token)).toMatchObject({
+    status: "error",
+    code: "auth.token_invalid",
+  });
 });
 
 it("should fail with expired verification token", async () => {
@@ -161,10 +213,9 @@ it("should fail with expired verification token", async () => {
   jest.setSystemTime(advancedDate);
   const { verificationUrl } = (readTemplateFile as jest.Mock).mock.calls[0][1];
   const token = url.parse(verificationUrl, true).query.token as string;
-  const { body, statusCode } = await request(app)
-    .get(`/api/auth/verify?token=${token}`)
-    .send();
-  expect(statusCode).toBe(400);
-  expect(body.errors[0].message).toBe("Link has been expired");
+  expect(await verifyEmail(token)).toMatchObject({
+    status: "error",
+    code: "auth.link_expired",
+  });
   jest.useRealTimers();
 });

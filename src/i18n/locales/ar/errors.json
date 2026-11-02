@@ -84,7 +84,6 @@
   "auth": {
     "token_required": "الرمز مطلوب",
     "token_invalid": "رمز غير صالح",
-    "token_invalid_or_expired": "رمز غير صالح أو منتهي الصلاحية",
     "link_expired": "انتهت صلاحية هذا الرابط",
     "verification_email_failed": "تعذر إرسال رسالة التحقق",
     "forgot_password_email_failed": "تعذر إرسال رسالة إعادة تعيين كلمة المرور",

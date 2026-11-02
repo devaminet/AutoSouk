@@ -117,6 +117,21 @@ Responses that confirm an action carry a code and a message in the same way:
 
 Translate with `t(`messages:${code}`, params)` or show `message`.
 
+## Email verification
+
+The link in the verification email opens the API, which redirects the browser
+to a page the client must provide:
+
+```text
+{CLIENT_URL}/verify-email?status=success&code=auth.account_verified&lang=fr
+{CLIENT_URL}/verify-email?status=error&code=auth.link_expired&lang=fr
+```
+
+Use `lang` for the page language: the user may be on a new device. Translate
+`code` with `messages:` when `status` is `success` and `errors:` when it is
+`error`. Links work once, so for `auth.link_expired` and `auth.token_invalid`
+offer to resend the email (`POST /api/auth/re-verify`).
+
 ## Lookup values and statuses
 
 The API returns lookup values and statuses as slugs, never as labels. Translate

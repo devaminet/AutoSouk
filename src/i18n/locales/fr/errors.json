@@ -66,7 +66,6 @@
   "auth": {
     "token_required": "Le jeton est obligatoire",
     "token_invalid": "Jeton invalide",
-    "token_invalid_or_expired": "Jeton invalide ou expiré",
     "link_expired": "Ce lien a expiré",
     "verification_email_failed": "Impossible d'envoyer l'e-mail de vérification",
     "forgot_password_email_failed": "Impossible d'envoyer l'e-mail de réinitialisation du mot de passe",
