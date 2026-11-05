@@ -431,37 +431,29 @@ export const rejectPendingListingById = async (id: number, reason: string) => {
   return listing ?? null;
 };
 
-// The seller's listing with the id of its car. A left join, because a listing
-// can have no car: car is null then.
-export const findListingCarId = async (userId: number, listingId: number) => {
-  const [listing] = await db
-    .select({
-      id: listingTable.id,
-      userId: listingTable.userId,
-      car: {
-        id: carTable.id,
-      },
-    })
-    .from(listingTable)
-    .leftJoin(carTable, eq(listingTable.id, carTable.listingId))
-    .where(
-      and(eq(listingTable.id, listingId), eq(listingTable.userId, userId)),
-    );
-
-  return listing ?? null;
-};
-
+// Deletes the listing with its car and media, and returns the filenames of all
+// that media, uploaded or not, for the caller to remove from storage after the
+// commit. The car lock makes concurrent media additions wait, so they either
+// finish before the filenames are read or find no car.
 export const deleteListingDetails = async (
   listingId: number,
-  carId: number | undefined,
-) => {
-  await db.transaction(async (tx) => {
-    if (carId) {
-      await tx.delete(carMediaTable).where(eq(carMediaTable.carId, carId));
-      await tx.delete(carTable).where(eq(carTable.id, carId));
+): Promise<string[]> => {
+  return await db.transaction(async (tx) => {
+    const car = await lockListingCar(tx, listingId);
+    let filenames: string[] = [];
+
+    if (car) {
+      const media = await tx
+        .delete(carMediaTable)
+        .where(eq(carMediaTable.carId, car.id))
+        .returning({ link: carMediaTable.link });
+      filenames = media.map(({ link }) => link);
+      await tx.delete(carTable).where(eq(carTable.id, car.id));
     }
 
     await tx.delete(listingTable).where(eq(listingTable.id, listingId));
+
+    return filenames;
   });
 };
 

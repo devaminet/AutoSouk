@@ -4,9 +4,12 @@ import { messageKey } from "../../i18n/zod_issues";
 import { allowedFileTypes, getFileType } from "../../utils/functions";
 import { maxCarEquipmentCount, maxCarMediaCount } from "../../utils/constants";
 
+const listingTitleSchema = z.string().trim().min(1);
+const listingDescriptionSchema = z.string().trim().min(1);
+
 export const createListingSchema = z.object({
-  title: z.string(),
-  description: z.string(),
+  title: listingTitleSchema,
+  description: listingDescriptionSchema,
 });
 
 const minCarYear = 1950;
@@ -140,8 +143,8 @@ export const listingMediaParamSchema = attachListingParamSchema.extend({
 
 export const updateListingSchema = z
   .object({
-    title: z.string().min(1).optional(),
-    description: z.string().min(1).optional(),
+    title: listingTitleSchema.optional(),
+    description: listingDescriptionSchema.optional(),
     car: createCarSchema.partial().optional(),
   })
   .refine(

@@ -45,7 +45,6 @@ import {
   findListingById,
   type CarReferenceField,
   type CarReferenceIds,
-  findListingCarId,
   findListings,
   findListingsBySeller,
   findPendingListings,
@@ -669,16 +668,17 @@ export const getListings = async (
   };
 };
 
+// Storage objects are removed after the database commit, so a storage failure
+// never brings the deleted rows back. It only leaves an orphaned file behind.
 export const deleteListing = async (listingId: number, userId: number) => {
-  const listing = await findListingCarId(userId, listingId);
+  const listing = await getUserListing(listingId, userId);
 
   if (!listing) {
     throw new NotFoundError("listing.not_found");
   }
 
-  const carId = listing.car?.id;
-
-  await deleteListingDetails(listingId, carId);
+  const filenames = await deleteListingDetails(listingId);
+  await removeStoredCarMedia(filenames);
 
   return { deleted: true, listingId };
 };

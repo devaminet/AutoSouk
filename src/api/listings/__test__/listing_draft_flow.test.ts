@@ -8,7 +8,12 @@ import { inspectionTable } from "../../../db/schema/inspection";
 import { listingTable } from "../../../db/schema/listing";
 import { minioClient } from "../../../file_storage/minio";
 import { carBucketName } from "../../../utils/constants";
-import { createBucket, getFileType } from "../../../utils/functions";
+import {
+  createBucket,
+  getFileType,
+  removeObject,
+} from "../../../utils/functions";
+import { translate } from "../../../i18n";
 import {
   createBuyer,
   createMechanic,
@@ -898,5 +903,231 @@ describe("car-less listings", () => {
       await getDetails(listingId).expect(404);
       await getDetails(listingId, other.accessToken).expect(404);
     });
+  });
+});
+
+describe("DELETE /api/listings/:id and stored files", () => {
+  const deleteListing = (listingId: number, token = seller.accessToken) =>
+    asSeller(request(app).delete(`/api/listings/${listingId}`), token);
+
+  const objectExists = async (filename: string) => {
+    try {
+      await minioClient.statObject(carBucketName, filename);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const carMediaRows = (carId: number) =>
+    db.select().from(carMediaTable).where(eq(carMediaTable.carId, carId));
+
+  let removeSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    removeSpy = jest.spyOn(minioClient, "removeObject");
+  });
+
+  afterEach(() => {
+    removeSpy.mockRestore();
+  });
+
+  it("does not fail when storage removes an object that does not exist", async () => {
+    await expect(
+      removeObject(carBucketName, "car-never-uploaded.png"),
+    ).resolves.toBeUndefined();
+  });
+
+  it("removes every file, uploaded or not, and the rows", async () => {
+    const { listingId, carId } = await createDraftWithCar();
+    const [uploaded, pending] = await addFiles(listingId, ["a.png", "b.png"]);
+    await putImage(uploaded.filename);
+    await confirm(listingId).expect(200);
+    expect(await objectExists(uploaded.filename)).toBe(true);
+
+    await deleteListing(listingId).expect(200);
+
+    expect(removeSpy.mock.calls.map(([, filename]) => filename).sort()).toEqual(
+      [uploaded.filename, pending.filename].sort(),
+    );
+    expect(await objectExists(uploaded.filename)).toBe(false);
+    expect(await carMediaRows(carId)).toEqual([]);
+  });
+
+  it("removes files only after the rows are deleted", async () => {
+    const { listingId, carId } = await createDraftWithCar();
+    await addFiles(listingId, ["a.png"]);
+    let rowsDuringRemoval = -1;
+    removeSpy.mockImplementation(async () => {
+      rowsDuringRemoval = (await carMediaRows(carId)).length;
+    });
+
+    await deleteListing(listingId).expect(200);
+
+    expect(rowsDuringRemoval).toBe(0);
+  });
+
+  it("returns success and keeps the rows deleted when storage fails", async () => {
+    const { listingId, carId } = await createDraftWithCar();
+    await addFiles(listingId, ["a.png", "b.png"]);
+    removeSpy.mockRejectedValue(new Error("storage is down"));
+    const logSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    const { body } = await deleteListing(listingId).expect(200);
+
+    expect(body).toEqual({ deleted: true, listingId });
+    expect(removeSpy).toHaveBeenCalledTimes(2);
+    expect(logSpy).toHaveBeenCalledTimes(2);
+    logSpy.mockRestore();
+    expect(await carMediaRows(carId)).toEqual([]);
+    await asSeller(request(app).get(`/api/listings/${listingId}`)).expect(404);
+  });
+
+  it("does not call storage for a listing with no car", async () => {
+    const listingId = await createDraft();
+
+    await deleteListing(listingId).expect(200);
+
+    expect(removeSpy).not.toHaveBeenCalled();
+  });
+
+  it("does not call storage for a car with no media", async () => {
+    const { listingId } = await createDraftWithCar();
+
+    await deleteListing(listingId).expect(200);
+
+    expect(removeSpy).not.toHaveBeenCalled();
+  });
+
+  it("leaves rows and files alone for another seller's listing", async () => {
+    const { listingId, carId } = await createDraftWithCar();
+    const [media] = await addFiles(listingId, ["a.png"]);
+    await putImage(media.filename);
+    await signupUserWithVerification({
+      userType: "seller",
+      email: "other@example.com",
+    });
+    const other = await signinUser({ email: "other@example.com" });
+
+    await deleteListing(listingId, other.accessToken).expect(404);
+
+    expect(removeSpy).not.toHaveBeenCalled();
+    expect(await carMediaRows(carId)).toHaveLength(1);
+    expect(await objectExists(media.filename)).toBe(true);
+
+    await deleteListing(listingId).expect(200);
+    expect(await objectExists(media.filename)).toBe(false);
+  });
+
+  it("does not leave a file behind when media is added during the delete", async () => {
+    const { listingId, carId } = await createDraftWithCar();
+    await addFiles(listingId, ["a.png"]);
+
+    const [added, deleted] = await Promise.all([
+      asSeller(
+        request(app)
+          .post(`/api/listings/${listingId}/media`)
+          .send({ files: [{ name: "b.png" }] }),
+      ),
+      deleteListing(listingId),
+    ]);
+
+    expect(deleted.statusCode).toBe(200);
+    expect(await carMediaRows(carId)).toEqual([]);
+    const removed = removeSpy.mock.calls.map(([, filename]) => filename);
+    if (added.statusCode === 201) {
+      expect(removed).toContain(added.body.carMedia[0].filename);
+    } else {
+      expect(added.statusCode).toBe(400);
+      expect(removed).toHaveLength(1);
+    }
+  });
+});
+
+describe("listing title and description", () => {
+  const create = (body: object, query = "") =>
+    asSeller(request(app).post(`/api/listings${query}`).send(body));
+
+  const valid = { title: "A black car", description: "A brand new black Ford" };
+
+  it.each([
+    ["title", ""],
+    ["title", "   "],
+    ["title", "\t\n "],
+    ["description", ""],
+    ["description", "   "],
+  ])("POST refuses %s %j", async (field, value) => {
+    const { body } = await create({ ...valid, [field]: value }).expect(400);
+
+    expect(body.errors).toEqual([
+      {
+        code: "validation.string_min",
+        message: "Must contain at least 1 character",
+        field,
+        params: { count: 1 },
+      },
+    ]);
+  });
+
+  it.each(["en", "fr", "ar"] as const)(
+    "translates the error into %s",
+    async (lang) => {
+      const { body } = await create({ ...valid, title: " " }, `?lang=${lang}`);
+
+      expect(body.errors[0].field).toBe("title");
+      expect(body.errors[0].message).toBe(
+        translate(lang, "errors:validation.string_min", { count: 1 }),
+      );
+      expect(body.errors[0].message).not.toBe("validation.string_min");
+    },
+  );
+
+  it("POST stores trimmed values", async () => {
+    const { body } = await create({
+      title: "  A black car ",
+      description: "\tA brand new black Ford\n",
+    }).expect(201);
+
+    expect(body.listing).toMatchObject(valid);
+    const [row] = await db
+      .select()
+      .from(listingTable)
+      .where(eq(listingTable.id, body.listing.id));
+    expect(row).toMatchObject(valid);
+  });
+
+  it.each(["title", "description"])(
+    "PATCH refuses a %s of only spaces and keeps the stored value",
+    async (field) => {
+      const listingId = await createDraft();
+
+      const { body } = await asSeller(
+        request(app)
+          .patch(`/api/listings/${listingId}`)
+          .send({ [field]: "   " }),
+      ).expect(400);
+
+      expect(body.errors[0]).toMatchObject({
+        code: "validation.string_min",
+        field,
+      });
+      const [row] = await db
+        .select()
+        .from(listingTable)
+        .where(eq(listingTable.id, listingId));
+      expect(row).toMatchObject(valid);
+    },
+  );
+
+  it("PATCH stores trimmed values", async () => {
+    const listingId = await createDraft();
+
+    const { body } = await asSeller(
+      request(app)
+        .patch(`/api/listings/${listingId}`)
+        .send({ title: "  New title " }),
+    ).expect(200);
+
+    expect(body.listing.title).toBe("New title");
   });
 });

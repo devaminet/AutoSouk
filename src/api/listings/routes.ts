@@ -273,8 +273,12 @@ listingRouter.get(
  *             properties:
  *               title:
  *                 type: string
+ *                 minLength: 1
+ *                 description: Surrounding spaces are removed before it is checked and stored, so a value of only spaces is refused.
  *               description:
  *                 type: string
+ *                 minLength: 1
+ *                 description: Surrounding spaces are removed before it is checked and stored, so a value of only spaces is refused.
  *     responses:
  *       201:
  *         description: Listing created
@@ -864,8 +868,8 @@ listingRouter.get("/:id", async (req: Request, res: Response) => {
  *           schema:
  *             type: object
  *             properties:
- *               title: { type: string }
- *               description: { type: string }
+ *               title: { type: string, minLength: 1, description: "Surrounding spaces are removed before it is checked and stored, so a value of only spaces is refused." }
+ *               description: { type: string, minLength: 1, description: "Surrounding spaces are removed before it is checked and stored, so a value of only spaces is refused." }
  *               car:
  *                 type: object
  *                 properties:
@@ -1037,7 +1041,7 @@ listingRouter.patch(
  *   delete:
  *     tags: [Listings]
  *     summary: Delete a listing, in any status, with or without a car
- *     description: Deletes the listing and, when it has one, its car and the car's media.
+ *     description: Deletes the listing and, when it has one, its car and the car's media, then removes the stored files, including files not uploaded yet. A storage failure is only logged, so the listing stays deleted and the response is still 200.
  *     security:
  *       - bearerAuth: []
  *     parameters:
