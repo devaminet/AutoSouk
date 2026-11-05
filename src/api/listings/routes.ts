@@ -791,6 +791,9 @@ listingRouter.get("/:id/mechanics", async (req: Request, res: Response) => {
  *       Approved listings are public. Any other status answers 404, except for
  *       the listing's seller and admins (send the bearer token), who also see
  *       `rejectionReason`. A draft may have no car yet, so `car` can be null.
+ *       `car` carries the ids of its make, model, city, carburant, origin and
+ *       state, so a form can show the saved choices, next to the nested
+ *       objects used for display.
  *     parameters:
  *       - in: path
  *         name: id
@@ -811,6 +814,12 @@ listingRouter.get("/:id/mechanics", async (req: Request, res: Response) => {
  *                       type: object
  *                       nullable: true
  *                       properties:
+ *                         makeId: { type: integer, nullable: true, example: 449 }
+ *                         modelId: { type: integer, nullable: true, example: 2085 }
+ *                         cityId: { type: integer, nullable: true, example: 1 }
+ *                         carburantId: { type: integer, nullable: true, example: 3 }
+ *                         originId: { type: integer, nullable: true, example: 4 }
+ *                         stateId: { type: integer, nullable: true, example: 6 }
  *                         city:
  *                           type: object
  *                           properties:

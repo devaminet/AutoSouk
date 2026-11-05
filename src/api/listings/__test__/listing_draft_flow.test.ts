@@ -1131,3 +1131,30 @@ describe("listing title and description", () => {
     expect(body.listing.title).toBe("New title");
   });
 });
+
+describe("GET /api/listings/:id car reference ids", () => {
+  it("returns the car's reference ids next to the nested objects for the owner", async () => {
+    const { listingId } = await createDraftWithCar();
+
+    const { body } = await asSeller(
+      request(app).get(`/api/listings/${listingId}`),
+    ).expect(200);
+
+    expect(body.listing.car).toMatchObject({
+      makeId: carPayload.makeId,
+      modelId: carPayload.modelId,
+      cityId: carPayload.cityId,
+      carburantId: carPayload.carburantId,
+      originId: carPayload.originId,
+      stateId: carPayload.stateId,
+      make: { name: expect.any(String) },
+      model: { name: expect.any(String) },
+      city: { name: expect.any(String), slug: expect.any(String) },
+      carburant: { carburant: expect.any(String) },
+      origin: { origin: expect.any(String) },
+      state: { state: expect.any(String) },
+      equipment: [],
+      carMedias: [],
+    });
+  });
+});

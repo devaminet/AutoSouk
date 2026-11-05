@@ -321,6 +321,12 @@ export const getListingDetailsById = async (id: number) => {
           fiscalPower: true,
           transmission: true,
           ownersCount: true,
+          makeId: true,
+          modelId: true,
+          cityId: true,
+          carburantId: true,
+          originId: true,
+          stateId: true,
         },
         with: {
           carburant: {
