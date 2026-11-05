@@ -84,9 +84,10 @@
     "not_found": "Listing was not found",
     "already_approved": "Listing is already approved",
     "car_already_attached": "A car is already attached to this listing",
-    "car_required": "Attach a car to this listing before editing it",
+    "car_required": "Attach a car to this listing first",
     "car_required_for_media": "Attach a car to this listing before adding media",
-    "not_pending": "Only a pending listing can be rejected"
+    "not_pending": "Only a pending listing can be approved or rejected",
+    "not_draft": "This listing is not a draft"
   },
   "media": {
     "upload_urls_failed": "Could not generate urls for images",
@@ -98,8 +99,7 @@
     "min_images_other": "A car needs at least {{count}} images.",
     "max_files_one": "A car can have at most {{count}} file.",
     "max_files_other": "A car can have at most {{count}} files.",
-    "one_primary": "Exactly one file must be designated as primary.",
-    "primary_file_not_image": "The primary file must be an image.",
+    "primary_required": "Choose an uploaded image as the cover before submitting",
     "unknown": "Media {{id}} does not exist for this car"
   },
   "car": {

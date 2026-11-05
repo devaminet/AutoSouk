@@ -18,7 +18,7 @@ import {
   lte,
   sql,
 } from "drizzle-orm";
-import { listingTable } from "../../db/schema/listing";
+import { listingStatusEnum, listingTable } from "../../db/schema/listing";
 import { carTable } from "../../db/schema/car";
 import { db } from "../../db";
 import { carMediaTable } from "../../db/schema/car_media";
@@ -30,6 +30,7 @@ import { carStateTable } from "../../db/schema/state";
 import { cityTable } from "../../db/schema/city";
 import { getFileType } from "../../utils/functions";
 import { carEquipmentTable, equipmentTable } from "../../db/schema/equipment";
+import { inspectionTable } from "../../db/schema/inspection";
 
 // Listing ids whose car has every one of the given (distinct) equipment ids.
 const listingIdsWithAllEquipment = (equipmentIds: number[]) =>
@@ -153,7 +154,7 @@ export const findListings = async (
 };
 
 const listingCarSummary = {
-  columns: { id: true, price: true, year: true },
+  columns: { id: true, price: true, year: true, distance: true },
   with: {
     make: { columns: { name: true } },
     model: { columns: { name: true } },
@@ -238,6 +239,33 @@ export const findListingsBySeller = async (
     .where(where);
 
   return { listings, total };
+};
+
+// One row per status the seller has listings in, whatever filter the page uses.
+export const countSellerListingsByStatus = async (userId: number) => {
+  return await db
+    .select({ status: listingTable.status, total: count() })
+    .from(listingTable)
+    .where(eq(listingTable.userId, userId))
+    .groupBy(listingTable.status);
+};
+
+// One query for the whole page. Cars without a completed inspection have no row.
+export const countCompletedInspectionsByCar = async (carIds: number[]) => {
+  if (carIds.length === 0) {
+    return [];
+  }
+
+  return await db
+    .select({ carId: inspectionTable.carId, total: count() })
+    .from(inspectionTable)
+    .where(
+      and(
+        inArray(inspectionTable.carId, carIds),
+        eq(inspectionTable.status, "completed"),
+      ),
+    )
+    .groupBy(inspectionTable.carId);
 };
 
 export const insertListing = async (
@@ -386,18 +414,6 @@ export const findListingCityById = async (id: number) => {
   return listing ?? null;
 };
 
-export const approveListingById = async (id: number) => {
-  return await db
-    .update(listingTable)
-    .set({
-      status: "approved",
-      approvedAt: new Date().toISOString(),
-      rejectionReason: null,
-    })
-    .where(eq(listingTable.id, id))
-    .returning();
-};
-
 // Only a pending listing can be rejected; the condition is part of the update
 // so that a listing approved or edited at the same time is left alone.
 export const rejectPendingListingById = async (id: number, reason: string) => {
@@ -415,8 +431,10 @@ export const rejectPendingListingById = async (id: number, reason: string) => {
   return listing ?? null;
 };
 
+// The seller's listing with the id of its car. A left join, because a listing
+// can have no car: car is null then.
 export const findListingCarId = async (userId: number, listingId: number) => {
-  const listing = await db
+  const [listing] = await db
     .select({
       id: listingTable.id,
       userId: listingTable.userId,
@@ -425,19 +443,17 @@ export const findListingCarId = async (userId: number, listingId: number) => {
       },
     })
     .from(listingTable)
-    .where(and(eq(listingTable.id, listingId), eq(listingTable.userId, userId)))
-    .innerJoin(carTable, eq(listingTable.id, carTable.listingId));
+    .leftJoin(carTable, eq(listingTable.id, carTable.listingId))
+    .where(
+      and(eq(listingTable.id, listingId), eq(listingTable.userId, userId)),
+    );
 
-  if (listing.length === 0) {
-    return null;
-  }
-
-  return listing[0];
+  return listing ?? null;
 };
 
 export const deleteListingDetails = async (
   listingId: number,
-  carId: number,
+  carId: number | undefined,
 ) => {
   await db.transaction(async (tx) => {
     if (carId) {
@@ -463,15 +479,14 @@ export const checkCarExistanceByListingId = async (listingId: number) => {
 };
 
 // Returns null when the listing already has a car (unique listing_id).
-// Attaching a car sends the listing to admin approval.
-export const saveCarAndMedia = async (args: {
-  carDetails: Omit<z.infer<typeof createCarSchema>, "files" | "equipmentIds">;
-  carMedia: { isPrimary: boolean; filename: string }[];
+// The listing keeps its status: a draft goes to review through submit.
+export const saveCar = async (args: {
+  carDetails: Omit<z.infer<typeof createCarSchema>, "equipmentIds">;
   equipmentIds: number[];
   listingId: number;
   userId: number;
 }) => {
-  const { carDetails, carMedia, equipmentIds, listingId, userId } = args;
+  const { carDetails, equipmentIds, listingId, userId } = args;
 
   return await db.transaction(async (tx) => {
     const [newCar] = await tx
@@ -488,15 +503,6 @@ export const saveCarAndMedia = async (args: {
       return null;
     }
 
-    const carMediaValues = carMedia.map((media) => ({
-      carId: newCar.id,
-      link: media.filename,
-      type: getFileType(media.filename) as "image" | "video",
-      isPrimary: media.isPrimary,
-      isUploaded: false,
-    }));
-
-    await tx.insert(carMediaTable).values(carMediaValues);
     if (equipmentIds.length > 0) {
       await tx.insert(carEquipmentTable).values(
         equipmentIds.map((equipmentId) => ({
@@ -507,12 +513,7 @@ export const saveCarAndMedia = async (args: {
     }
     await tx
       .update(listingTable)
-      .set({
-        status: "pending",
-        approvedAt: null,
-        rejectionReason: null,
-        updatedAt: new Date().toISOString(),
-      })
+      .set({ updatedAt: new Date().toISOString() })
       .where(eq(listingTable.id, listingId));
 
     return newCar;
@@ -522,9 +523,16 @@ export const saveCarAndMedia = async (args: {
 export const getUserListing = async (
   listingId: number,
   userId: number,
-): Promise<Pick<typeof listingTable.$inferSelect, "id" | "userId"> | null> => {
+): Promise<Pick<
+  typeof listingTable.$inferSelect,
+  "id" | "userId" | "status"
+> | null> => {
   const listing = await db
-    .select({ id: listingTable.id, userId: listingTable.userId })
+    .select({
+      id: listingTable.id,
+      userId: listingTable.userId,
+      status: listingTable.status,
+    })
     .from(listingTable)
     .where(
       and(eq(listingTable.id, listingId), eq(listingTable.userId, userId)),
@@ -534,6 +542,8 @@ export const getUserListing = async (
 };
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+type ListingStatus = (typeof listingStatusEnum.enumValues)[number];
 
 // Locks the listing's car so concurrent changes to its equipment or media
 // run one after the other.
@@ -569,7 +579,17 @@ const replaceCarEquipment = async (
   }
 };
 
-export const updateListingAndMarkPending = async (
+// A seller's edit leaves a draft as a draft. Any other status needs a new
+// review. The status is decided in the update itself, so an edit racing with
+// submit or approve cannot act on a status it read earlier.
+const sellerEditChanges = () => ({
+  status: sql<ListingStatus>`CASE WHEN ${listingTable.status} = 'draft' THEN 'draft'::listing_status ELSE 'pending'::listing_status END`,
+  approvedAt: null,
+  rejectionReason: null,
+  updatedAt: new Date().toISOString(),
+});
+
+export const updateListingAfterSellerEdit = async (
   listingId: number,
   changes: z.infer<typeof updateListingSchema>,
 ) => {
@@ -589,13 +609,7 @@ export const updateListingAndMarkPending = async (
 
     const updated = await tx
       .update(listingTable)
-      .set({
-        ...listingChanges,
-        status: "pending",
-        approvedAt: null,
-        rejectionReason: null,
-        updatedAt: new Date().toISOString(),
-      })
+      .set({ ...listingChanges, ...sellerEditChanges() })
       .where(eq(listingTable.id, listingId))
       .returning();
 
@@ -737,32 +751,6 @@ export const findCarMediaByListing = async (
     );
 };
 
-// Newly visible media has not been reviewed, so the listing goes back to
-// admin approval, like any other listing edit.
-export const markCarMediaUploaded = async (
-  listingId: number,
-  mediaIds: number[],
-) => {
-  if (mediaIds.length === 0) {
-    return;
-  }
-  await db.transaction(async (tx) => {
-    await tx
-      .update(carMediaTable)
-      .set({ isUploaded: true })
-      .where(inArray(carMediaTable.id, mediaIds));
-    await tx
-      .update(listingTable)
-      .set({
-        status: "pending",
-        approvedAt: null,
-        rejectionReason: null,
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(listingTable.id, listingId));
-  });
-};
-
 export type AddCarMediaResult =
   | { status: "no_car" }
   | { status: "over_limit" }
@@ -806,15 +794,29 @@ export const insertCarMediaWithinLimit = async (
   });
 };
 
-// Gives the car a primary image again after its primary was deleted:
-// the oldest uploaded image, or the oldest image still waiting for upload.
+const readListingStatus = async (tx: Transaction, listingId: number) => {
+  const [listing] = await tx
+    .select({ status: listingTable.status })
+    .from(listingTable)
+    .where(eq(listingTable.id, listingId));
+  return listing?.status ?? null;
+};
+
+const uploadedImageOfCar = (carId: number) =>
+  and(
+    eq(carMediaTable.carId, carId),
+    eq(carMediaTable.type, "image"),
+    eq(carMediaTable.isUploaded, true),
+  );
+
+// Makes the oldest uploaded image primary when the car has no uploaded primary
+// image. A primary flag on a file that is not uploaded does not count, and is
+// moved. Without any uploaded image the car stays without a primary.
 const ensureCarPrimaryImage = async (tx: Transaction, carId: number) => {
   const [primary] = await tx
     .select({ id: carMediaTable.id })
     .from(carMediaTable)
-    .where(
-      and(eq(carMediaTable.carId, carId), eq(carMediaTable.isPrimary, true)),
-    );
+    .where(and(uploadedImageOfCar(carId), eq(carMediaTable.isPrimary, true)));
   if (primary) {
     return;
   }
@@ -822,39 +824,64 @@ const ensureCarPrimaryImage = async (tx: Transaction, carId: number) => {
   const [next] = await tx
     .select({ id: carMediaTable.id })
     .from(carMediaTable)
-    .where(and(eq(carMediaTable.carId, carId), eq(carMediaTable.type, "image")))
-    .orderBy(desc(carMediaTable.isUploaded), asc(carMediaTable.id))
+    .where(uploadedImageOfCar(carId))
+    .orderBy(asc(carMediaTable.id))
     .limit(1);
   if (next) {
     await tx
       .update(carMediaTable)
-      .set({ isPrimary: true })
-      .where(eq(carMediaTable.id, next.id));
+      .set({ isPrimary: sql`${carMediaTable.id} = ${next.id}` })
+      .where(eq(carMediaTable.carId, carId));
   }
 };
 
-// Removes media that failed upload validation, keeping a primary image.
-export const deleteCarMediaByIds = async (
+// Applies the outcome of a confirm in one transaction: invalid files go, found
+// files become visible, and the car gets a primary image if it needs one. New
+// visible media needs a review, unless the listing is still a draft.
+export const applyCarMediaConfirmation = async (
   listingId: number,
-  mediaIds: number[],
+  uploadedIds: number[],
+  rejectedIds: number[],
 ) => {
-  if (mediaIds.length === 0) {
-    return;
-  }
   await db.transaction(async (tx) => {
     const car = await lockListingCar(tx, listingId);
     if (!car) {
       return;
     }
-    await tx
-      .delete(carMediaTable)
-      .where(
-        and(
-          eq(carMediaTable.carId, car.id),
-          inArray(carMediaTable.id, mediaIds),
-        ),
-      );
+
+    if (rejectedIds.length > 0) {
+      await tx
+        .delete(carMediaTable)
+        .where(
+          and(
+            eq(carMediaTable.carId, car.id),
+            inArray(carMediaTable.id, rejectedIds),
+          ),
+        );
+    }
+
+    const uploaded =
+      uploadedIds.length > 0
+        ? await tx
+            .update(carMediaTable)
+            .set({ isUploaded: true })
+            .where(
+              and(
+                eq(carMediaTable.carId, car.id),
+                inArray(carMediaTable.id, uploadedIds),
+              ),
+            )
+            .returning({ id: carMediaTable.id })
+        : [];
+
     await ensureCarPrimaryImage(tx, car.id);
+
+    if (uploaded.length > 0) {
+      await tx
+        .update(listingTable)
+        .set(sellerEditChanges())
+        .where(eq(listingTable.id, listingId));
+    }
   });
 };
 
@@ -894,8 +921,9 @@ export type DeleteCarMediaResult =
       remaining: UploadedCarMedia[];
     };
 
-// Deletes media from the listing's car unless fewer than minImages uploaded
-// images would remain. Media that is not uploaded yet can always be deleted.
+// Deletes media from the listing's car. Outside a draft, a delete that removes
+// an uploaded image must leave at least minImages of them. Media that is not
+// uploaded yet can always be deleted, so a stuck file never blocks the seller.
 export const deleteCarMediaKeepingMinimum = async (
   listingId: number,
   mediaIds: number[],
@@ -926,11 +954,20 @@ export const deleteCarMediaKeepingMinimum = async (
     }
 
     const toDelete = new Set(mediaIds);
-    const remainingImages = media.filter(
-      (item) =>
-        !toDelete.has(item.id) && item.isUploaded && item.type === "image",
+    const uploadedImages = media.filter(
+      (item) => item.isUploaded && item.type === "image",
     );
-    if (remainingImages.length < minImages) {
+    const remainingImages = uploadedImages.filter(
+      (item) => !toDelete.has(item.id),
+    );
+    const removesUploadedImage = remainingImages.length < uploadedImages.length;
+    // Read after taking the car lock, which submit and approve also take.
+    const status = await readListingStatus(tx, listingId);
+    if (
+      status !== "draft" &&
+      removesUploadedImage &&
+      remainingImages.length < minImages
+    ) {
       return { status: "below_minimum" };
     }
 
@@ -992,5 +1029,107 @@ export const setPrimaryCarMedia = async (
       .where(eq(carMediaTable.carId, car.id));
 
     return { status: "updated", media: await findUploadedCarMedia(tx, car.id) };
+  });
+};
+
+const countUploadedImages = async (tx: Transaction, carId: number) => {
+  const [{ total }] = await tx
+    .select({ total: count() })
+    .from(carMediaTable)
+    .where(uploadedImageOfCar(carId));
+  return total;
+};
+
+export type SubmitListingResult =
+  | { status: "not_draft" }
+  | { status: "no_car" }
+  | { status: "too_few_images" }
+  | { status: "no_primary" }
+  | { status: "submitted"; listing: typeof listingTable.$inferSelect };
+
+// Sends a complete draft to review. The car lock keeps a concurrent media
+// delete from dropping below the checked minimum before the status changes.
+export const submitDraftListing = async (
+  listingId: number,
+  minImages: number,
+): Promise<SubmitListingResult> => {
+  return await db.transaction(async (tx) => {
+    const car = await lockListingCar(tx, listingId);
+    if ((await readListingStatus(tx, listingId)) !== "draft") {
+      return { status: "not_draft" };
+    }
+    if (!car) {
+      return { status: "no_car" };
+    }
+    if ((await countUploadedImages(tx, car.id)) < minImages) {
+      return { status: "too_few_images" };
+    }
+
+    const [primary] = await tx
+      .select({ id: carMediaTable.id })
+      .from(carMediaTable)
+      .where(
+        and(uploadedImageOfCar(car.id), eq(carMediaTable.isPrimary, true)),
+      );
+    if (!primary) {
+      return { status: "no_primary" };
+    }
+
+    const [listing] = await tx
+      .update(listingTable)
+      .set({
+        status: "pending",
+        approvedAt: null,
+        rejectionReason: null,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(
+        and(eq(listingTable.id, listingId), eq(listingTable.status, "draft")),
+      )
+      .returning();
+
+    return listing ? { status: "submitted", listing } : { status: "not_draft" };
+  });
+};
+
+export type ApproveListingResult =
+  | { status: "not_pending" }
+  | { status: "no_car" }
+  | { status: "too_few_images" }
+  | { status: "approved"; listings: (typeof listingTable.$inferSelect)[] };
+
+// Only a complete pending listing can be approved. The status is checked again
+// in the update, so a listing edited at the same time is left alone.
+export const approvePendingListing = async (
+  listingId: number,
+  minImages: number,
+): Promise<ApproveListingResult> => {
+  return await db.transaction(async (tx) => {
+    const car = await lockListingCar(tx, listingId);
+    if ((await readListingStatus(tx, listingId)) !== "pending") {
+      return { status: "not_pending" };
+    }
+    if (!car) {
+      return { status: "no_car" };
+    }
+    if ((await countUploadedImages(tx, car.id)) < minImages) {
+      return { status: "too_few_images" };
+    }
+
+    const listings = await tx
+      .update(listingTable)
+      .set({
+        status: "approved",
+        approvedAt: new Date().toISOString(),
+        rejectionReason: null,
+      })
+      .where(
+        and(eq(listingTable.id, listingId), eq(listingTable.status, "pending")),
+      )
+      .returning();
+
+    return listings.length > 0
+      ? { status: "approved", listings }
+      : { status: "not_pending" };
   });
 };

@@ -29,15 +29,16 @@ import {
   maxCarVideoSizeBytes,
 } from "../../utils/constants";
 import {
-  approveListingById,
+  applyCarMediaConfirmation,
+  approvePendingListing,
   checkCarExistanceByListingId,
+  countCompletedInspectionsByCar,
+  countSellerListingsByStatus,
   deleteListingDetails,
-  deleteCarMediaByIds,
   deleteCarMediaKeepingMinimum,
   setPrimaryCarMedia,
   findCarMediaByListing,
   findCarReferencesByListingId,
-  markCarMediaUploaded,
   insertCarMediaWithinLimit,
   findInvalidCarReferences,
   findMissingEquipmentIds,
@@ -52,9 +53,11 @@ import {
   getUserListing,
   insertListing,
   rejectPendingListingById,
-  saveCarAndMedia,
-  updateListingAndMarkPending,
+  saveCar,
+  submitDraftListing,
+  updateListingAfterSellerEdit,
 } from "./db";
+import { listingStatusEnum } from "../../db/schema/listing";
 import { InternalServerError } from "../../errors/internal_server_error";
 
 const withProfileImageUrl = async <T extends { imageName: string | null }>(
@@ -128,16 +131,12 @@ const createCarMediaUploadPolicy = async (
   return { url: postURL, fields: formData };
 };
 
-const buildCarMediaUpload = async (file: {
-  name: string;
-  isPrimary: boolean;
-}) => {
+const buildCarMediaUpload = async (file: { name: string }) => {
   const filename = buildCarMediaName(file.name);
   const type = getFileType(file.name) ?? "image";
 
   return {
     upload: await createCarMediaUploadPolicy(filename, type),
-    isPrimary: file.isPrimary,
     filename,
     originalName: file.name,
   };
@@ -158,42 +157,30 @@ export const attachCarToListing = async (
     throw new NotFoundError("listing.not_found");
   }
 
+  if (listing.status !== "draft") {
+    throw new BadRequestError("listing.not_draft");
+  }
+
   const found = await checkCarExistanceByListingId(listingId);
 
   if (found) {
     throw new BadRequestError("listing.car_already_attached");
   }
 
-  const { files, equipmentIds = [], ...carDetails } = data;
+  const { equipmentIds = [], ...carDetails } = data;
   const [referenceIssues, equipmentIssues] = await Promise.all([
     findCarReferenceIssues(carDetails),
     findEquipmentIssues(equipmentIds),
   ]);
   throwIfIssues([...referenceIssues, ...equipmentIssues]);
-  let carMedia: Awaited<ReturnType<typeof buildCarMediaUpload>>[] = [];
-  try {
-    carMedia = await Promise.all(files.map(buildCarMediaUpload));
-  } catch (error) {
-    console.error("Error generating car media upload policies:", error);
-    throw new InternalServerError("media.upload_urls_failed");
-  }
 
-  const car = await saveCarAndMedia({
-    carDetails,
-    carMedia,
-    equipmentIds,
-    listingId,
-    userId,
-  });
+  const car = await saveCar({ carDetails, equipmentIds, listingId, userId });
 
   if (!car) {
     throw new BadRequestError("listing.car_already_attached");
   }
 
-  return {
-    car: { ...car, equipmentIds },
-    carMedia,
-  };
+  return { ...car, equipmentIds };
 };
 
 const isValidUploadedMedia = (
@@ -219,9 +206,7 @@ export const addListingMedia = async (
 
   let uploads: Awaited<ReturnType<typeof buildCarMediaUpload>>[] = [];
   try {
-    uploads = await Promise.all(
-      files.map((file) => buildCarMediaUpload({ ...file, isPrimary: false })),
-    );
+    uploads = await Promise.all(files.map(buildCarMediaUpload));
   } catch (error) {
     console.error("Error generating car media upload policies:", error);
     throw new InternalServerError("media.upload_urls_failed");
@@ -271,9 +256,9 @@ const removeStoredCarMedia = async (filenames: string[]) => {
   }
 };
 
-// Deletes media from the seller's car while it keeps at least the minimum
-// number of uploaded images. Storage objects are removed after the database
-// commit, so a storage failure never brings the deleted rows back.
+// Deletes media from the seller's car. Outside a draft the car keeps at least
+// the minimum number of uploaded images. Storage objects are removed after the
+// database commit, so a storage failure never brings the deleted rows back.
 export const deleteListingMedia = async (
   listingId: number,
   userId: number,
@@ -342,8 +327,9 @@ export const setListingPrimaryMedia = async (
   }
 };
 
-// Marks uploaded media as visible, drops invalid objects, and returns a new
-// upload policy for media that never reached storage so the client can retry.
+// Marks uploaded media as visible, drops invalid objects, gives the car a
+// primary image if it has none, and returns the id and a new upload policy of
+// media that never reached storage, so the client can retry or delete it.
 export const confirmListingMedia = async (
   listingId: number,
   userId: number,
@@ -368,9 +354,9 @@ export const confirmListingMedia = async (
     }
   }
 
-  await markCarMediaUploaded(listingId, uploadedIds);
-  await deleteCarMediaByIds(
+  await applyCarMediaConfirmation(
     listingId,
+    uploadedIds,
     rejected.map((item) => item.id),
   );
   for (const item of rejected) {
@@ -383,6 +369,7 @@ export const confirmListingMedia = async (
 
   const retry = await Promise.all(
     pending.map(async (item) => ({
+      id: item.id,
       filename: item.link,
       upload: await createCarMediaUploadPolicy(item.link, item.type),
     })),
@@ -417,6 +404,8 @@ const toCarEquipment = (
       name,
       category: { slug: category.slug, name: category.name },
     }));
+
+type ListingStatus = (typeof listingStatusEnum.enumValues)[number];
 
 type ListingViewer = { id: number; role: string } | undefined;
 
@@ -494,7 +483,34 @@ export const updateListing = async (
     throwIfIssues([...referenceIssues, ...equipmentIssues]);
   }
 
-  return await updateListingAndMarkPending(listingId, changes);
+  return await updateListingAfterSellerEdit(listingId, changes);
+};
+
+const throwTooFewImages = (): never => {
+  throw new BadRequestError("media.min_images", { count: minCarImageCount });
+};
+
+// Sends a complete draft to review. Files that are not uploaded yet do not
+// block it and stay hidden.
+export const submitListing = async (listingId: number, userId: number) => {
+  const listing = await getUserListing(listingId, userId);
+  if (!listing) {
+    throw new NotFoundError("listing.not_found");
+  }
+
+  const result = await submitDraftListing(listingId, minCarImageCount);
+  switch (result.status) {
+    case "not_draft":
+      throw new BadRequestError("listing.not_draft");
+    case "no_car":
+      throw new BadRequestError("listing.car_required");
+    case "too_few_images":
+      return throwTooFewImages();
+    case "no_primary":
+      throw new BadRequestError("media.primary_required");
+    case "submitted":
+      return result.listing;
+  }
 };
 
 export const approveListing = async (listingId: number) => {
@@ -508,8 +524,17 @@ export const approveListing = async (listingId: number) => {
     throw new BadRequestError("listing.already_approved");
   }
 
-  const result = await approveListingById(listingId);
-  return result;
+  const result = await approvePendingListing(listingId, minCarImageCount);
+  switch (result.status) {
+    case "not_pending":
+      throw new BadRequestError("listing.not_pending");
+    case "no_car":
+      throw new BadRequestError("listing.car_required");
+    case "too_few_images":
+      return throwTooFewImages();
+    case "approved":
+      return result.listings;
+  }
 };
 
 export const rejectListing = async (listingId: number, reason: string) => {
@@ -563,18 +588,54 @@ export const getPendingListings = async (
   };
 };
 
+// Every status is present, with 0 when the seller has no listing in it.
+const toStatusCounts = (
+  rows: { status: ListingStatus | null; total: number }[],
+) => {
+  const counts = Object.fromEntries(
+    listingStatusEnum.enumValues.map((status) => [status, 0]),
+  ) as Record<ListingStatus, number>;
+  for (const { status, total } of rows) {
+    if (status) {
+      counts[status] = total;
+    }
+  }
+  return counts;
+};
+
 export const getMyListings = async (
   userId: number,
   query: z.infer<typeof getMyListingsQuerySchema>,
 ) => {
   const { limit, page } = query;
-  const { listings, total } = await findListingsBySeller(userId, query);
+  const [{ listings, total }, statusRows] = await Promise.all([
+    findListingsBySeller(userId, query),
+    countSellerListingsByStatus(userId),
+  ]);
 
   await signCarMediaLinks(listings);
 
+  const inspectionRows = await countCompletedInspectionsByCar(
+    listings.flatMap(({ car }) => (car ? [car.id] : [])),
+  );
+  const completedByCar = new Map(
+    inspectionRows.map(({ carId, total }) => [carId, total]),
+  );
+
   return {
-    listings,
-    meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    listings: listings.map((listing) => ({
+      ...listing,
+      completedInspectionsCount: listing.car
+        ? (completedByCar.get(listing.car.id) ?? 0)
+        : 0,
+    })),
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      statusCounts: toStatusCounts(statusRows),
+    },
   };
 };
 

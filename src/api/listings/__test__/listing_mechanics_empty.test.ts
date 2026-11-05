@@ -1,7 +1,10 @@
 import request from "supertest";
+import { eq } from "drizzle-orm";
 import { app } from "../../../app";
+import { db } from "../../../db";
+import { listingTable } from "../../../db/schema/listing";
 import {
-  carImageFiles,
+  submitWithImages,
   signinUser,
   signupUserWithVerification,
 } from "../../../test/helpers";
@@ -21,7 +24,6 @@ const carPayload = {
   transmission: "automatic",
   fiscalPower: 8,
   doorsNumber: 5,
-  files: carImageFiles(),
 };
 
 const createListing = async () => {
@@ -48,6 +50,7 @@ const attachCar = async (listingId: number) => {
     .send(carPayload)
     .auth(seller.accessToken, { type: "bearer" })
     .expect(201);
+  await submitWithImages(listingId, seller.accessToken);
 };
 
 const approveListing = async (listingId: number) => {
@@ -87,7 +90,12 @@ it("should return an empty result when an approved listing's city has no active 
 
 it("should return an empty result when an approved listing has no attached car or city", async () => {
   const listingId = await createListing();
-  await approveListing(listingId);
+  // The API no longer approves a listing without a car, but older rows can
+  // still be in this state.
+  await db
+    .update(listingTable)
+    .set({ status: "approved" })
+    .where(eq(listingTable.id, listingId));
 
   const response = await request(app).get(
     `/api/listings/${listingId}/mechanics`,

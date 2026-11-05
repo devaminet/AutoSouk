@@ -1,7 +1,7 @@
 import request from "supertest";
 import { app } from "../../../app";
 import {
-  carImageFiles,
+  submitWithImages,
   signinUser,
   signupUserWithVerification,
 } from "../../../test/helpers";
@@ -32,7 +32,7 @@ const createListing = async () => {
   const listingId = response.body.listing.id as number;
   console.log("Created listing with ID:", listingId);
 
-  const attached = await request(app)
+  await request(app)
     .post(`/api/listings/${listingId}/car`)
     .send({
       makeId: 449,
@@ -48,23 +48,10 @@ const createListing = async () => {
       distance: "180000KM",
       fiscalPower: 7,
       doorsNumber: 5,
-      files: carImageFiles(),
     })
     .auth(authUser.accessToken, { type: "bearer" });
 
-  for (const media of attached.body.carMedia) {
-    await minioClient.putObject(
-      carBucketName,
-      media.filename,
-      Buffer.from("img"),
-      3,
-      { "Content-Type": "image/png" },
-    );
-  }
-  await request(app)
-    .post(`/api/listings/${listingId}/media/confirm`)
-    .auth(authUser.accessToken, { type: "bearer" })
-    .expect(200);
+  await submitWithImages(listingId, authUser.accessToken);
 
   return { listingId, title, description };
 };

@@ -199,7 +199,7 @@ export const getProfileImageUrl = (imageName: string | null) => {
 };
 
 export const getFileType = (file: string) => {
-  const extenstion = file.substring(file.lastIndexOf(".") + 1);
+  const extenstion = file.substring(file.lastIndexOf(".") + 1).toLowerCase();
   if (imageTypes.includes(extenstion)) {
     return "image";
   }

@@ -1,10 +1,8 @@
 import request from "supertest";
-import { eq } from "drizzle-orm";
 import { app } from "../../../app";
-import { db } from "../../../db";
-import { carMediaTable } from "../../../db/schema/car_media";
 import {
-  carImageFiles,
+  submitWithImages,
+  addUploadedCarImages,
   signinUser,
   signupUserWithVerification,
 } from "../../../test/helpers";
@@ -23,7 +21,6 @@ const carPayload = {
   transmission: "automatic",
   fiscalPower: 8,
   doorsNumber: 5,
-  files: carImageFiles(),
 };
 
 let seller: Awaited<ReturnType<typeof signinUser>>;
@@ -89,8 +86,10 @@ describe("GET /api/listings/mine", () => {
     const draft = await createListing();
     const pending = await createListing();
     await attachCar(pending);
+    await submitWithImages(pending, seller.accessToken);
     const approved = await createListing();
     await attachCar(approved);
+    await submitWithImages(approved, seller.accessToken);
     await approve(approved);
 
     const { body } = await getMine().expect(200);
@@ -105,7 +104,20 @@ describe("GET /api/listings/mine", () => {
       [pending, "pending"],
       [draft, "draft"],
     ]);
-    expect(body.meta).toEqual({ total: 3, page: 1, limit: 10, totalPages: 1 });
+    expect(body.meta).toEqual({
+      total: 3,
+      page: 1,
+      limit: 10,
+      totalPages: 1,
+      statusCounts: {
+        draft: 1,
+        pending: 1,
+        approved: 1,
+        withdrawn: 0,
+        rejected: 0,
+        sold: 0,
+      },
+    });
   });
 
   it("returns a draft without a car", async () => {
@@ -135,6 +147,7 @@ describe("GET /api/listings/mine", () => {
     const draft = await createListing();
     const approved = await createListing();
     await attachCar(approved);
+    await submitWithImages(approved, seller.accessToken);
     await approve(approved);
 
     const { body } = await getMine("?status=draft").expect(200);
@@ -167,10 +180,7 @@ describe("GET /api/listings/mine", () => {
   it("returns car details with only uploaded media, primary first", async () => {
     const listingId = await createListing();
     const carId = await attachCar(listingId);
-    await db
-      .update(carMediaTable)
-      .set({ isUploaded: true })
-      .where(eq(carMediaTable.carId, carId));
+    await addUploadedCarImages(listingId);
 
     const { body } = await getMine().expect(200);
     const { car } = body.listings[0];
@@ -179,6 +189,7 @@ describe("GET /api/listings/mine", () => {
       id: carId,
       price: carPayload.price,
       year: carPayload.year,
+      distance: carPayload.distance,
       make: { name: expect.any(String) },
       model: { name: expect.any(String) },
       city: { name: expect.any(String), slug: expect.any(String) },
@@ -192,7 +203,13 @@ describe("GET /api/listings/mine", () => {
   });
 
   it("hides media that was not uploaded yet", async () => {
-    await attachCar(await createListing());
+    const listingId = await createListing();
+    await attachCar(listingId);
+    await request(app)
+      .post(`/api/listings/${listingId}/media`)
+      .send({ files: [{ name: "side.png" }] })
+      .auth(seller.accessToken, { type: "bearer" })
+      .expect(201);
 
     const { body } = await getMine().expect(200);
 

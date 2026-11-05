@@ -1,7 +1,7 @@
 import request from "supertest";
 import { app } from "../../../app";
 import {
-  carImageFiles,
+  submitWithImages,
   signinUser,
   signupUserWithVerification,
 } from "../../../test/helpers";
@@ -22,7 +22,6 @@ export const carPayload = {
   transmission: "automatic" as const,
   fiscalPower: 8,
   doorsNumber: 5,
-  files: carImageFiles(),
 };
 
 export const createApprovedCar = async (sellerEmail: string) => {
@@ -44,6 +43,7 @@ export const createApprovedCar = async (sellerEmail: string) => {
     .send(carPayload)
     .auth(seller.accessToken, { type: "bearer" })
     .expect(201);
+  await submitWithImages(listingId, seller.accessToken);
 
   const admin = await signinUser({
     email: "admin@autosouk.com",

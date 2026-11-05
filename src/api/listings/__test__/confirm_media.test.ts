@@ -4,7 +4,6 @@ import { minioClient } from "../../../file_storage/minio";
 import { carBucketName } from "../../../utils/constants";
 import { createBucket } from "../../../utils/functions";
 import {
-  carImageFiles,
   getListingDetailsAsAdmin,
   signinUser,
   signupUserWithVerification,
@@ -24,10 +23,9 @@ const carPayload = {
   transmission: "automatic",
   fiscalPower: 8,
   doorsNumber: 5,
-  files: carImageFiles(),
 };
 
-type CarMediaItem = { filename: string; originalName: string };
+type CarMediaItem = { id: number; filename: string; originalName: string };
 
 const createListingWithCar = async () => {
   await signupUserWithVerification({ userType: "seller" });
@@ -37,14 +35,24 @@ const createListingWithCar = async () => {
     .send({ title: "A black car", description: "A brand new black Ford" })
     .auth(authUser.accessToken, { type: "bearer" });
   const listingId = created.body.listing.id;
-  const attached = await request(app)
+  await request(app)
     .post(`/api/listings/${listingId}/car`)
     .send(carPayload)
+    .auth(authUser.accessToken, { type: "bearer" });
+  const added = await request(app)
+    .post(`/api/listings/${listingId}/media`)
+    .send({
+      files: [
+        { name: "photo-1.png" },
+        { name: "photo-2.png" },
+        { name: "photo-3.png" },
+      ],
+    })
     .auth(authUser.accessToken, { type: "bearer" });
   return {
     authUser,
     listingId,
-    carMedia: attached.body.carMedia as CarMediaItem[],
+    carMedia: added.body.carMedia as CarMediaItem[],
   };
 };
 
@@ -77,6 +85,9 @@ it("should return new upload policies for media still missing", async () => {
   expect(
     response.body.pending.map((item: CarMediaItem) => item.filename).sort(),
   ).toEqual(carMedia.map((item) => item.filename).sort());
+  expect(
+    response.body.pending.map((item: CarMediaItem) => item.id).sort(),
+  ).toEqual(carMedia.map((item) => item.id).sort());
   expect(response.body.pending[0].upload.fields.policy).toBeDefined();
 });
 

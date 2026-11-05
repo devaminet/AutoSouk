@@ -5,15 +5,52 @@ import { app } from "../app";
 import { registrationRoleSchema } from "../api/auth/request_schema";
 import { readTemplateFile } from "../utils/functions";
 import { minCarImageCount } from "../utils/constants";
+import { and, eq } from "drizzle-orm";
+import { db } from "../db";
+import { carTable } from "../db/schema/car";
+import { carMediaTable } from "../db/schema/car_media";
 
 type TestUserRole = z.infer<typeof registrationRoleSchema>;
 
-// Car image files for attach requests; the first one is primary.
-export const carImageFiles = (count = minCarImageCount) =>
-  Array.from({ length: count }, (_, index) => ({
-    name: `photo-${index + 1}.png`,
-    isPrimary: index === 0,
-  }));
+// Gives the listing's car uploaded images directly in the database, so tests
+// that do not exercise uploads skip storage. The first new image is primary
+// when the car has none.
+export const addUploadedCarImages = async (
+  listingId: number,
+  count = minCarImageCount,
+) => {
+  const [car] = await db
+    .select({ id: carTable.id })
+    .from(carTable)
+    .where(eq(carTable.listingId, listingId));
+  const [primary] = await db
+    .select({ id: carMediaTable.id })
+    .from(carMediaTable)
+    .where(
+      and(eq(carMediaTable.carId, car.id), eq(carMediaTable.isPrimary, true)),
+    );
+  await db.insert(carMediaTable).values(
+    Array.from({ length: count }, (_, index) => ({
+      carId: car.id,
+      link: `car-seeded-${listingId}-${index + 1}.png`,
+      type: "image" as const,
+      isPrimary: !primary && index === 0,
+      isUploaded: true,
+    })),
+  );
+};
+
+// Completes a draft that has a car and sends it to review.
+export const submitWithImages = async (
+  listingId: number,
+  accessToken: string,
+) => {
+  await addUploadedCarImages(listingId);
+  await request(app)
+    .post(`/api/listings/${listingId}/submit`)
+    .auth(accessToken, { type: "bearer" })
+    .expect(200);
+};
 
 export const testUserCredentials = {
   email: "user@example.com",

@@ -103,6 +103,22 @@ Generic validation codes live under `validation.*` (`validation.required`,
 `validation.invalid_type.number`, `validation.invalid_option`, ...); domain
 rules have their own codes (`media.min_images`, `listing.not_found`, ...).
 
+A new listing is a draft built step by step: attach the car, upload media, then
+`POST /api/listings/:id/submit`. Submit answers 400 without `field`, so show
+these next to the submit button and branch on the code to send the seller to
+the right step:
+
+| Code                     | Step to reopen                                  |
+| ------------------------ | ----------------------------------------------- |
+| `listing.not_draft`      | None: the listing is no longer a draft          |
+| `listing.car_required`   | Car details                                     |
+| `media.min_images`       | Photos (`params.count` is the minimum)          |
+| `media.primary_required` | Photos: choose a cover with `PATCH …/primary`   |
+
+`POST /api/listings/:id/car` also answers `listing.not_draft`, because only a
+draft accepts a car. `PATCH /api/listings/:id/approve` can answer `listing.not_pending`,
+`listing.already_approved`, `listing.car_required` and `media.min_images`.
+
 ## Success messages
 
 Responses that confirm an action carry a code and a message in the same way:

@@ -2,11 +2,7 @@ import { z } from "zod";
 import { listingStatusEnum } from "../../db/schema/listing";
 import { messageKey } from "../../i18n/zod_issues";
 import { allowedFileTypes, getFileType } from "../../utils/functions";
-import {
-  maxCarEquipmentCount,
-  maxCarMediaCount,
-  minCarImageCount,
-} from "../../utils/constants";
+import { maxCarEquipmentCount, maxCarMediaCount } from "../../utils/constants";
 
 export const createListingSchema = z.object({
   title: z.string(),
@@ -62,36 +58,6 @@ export const createCarSchema = z.object({
     .max(maxCarEquipmentCount)
     .refine(hasUniqueIds, { message: messageKey("validation.unique_ids") })
     .optional(),
-  files: z
-    .array(
-      z.object({
-        name: carMediaNameSchema,
-        isPrimary: z.boolean(),
-      }),
-    )
-    .max(maxCarMediaCount, maxCarMediaFiles)
-    .refine(
-      (files) =>
-        files.filter((file) => getFileType(file.name) === "image").length >=
-        minCarImageCount,
-      {
-        message: messageKey("media.min_images"),
-        params: { count: minCarImageCount },
-        path: [],
-      },
-    )
-    .refine((files) => files.filter((file) => file.isPrimary).length === 1, {
-      message: messageKey("media.one_primary"),
-      path: [],
-    })
-    .refine(
-      (files) =>
-        files.every(
-          (file) => !file.isPrimary || getFileType(file.name) === "image",
-        ),
-      { message: messageKey("media.primary_file_not_image"), path: [] },
-    )
-    .refine(hasUniqueNames, uniqueFileNames),
 });
 
 // Accepts equipmentIds=3,7 as well as equipmentIds=3&equipmentIds=7.
@@ -176,7 +142,7 @@ export const updateListingSchema = z
   .object({
     title: z.string().min(1).optional(),
     description: z.string().min(1).optional(),
-    car: createCarSchema.omit({ files: true }).partial().optional(),
+    car: createCarSchema.partial().optional(),
   })
   .refine(
     (data) =>

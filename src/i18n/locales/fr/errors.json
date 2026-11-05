@@ -90,9 +90,10 @@
     "not_found": "Annonce introuvable",
     "already_approved": "L'annonce est déjà approuvée",
     "car_already_attached": "Une voiture est déjà associée à cette annonce",
-    "car_required": "Associez une voiture à cette annonce avant de la modifier",
+    "car_required": "Associez d'abord une voiture à cette annonce",
     "car_required_for_media": "Associez une voiture à cette annonce avant d'ajouter des médias",
-    "not_pending": "Seule une annonce en attente de validation peut être refusée"
+    "not_pending": "Seule une annonce en attente de validation peut être approuvée ou refusée",
+    "not_draft": "Cette annonce n'est pas un brouillon"
   },
   "media": {
     "upload_urls_failed": "Impossible de générer les URL des images",
@@ -106,8 +107,7 @@
     "max_files_one": "Une voiture peut avoir au plus {{count}} fichier.",
     "max_files_many": "Une voiture peut avoir au plus {{count}} de fichiers.",
     "max_files_other": "Une voiture peut avoir au plus {{count}} fichiers.",
-    "one_primary": "Un seul fichier doit être désigné comme principal.",
-    "primary_file_not_image": "Le fichier principal doit être une image.",
+    "primary_required": "Choisissez une image envoyée comme image principale avant de soumettre l'annonce",
     "unknown": "Le média {{id}} n'existe pas pour cette voiture"
   },
   "car": {
