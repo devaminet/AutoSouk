@@ -108,9 +108,9 @@ favoriteListingRouter.get(
  *                 type: integer
  *     responses:
  *       201:
- *         description: Favorite created. Body is `{ listingId, created: true }`.
+ *         description: "Favorite created. Body is `{ listingId, created: true }`."
  *       200:
- *         description: The listing was already a favorite. Body is `{ listingId, created: false }`.
+ *         description: "The listing was already a favorite. Body is `{ listingId, created: false }`."
  *       400:
  *         description: Validation error
  *       404:
