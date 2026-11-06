@@ -9,6 +9,7 @@ import {
 import { RequestValidationError } from "../../errors/request_validation_error";
 import {
   favorListing,
+  getFavoriteListingIds,
   getUserFavoriteListings,
   removeFavorite,
 } from "./services";
@@ -55,6 +56,40 @@ favoriteListingRouter.get("/", isAuthenticated, isBuyer, async (req, res) => {
 
 /**
  * @openapi
+ * /api/favorite_listings/ids:
+ *   get:
+ *     tags: [Favorite Listings]
+ *     summary: Get the ids of every listing the current buyer keeps
+ *     description: Light enough to mark favourites on listing cards. Newest first.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: The listing ids
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 listingIds:
+ *                   type: array
+ *                   items: { type: integer }
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not a buyer
+ */
+favoriteListingRouter.get(
+  "/ids",
+  isAuthenticated,
+  isBuyer,
+  async (req, res) => {
+    res.status(200).json(await getFavoriteListingIds(req.currentUser?.id!));
+  },
+);
+
+/**
+ * @openapi
  * /api/favorite_listings:
  *   post:
  *     tags: [Favorite Listings]
@@ -73,9 +108,13 @@ favoriteListingRouter.get("/", isAuthenticated, isBuyer, async (req, res) => {
  *                 type: integer
  *     responses:
  *       201:
- *         description: Favorite created
+ *         description: Favorite created. Body is `{ listingId, created: true }`.
+ *       200:
+ *         description: The listing was already a favorite. Body is `{ listingId, created: false }`.
  *       400:
  *         description: Validation error
+ *       404:
+ *         description: No approved listing has this id (`listing.not_found`)
  *       401:
  *         description: Not authenticated
  *       403:
@@ -91,7 +130,7 @@ favoriteListingRouter.post("/", isAuthenticated, isBuyer, async (req, res) => {
     listingId: validationResult.data.listingId,
   });
 
-  res.status(201).json(result);
+  res.status(result.created ? 201 : 200).json(result);
 });
 
 /**
@@ -110,7 +149,9 @@ favoriteListingRouter.post("/", isAuthenticated, isBuyer, async (req, res) => {
  *           type: integer
  *     responses:
  *       200:
- *         description: Favorite removed
+ *         description: >
+ *           The listing is no longer a favorite. `count` is 1 when it was
+ *           removed, and 0 when it wasn't a favorite.
  *       400:
  *         description: Validation error
  *       401:

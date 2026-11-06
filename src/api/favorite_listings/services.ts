@@ -1,39 +1,43 @@
-import { z } from "zod";
-import { BadRequestError } from "../../errors/bad_request_error";
 import { InternalServerError } from "../../errors/internal_server_error";
+import { NotFoundError } from "../../errors/not_found_error";
 import {
   createFavoriteListing,
+  favoriteListingIds,
+  isApprovedListing,
   removeFavoriteListing,
   userFavoriteListings,
 } from "./db";
 import { QueryParams } from "./request_schema";
 
+// Buyers can only keep listings they can see. Keeping one twice is not an
+// error, so a repeated request is safe.
 export const favorListing = async (data: {
   userId: number;
   listingId: number;
 }) => {
+  if (!(await isApprovedListing(data.listingId))) {
+    throw new NotFoundError("listing.not_found");
+  }
+  let created: boolean;
   try {
-    return await createFavoriteListing(data);
+    created = await createFavoriteListing(data);
   } catch (error) {
     throw new InternalServerError("favorite.add_failed");
   }
+  return { listingId: data.listingId, created };
 };
 
+// Removing a listing that isn't kept is not an error, so a repeated request
+// is safe. The count says whether one was removed.
 export const removeFavorite = async (data: {
   userId: number;
   listingId: number;
 }) => {
-  let count: number;
   try {
-    count = await removeFavoriteListing(data);
+    return { count: await removeFavoriteListing(data) };
   } catch (error) {
     throw new InternalServerError("favorite.remove_failed");
   }
-
-  if (count === 0) {
-    throw new BadRequestError("favorite.not_in_favorites");
-  }
-  return { count };
 };
 
 export const getUserFavoriteListings = async (
@@ -42,3 +46,7 @@ export const getUserFavoriteListings = async (
 ) => {
   return await userFavoriteListings(userId, options);
 };
+
+export const getFavoriteListingIds = async (userId: number) => ({
+  listingIds: await favoriteListingIds(userId),
+});

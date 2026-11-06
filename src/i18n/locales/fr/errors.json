@@ -145,8 +145,7 @@
   },
   "favorite": {
     "add_failed": "Impossible d'ajouter cette annonce à vos favoris",
-    "remove_failed": "Impossible de retirer cette annonce de vos favoris",
-    "not_in_favorites": "Cette annonce n'est pas dans vos favoris"
+    "remove_failed": "Impossible de retirer cette annonce de vos favoris"
   },
   "equipment": {
     "not_found": "L'équipement {{id}} n'existe pas"
