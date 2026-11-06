@@ -1,8 +1,15 @@
 import request from "supertest";
-import { ne } from "drizzle-orm";
+import { eq, ne } from "drizzle-orm";
 import { app } from "../../../app";
 import { db } from "../../../db";
+import { carTable } from "../../../db/schema/car";
 import { carModelTable } from "../../../db/schema/car_model";
+import { carCarburantTable } from "../../../db/schema/carburant";
+import { inspectionTable } from "../../../db/schema/inspection";
+import {
+  createBuyer,
+  createMechanic,
+} from "../../inspections/__test__/fixtures";
 import {
   submitWithImages,
   signinUser,
@@ -125,6 +132,34 @@ describe("GET /api/listings filters", () => {
     expect(listedIds(response.body)).toEqual([cheap]);
   });
 
+  it("filters by transmission", async () => {
+    const manual = await publishCar({ transmission: "manual" });
+
+    const response = await request(app)
+      .get("/api/listings?transmission=manual")
+      .expect(200);
+
+    expect(listedIds(response.body)).toEqual([manual]);
+  });
+
+  it("refuses an unknown transmission", async () => {
+    await request(app).get("/api/listings?transmission=cvt").expect(400);
+  });
+
+  it("filters by any of several fuels", async () => {
+    const otherFuel = await publishCar({ carburantId: 1 });
+    await publishCar({ carburantId: 2 });
+
+    const response = await request(app)
+      .get(`/api/listings?carburantIds=1,${baseCar.carburantId}`)
+      .expect(200);
+
+    expect(sorted(listedIds(response.body))).toEqual(
+      sorted([cheap, middle, expensive, otherFuel]),
+    );
+    expect(response.body.meta.total).toBe(4);
+  });
+
   it("returns an empty page when nothing matches", async () => {
     const response = await request(app)
       .get("/api/listings?minPrice=5000000")
@@ -207,5 +242,65 @@ describe("GET /api/listings sorting and paging", () => {
         ]),
       },
     });
+  });
+});
+
+describe("GET /api/listings cards", () => {
+  const findListing = async (id: number) => {
+    const response = await request(app).get("/api/listings").expect(200);
+    return response.body.listings.find(
+      (listing: { id: number }) => listing.id === id,
+    );
+  };
+
+  it("returns the car's price and specs", async () => {
+    const [fuel] = await db
+      .select({ slug: carCarburantTable.carburant })
+      .from(carCarburantTable)
+      .where(eq(carCarburantTable.id, baseCar.carburantId));
+
+    const listing = await findListing(cheap);
+
+    expect(listing.car).toMatchObject({
+      price: 100000,
+      year: baseCar.year,
+      distance: baseCar.distance,
+      transmission: baseCar.transmission,
+      carburant: { carburant: fuel.slug },
+    });
+    expect(listing.inspectionScore).toBeNull();
+  });
+
+  it("returns the score of the latest completed inspection", async () => {
+    const [car] = await db
+      .select({ id: carTable.id })
+      .from(carTable)
+      .where(eq(carTable.listingId, middle));
+    const { mechanic } = await createMechanic("mechanic@example.com");
+    const buyer = await createBuyer("buyer@example.com");
+    const inspection = {
+      carId: car.id,
+      buyerId: buyer.user.id,
+      mechanicId: mechanic.id,
+      priceAtRequest: 300,
+    };
+    await db.insert(inspectionTable).values([
+      {
+        ...inspection,
+        status: "completed",
+        overallScore: 70,
+        completedAt: new Date("2025-01-01"),
+      },
+      {
+        ...inspection,
+        status: "completed",
+        overallScore: 92,
+        completedAt: new Date("2025-06-01"),
+      },
+      { ...inspection, status: "pending" },
+    ]);
+
+    expect((await findListing(middle)).inspectionScore).toBe(92);
+    expect((await findListing(cheap)).inspectionScore).toBeNull();
   });
 });

@@ -42,6 +42,34 @@ const listingIdsWithAllEquipment = (equipmentIds: number[]) =>
     .groupBy(carTable.listingId)
     .having(eq(count(), equipmentIds.length));
 
+// The score of the latest completed inspection of each listing's car, by
+// listing id. Listings whose car was never inspected are left out.
+const latestInspectionScores = async (listingIds: number[]) => {
+  const rows = await db
+    .selectDistinctOn([carTable.listingId], {
+      listingId: carTable.listingId,
+      score: inspectionTable.overallScore,
+    })
+    .from(inspectionTable)
+    .innerJoin(carTable, eq(inspectionTable.carId, carTable.id))
+    .where(
+      and(
+        inArray(carTable.listingId, listingIds),
+        eq(inspectionTable.status, "completed"),
+      ),
+    )
+    .orderBy(
+      carTable.listingId,
+      desc(inspectionTable.completedAt),
+      desc(inspectionTable.id),
+    );
+  return new Map(
+    rows.flatMap(({ listingId, score }) =>
+      listingId !== null && score !== null ? [[listingId, score] as const] : [],
+    ),
+  );
+};
+
 // The id breaks ties so pages stay stable when the sort key is equal.
 const listingsOrderBy = {
   price_asc: [asc(carTable.price), asc(listingTable.id)],
@@ -62,6 +90,8 @@ export const findListings = async (
     minPrice,
     maxPrice,
     equipmentIds,
+    transmission,
+    carburantIds,
     sort,
   } = options;
 
@@ -72,6 +102,11 @@ export const findListings = async (
   if (cityId) conditions.push(eq(carTable.cityId, cityId));
   if (minPrice !== undefined) conditions.push(gte(carTable.price, minPrice));
   if (maxPrice !== undefined) conditions.push(lte(carTable.price, maxPrice));
+  if (transmission) conditions.push(eq(carTable.transmission, transmission));
+  // A car with any of the fuels matches.
+  if (carburantIds && carburantIds.length > 0) {
+    conditions.push(inArray(carTable.carburantId, carburantIds));
+  }
   if (equipmentIds && equipmentIds.length > 0) {
     conditions.push(
       inArray(listingTable.id, listingIdsWithAllEquipment(equipmentIds)),
@@ -120,8 +155,15 @@ export const findListings = async (
         },
       },
       car: {
-        columns: {},
+        columns: {
+          price: true,
+          year: true,
+          distance: true,
+          transmission: true,
+        },
         with: {
+          // The slug, as in the listing details. Translate it with `carburant.<slug>`.
+          carburant: { columns: { carburant: true } },
           carMedias: {
             columns: {
               type: true,
@@ -146,9 +188,13 @@ export const findListings = async (
   });
 
   const position = new Map(pageIds.map((id, index) => [id, index]));
-  const listings = found.sort(
-    (a, b) => (position.get(a.id) ?? 0) - (position.get(b.id) ?? 0),
-  );
+  const scores = await latestInspectionScores(pageIds);
+  const listings = found
+    .sort((a, b) => (position.get(a.id) ?? 0) - (position.get(b.id) ?? 0))
+    .map((listing) => ({
+      ...listing,
+      inspectionScore: scores.get(listing.id) ?? null,
+    }));
 
   return { listings, totalCountResult };
 };
