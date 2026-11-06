@@ -76,6 +76,20 @@ const listingRouter = Router();
  *           maxItems: 100
  *           items: { type: integer }
  *       - in: query
+ *         name: transmission
+ *         schema:
+ *           type: string
+ *           enum: [manual, automatic]
+ *       - in: query
+ *         name: carburantIds
+ *         description: Only cars with one of these fuel ids from GET /api/lookups. Comma separated (carburantIds=1,2) or repeated, at most 20.
+ *         style: form
+ *         explode: false
+ *         schema:
+ *           type: array
+ *           maxItems: 20
+ *           items: { type: integer }
+ *       - in: query
  *         name: sort
  *         schema:
  *           type: string
@@ -83,7 +97,11 @@ const listingRouter = Router();
  *           default: newest
  *     responses:
  *       200:
- *         description: Paginated list of listings
+ *         description: >
+ *           Paginated list of approved listings. Each car has its price, year,
+ *           distance, transmission and fuel slug (`carburant.carburant`).
+ *           `inspectionScore` is the 0-100 score of the car's latest completed
+ *           inspection, or null when it has none.
  *       400:
  *         description: Validation error
  */

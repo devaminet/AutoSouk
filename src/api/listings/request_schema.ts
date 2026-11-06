@@ -88,6 +88,16 @@ const equipmentIdsQuerySchema = z.preprocess(
     .optional(),
 );
 
+// Fuel ids from GET /api/lookups. There are only a few fuels.
+const carburantIdsQuerySchema = z.preprocess(
+  splitIdList,
+  z
+    .array(z.coerce.number().int().positive())
+    .max(20)
+    .transform((ids) => [...new Set(ids)])
+    .optional(),
+);
+
 export const getListingsQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(10),
@@ -97,6 +107,8 @@ export const getListingsQuerySchema = z.object({
   minPrice: z.coerce.number().nonnegative().optional(),
   maxPrice: z.coerce.number().nonnegative().optional(),
   equipmentIds: equipmentIdsQuerySchema,
+  transmission: z.enum(["manual", "automatic"]).optional(),
+  carburantIds: carburantIdsQuerySchema,
   sort: z
     .enum(["price_asc", "price_desc", "newest", "oldest"])
     .default("newest"),
