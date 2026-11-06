@@ -1,7 +1,7 @@
 import request from "supertest";
 import { app } from "../../../app";
 import {
-  carImageFiles,
+  submitWithImages,
   signinUser,
   signupUserWithVerification,
 } from "../../../test/helpers";
@@ -20,7 +20,6 @@ const carPayload = {
   transmission: "automatic",
   fiscalPower: 8,
   doorsNumber: 5,
-  files: carImageFiles(),
 };
 
 let seller: Awaited<ReturnType<typeof signinUser>>;
@@ -42,6 +41,7 @@ const createPendingListing = async () => {
     .send(carPayload)
     .auth(seller.accessToken, { type: "bearer" })
     .expect(201);
+  await submitWithImages(listingId, seller.accessToken);
   return listingId;
 };
 
@@ -230,12 +230,20 @@ describe("PATCH /api/listings/:id/reject", () => {
     });
   });
 
-  it("clears the reason when an admin approves the listing later", async () => {
+  it("cannot be undone by approving: the seller edits it first", async () => {
     const listingId = await createPendingListing();
     await reject(listingId).expect(200);
 
-    const { body } = await approve(listingId).expect(200);
+    const refused = await approve(listingId).expect(400);
+    expect(refused.body.errors[0].code).toBe("listing.not_pending");
 
+    await request(app)
+      .patch(`/api/listings/${listingId}`)
+      .send({ title: "Better photos" })
+      .auth(seller.accessToken, { type: "bearer" })
+      .expect(200);
+
+    const { body } = await approve(listingId).expect(200);
     expect(body.updatedRows[0]).toMatchObject({
       status: "approved",
       rejectionReason: null,

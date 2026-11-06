@@ -4,7 +4,7 @@ import { app } from "../../../app";
 import { db } from "../../../db";
 import { carModelTable } from "../../../db/schema/car_model";
 import {
-  carImageFiles,
+  submitWithImages,
   signinUser,
   signupUserWithVerification,
 } from "../../../test/helpers";
@@ -23,7 +23,6 @@ const baseCar = {
   transmission: "automatic",
   fiscalPower: 8,
   doorsNumber: 5,
-  files: carImageFiles(),
 };
 
 let seller: Awaited<ReturnType<typeof signinUser>>;
@@ -45,6 +44,7 @@ const publishCar = async (car: Record<string, unknown>) => {
     .send({ ...baseCar, ...car })
     .auth(seller.accessToken, { type: "bearer" })
     .expect(201);
+  await submitWithImages(listingId, seller.accessToken);
   await request(app)
     .patch(`/api/listings/${listingId}/approve`)
     .auth(admin.accessToken, { type: "bearer" })
@@ -200,7 +200,12 @@ describe("GET /api/listings sorting and paging", () => {
       id: middle,
       title: "A black car",
       user: expect.objectContaining({ firstName: expect.any(String) }),
-      car: { city: { name: expect.any(String) }, carMedias: [] },
+      car: {
+        city: { name: expect.any(String) },
+        carMedias: expect.arrayContaining([
+          expect.objectContaining({ isPrimary: true, type: "image" }),
+        ]),
+      },
     });
   });
 });

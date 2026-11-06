@@ -1,7 +1,7 @@
 import request from "supertest";
 import { app } from "../../../app";
 import {
-  carImageFiles,
+  submitWithImages,
   getListingDetailsAsAdmin,
   signinUser,
   signupUserWithVerification,
@@ -21,7 +21,6 @@ const carPayload = {
   transmission: "automatic",
   fiscalPower: 8,
   doorsNumber: 5,
-  files: carImageFiles(),
 };
 
 const createListingWithCar = async () => {
@@ -36,6 +35,7 @@ const createListingWithCar = async () => {
     .post(`/api/listings/${listingId}/car`)
     .send(carPayload)
     .auth(authUser.accessToken, { type: "bearer" });
+  await submitWithImages(listingId, authUser.accessToken);
   return { authUser, listingId };
 };
 

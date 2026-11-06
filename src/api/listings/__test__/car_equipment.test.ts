@@ -7,7 +7,7 @@ import {
   equipmentTable,
 } from "../../../db/schema/equipment";
 import {
-  carImageFiles,
+  submitWithImages,
   getListingDetailsAsAdmin,
   signinUser,
   signupUserWithVerification,
@@ -27,7 +27,6 @@ const validCar = {
   transmission: "automatic",
   fiscalPower: 8,
   doorsNumber: 5,
-  files: carImageFiles(),
 };
 
 const findEquipmentIds = async (slugs: string[]) => {
@@ -189,7 +188,7 @@ describe("car equipment on update", () => {
     });
 
     expect(response.statusCode).toBe(200);
-    expect(response.body.listing.status).toBe("pending");
+    expect(response.body.listing.status).toBe("draft");
     expect(await findSavedEquipmentIds(carId)).toEqual(equipmentIds);
   });
 
@@ -224,6 +223,7 @@ describe("car equipment on update", () => {
 
   it("sends an approved listing back to pending", async () => {
     const { authUser, listingId } = await attachCarWithEquipment(["abs"]);
+    await submitWithImages(listingId, authUser.accessToken);
     const admin = await signinUser({
       email: "admin@autosouk.com",
       password: "Admin_@@789",
@@ -344,6 +344,7 @@ describe("filter listings by equipment", () => {
       })
       .auth(seller.accessToken, { type: "bearer" })
       .expect(201);
+    await submitWithImages(listingId, seller.accessToken);
     await request(app)
       .patch(`/api/listings/${listingId}/approve`)
       .auth(admin.accessToken, { type: "bearer" })

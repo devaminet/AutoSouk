@@ -29,6 +29,7 @@ import {
   addListingMedia,
   deleteListingMedia,
   setListingPrimaryMedia,
+  submitListing,
   updateListing,
 } from "./services";
 import { getMechanicsForListing } from "../mechanics/services";
@@ -146,8 +147,10 @@ listingRouter.get(
  *     tags: [Listings]
  *     summary: List the seller's own listings, in every status
  *     description: >
- *       Newest first. Drafts have no car yet, so `car` can be null.
+ *       Newest first. A draft may have no car yet, so `car` can be null.
  *       `car.carMedias` lists uploaded media, primary first.
+ *       `meta.statusCounts` counts all of the seller's listings per status and
+ *       ignores the `status` filter, so it can label every tab.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -183,6 +186,7 @@ listingRouter.get(
  *                       rejectionReason: { type: string, nullable: true, description: "Why an admin rejected the listing; cleared when the seller edits it" }
  *                       createdAt: { type: string, format: date }
  *                       updatedAt: { type: string, format: date }
+ *                       completedInspectionsCount: { type: integer, description: "Completed inspections of the listing's car; 0 without a car" }
  *                       car:
  *                         type: object
  *                         nullable: true
@@ -190,6 +194,7 @@ listingRouter.get(
  *                           id: { type: integer }
  *                           price: { type: integer }
  *                           year: { type: integer }
+ *                           distance: { type: string }
  *                           make: { type: object, properties: { name: { type: string } } }
  *                           model: { type: object, properties: { name: { type: string } } }
  *                           city: { type: object, properties: { name: { type: string }, slug: { type: string } } }
@@ -209,6 +214,16 @@ listingRouter.get(
  *                     page: { type: integer }
  *                     limit: { type: integer }
  *                     totalPages: { type: integer }
+ *                     statusCounts:
+ *                       type: object
+ *                       description: Listings of this seller per status, 0 included. Ignores the status filter.
+ *                       properties:
+ *                         draft: { type: integer }
+ *                         pending: { type: integer }
+ *                         approved: { type: integer }
+ *                         withdrawn: { type: integer }
+ *                         rejected: { type: integer }
+ *                         sold: { type: integer }
  *       400:
  *         description: Validation error
  *       401:
@@ -240,7 +255,12 @@ listingRouter.get(
  * /api/listings:
  *   post:
  *     tags: [Listings]
- *     summary: Create a listing
+ *     summary: Create a draft listing
+ *     description: >
+ *       First step of a new listing. Then attach the car with POST
+ *       /api/listings/{id}/car, add media with POST /api/listings/{id}/media,
+ *       upload it, call POST /api/listings/{id}/media/confirm, and send the
+ *       draft to review with POST /api/listings/{id}/submit.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -253,8 +273,12 @@ listingRouter.get(
  *             properties:
  *               title:
  *                 type: string
+ *                 minLength: 1
+ *                 description: Surrounding spaces are removed before it is checked and stored, so a value of only spaces is refused.
  *               description:
  *                 type: string
+ *                 minLength: 1
+ *                 description: Surrounding spaces are removed before it is checked and stored, so a value of only spaces is refused.
  *     responses:
  *       201:
  *         description: Listing created
@@ -286,7 +310,8 @@ listingRouter.post(
  * /api/listings/{id}/car:
  *   post:
  *     tags: [Listings]
- *     summary: Attach a car to a listing
+ *     summary: Attach a car to a draft listing
+ *     description: Saves the car details. Only a draft accepts a car, otherwise the answer is 400 with the code `listing.not_draft`. The listing stays a draft until POST /api/listings/{id}/submit.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -300,7 +325,7 @@ listingRouter.post(
  *         application/json:
  *           schema:
  *             type: object
- *             required: [makeId, modelId, carburantId, originId, stateId, price, year, ownersCount, cityId, distance, transmission, fiscalPower, doorsNumber, files]
+ *             required: [makeId, modelId, carburantId, originId, stateId, price, year, ownersCount, cityId, distance, transmission, fiscalPower, doorsNumber]
  *             properties:
  *               makeId: { type: integer }
  *               modelId: { type: integer }
@@ -321,24 +346,17 @@ listingRouter.post(
  *                 maxItems: 100
  *                 uniqueItems: true
  *                 items: { type: integer }
- *               files:
- *                 type: array
- *                 description: At least 3 images and at most 20 files (images and videos). File names must be unique, and exactly one file is primary, which must be an image.
- *                 maxItems: 20
- *                 items:
- *                   type: object
- *                   properties:
- *                     name: { type: string }
- *                     isPrimary: { type: boolean }
  *     responses:
  *       201:
- *         description: Car attached to listing, which is now pending approval. The car includes the saved equipmentIds. Each carMedia item holds the stored filename, the originalName sent by the client, and upload ({ url, fields }), a presigned POST policy. Send a multipart/form-data POST to upload.url with every fields entry first and the file last as field \"file\". Images max 10MB (image/*), videos max 50MB (video/*), valid for 15 minutes.
+ *         description: Car attached. Returns the car row with the saved equipmentIds.
  *       400:
- *         description: Validation error
+ *         description: Validation error, the listing is not a draft, or a car is already attached
  *       401:
  *         description: Not authenticated
  *       403:
  *         description: Not a seller
+ *       404:
+ *         description: Listing not found for this seller
  */
 // Attach car to a listing
 listingRouter.post(
@@ -357,13 +375,13 @@ listingRouter.post(
       throw new RequestValidationError(validateResult.error.errors);
     }
     const listingId = requestParamValidation.data.id;
-    const { car, carMedia } = await attachCarToListing(
+    const car = await attachCarToListing(
       validateResult.data,
       listingId,
       req.currentUser?.id!,
     );
 
-    res.status(201).json({ ...car, carMedia });
+    res.status(201).json(car);
   },
 );
 
@@ -373,7 +391,7 @@ listingRouter.post(
  *   post:
  *     tags: [Listings]
  *     summary: Add media to a listing's car
- *     description: Returns a presigned POST policy per file, like attaching a car. Upload each file, then call POST /api/listings/{id}/media/confirm; confirmed media sends the listing back to pending approval. Files that are not uploaded yet count towards the 20 file limit until they are confirmed or deleted.
+ *     description: Returns a presigned POST policy per file. Send a multipart/form-data POST to upload.url with every fields entry first and the file last as field "file". Images max 10MB (image/*), videos max 50MB (video/*), valid for 15 minutes. Then call POST /api/listings/{id}/media/confirm. Files that are not uploaded yet count towards the 20 file limit until they are confirmed or deleted. New media is never primary at creation; confirm sets the primary when the car has none.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -459,12 +477,13 @@ listingRouter.post(
  *     tags: [Listings]
  *     summary: Delete media from a listing's car
  *     description: >
- *       Deletes the given media of the seller's car. The car must keep at least
- *       3 uploaded images, so upload and confirm replacement images before
- *       deleting old ones; media that is not uploaded yet can always be
- *       deleted. When the primary image is deleted, the oldest remaining
- *       uploaded image becomes primary. Deleting media does not send the
- *       listing back to approval.
+ *       Deletes the given media of the seller's car. Outside a draft, the car
+ *       must keep at least 3 uploaded images, so upload and confirm replacement
+ *       images before deleting old ones. A draft has no minimum, and media that
+ *       is not uploaded yet can always be deleted in any status: use the ids
+ *       from the `pending` items of the confirm response. When the primary
+ *       image is deleted, the oldest remaining uploaded image becomes primary.
+ *       Deleting media does not change the listing status.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -507,7 +526,7 @@ listingRouter.post(
  *                       type: { type: string, enum: [image, video] }
  *                       isPrimary: { type: boolean }
  *       400:
- *         description: Validation error, media not on this car, fewer than 3 images would remain, or no car attached
+ *         description: Validation error, media not on this car, fewer than 3 images would remain outside a draft, or no car attached
  *       401:
  *         description: Not authenticated
  *       403:
@@ -607,7 +626,7 @@ listingRouter.patch(
  *   post:
  *     tags: [Listings]
  *     summary: Confirm car media uploads for a listing
- *     description: Marks media found in storage as uploaded so it shows on the listing, removes invalid files, and returns fresh upload policies for files that are still missing so the client can retry. Newly uploaded media sends the listing back to pending approval.
+ *     description: Marks media found in storage as uploaded so it shows on the listing, and removes invalid files. If the car has no uploaded primary image, its oldest uploaded image becomes primary. Files still missing come back in `pending` with their id and a fresh upload policy, so the client can retry the upload or delete them with DELETE /api/listings/{id}/media. Newly uploaded media keeps a draft as a draft; any other status goes back to pending approval.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -617,7 +636,26 @@ listingRouter.patch(
  *         schema: { type: integer }
  *     responses:
  *       200:
- *         description: Returns uploaded filenames, rejected filenames, and pending items with a new upload ({ url, fields })
+ *         description: The outcome per file
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 uploaded: { type: array, items: { type: string }, description: Filenames of all uploaded media }
+ *                 rejected: { type: array, items: { type: string }, description: Filenames removed for a wrong type or size }
+ *                 pending:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id: { type: integer }
+ *                       filename: { type: string }
+ *                       upload:
+ *                         type: object
+ *                         properties:
+ *                           url: { type: string }
+ *                           fields: { type: object, additionalProperties: { type: string } }
  *       401:
  *         description: Not authenticated
  *       403:
@@ -640,6 +678,64 @@ listingRouter.post(
       req.currentUser?.id!,
     );
     res.status(200).json(result);
+  },
+);
+
+/**
+ * @openapi
+ * /api/listings/{id}/submit:
+ *   post:
+ *     tags: [Listings]
+ *     summary: Send a complete draft to review
+ *     description: >
+ *       Requires a draft with an attached car, at least 3 uploaded images and
+ *       an uploaded image as primary. Files that are not uploaded yet do not
+ *       block it and stay hidden. Errors use the codes `listing.not_draft`,
+ *       `listing.car_required`, `media.min_images` and `media.primary_required`.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Listing submitted, status set to pending
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 listing:
+ *                   type: object
+ *                   properties:
+ *                     id: { type: integer }
+ *                     status: { type: string, example: pending }
+ *       400:
+ *         description: Not a draft, no car attached, too few uploaded images, or no uploaded primary image
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not a seller
+ *       404:
+ *         description: Listing not found for this seller
+ */
+// Send a complete draft to review
+listingRouter.post(
+  "/:id/submit",
+  isAuthenticated,
+  isSeller,
+  async (req: Request, res: Response) => {
+    const paramValidation = attachListingParamSchema.safeParse(req.params);
+    if (!paramValidation.success) {
+      throw new RequestValidationError(paramValidation.error.errors);
+    }
+    const listing = await submitListing(
+      paramValidation.data.id,
+      req.currentUser?.id!,
+    );
+    res.status(200).json({ listing });
   },
 );
 
@@ -694,7 +790,10 @@ listingRouter.get("/:id/mechanics", async (req: Request, res: Response) => {
  *     description: >
  *       Approved listings are public. Any other status answers 404, except for
  *       the listing's seller and admins (send the bearer token), who also see
- *       `rejectionReason`.
+ *       `rejectionReason`. A draft may have no car yet, so `car` can be null.
+ *       `car` carries the ids of its make, model, city, carburant, origin and
+ *       state, so a form can show the saved choices, next to the nested
+ *       objects used for display.
  *     parameters:
  *       - in: path
  *         name: id
@@ -715,6 +814,12 @@ listingRouter.get("/:id/mechanics", async (req: Request, res: Response) => {
  *                       type: object
  *                       nullable: true
  *                       properties:
+ *                         makeId: { type: integer, nullable: true, example: 449 }
+ *                         modelId: { type: integer, nullable: true, example: 2085 }
+ *                         cityId: { type: integer, nullable: true, example: 1 }
+ *                         carburantId: { type: integer, nullable: true, example: 3 }
+ *                         originId: { type: integer, nullable: true, example: 4 }
+ *                         stateId: { type: integer, nullable: true, example: 6 }
  *                         city:
  *                           type: object
  *                           properties:
@@ -756,7 +861,8 @@ listingRouter.get("/:id", async (req: Request, res: Response) => {
  * /api/listings/{id}:
  *   patch:
  *     tags: [Listings]
- *     summary: Update a listing and its car, and mark it pending approval
+ *     summary: Update a listing and its car
+ *     description: A draft stays a draft. Any other status goes back to pending approval, which clears approvedAt and rejectionReason.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -771,8 +877,8 @@ listingRouter.get("/:id", async (req: Request, res: Response) => {
  *           schema:
  *             type: object
  *             properties:
- *               title: { type: string }
- *               description: { type: string }
+ *               title: { type: string, minLength: 1, description: "Surrounding spaces are removed before it is checked and stored, so a value of only spaces is refused." }
+ *               description: { type: string, minLength: 1, description: "Surrounding spaces are removed before it is checked and stored, so a value of only spaces is refused." }
  *               car:
  *                 type: object
  *                 properties:
@@ -797,7 +903,7 @@ listingRouter.get("/:id", async (req: Request, res: Response) => {
  *                     items: { type: integer }
  *     responses:
  *       200:
- *         description: Listing updated, status set to pending
+ *         description: Listing updated
  *       400:
  *         description: Validation error or no car attached
  *       401:
@@ -807,7 +913,7 @@ listingRouter.get("/:id", async (req: Request, res: Response) => {
  *       404:
  *         description: Listing not found for this seller
  */
-// Update a listing and send it back for approval
+// Update a listing; anything but a draft goes back for approval
 listingRouter.patch(
   "/:id",
   isAuthenticated,
@@ -835,7 +941,8 @@ listingRouter.patch(
  * /api/listings/{id}/approve:
  *   patch:
  *     tags: [Listings]
- *     summary: Approve a listing
+ *     summary: Approve a pending listing
+ *     description: Requires an attached car and at least 3 uploaded images. Errors use the codes `listing.already_approved`, `listing.not_pending`, `listing.car_required` and `media.min_images`.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -846,10 +953,14 @@ listingRouter.patch(
  *     responses:
  *       200:
  *         description: Listing approved
+ *       400:
+ *         description: Not pending, no car attached, or too few uploaded images
  *       401:
  *         description: Not authenticated
  *       403:
  *         description: Not an admin
+ *       404:
+ *         description: Listing not found
  */
 // Approve a listing
 listingRouter.patch(
@@ -938,7 +1049,8 @@ listingRouter.patch(
  * /api/listings/{id}:
  *   delete:
  *     tags: [Listings]
- *     summary: Delete a listing
+ *     summary: Delete a listing, in any status, with or without a car
+ *     description: Deletes the listing and, when it has one, its car and the car's media, then removes the stored files, including files not uploaded yet. A storage failure is only logged, so the listing stays deleted and the response is still 200.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -949,10 +1061,19 @@ listingRouter.patch(
  *     responses:
  *       200:
  *         description: Listing deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 deleted: { type: boolean, example: true }
+ *                 listingId: { type: integer }
  *       401:
  *         description: Not authenticated
  *       403:
- *         description: Not the owning seller
+ *         description: Not a seller
+ *       404:
+ *         description: Listing not found for this seller
  */
 // Delete a listing
 listingRouter.delete(

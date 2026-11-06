@@ -7,7 +7,7 @@ import { minioClient } from "../../../file_storage/minio";
 import { carBucketName } from "../../../utils/constants";
 import { createBucket } from "../../../utils/functions";
 import {
-  carImageFiles,
+  submitWithImages,
   getListingDetailsAsAdmin,
   signinUser,
   signupUserWithVerification,
@@ -27,7 +27,6 @@ const carPayload = {
   transmission: "automatic",
   fiscalPower: 8,
   doorsNumber: 5,
-  files: carImageFiles(),
 };
 
 type AddedMedia = {
@@ -189,7 +188,7 @@ describe("POST /api/listings/:id/media", () => {
     const { authUser, listingId, carId } = await createListingWithCar();
 
     await addMedia(listingId, authUser.accessToken, {
-      files: namedFiles(17),
+      files: namedFiles(20),
     }).expect(201);
     const response = await addMedia(listingId, authUser.accessToken, {
       files: namedFiles(1, "one-more"),
@@ -207,8 +206,45 @@ describe("POST /api/listings/:id/media", () => {
     expect(await countCarMedia(carId)).toBe(20);
   });
 
+  it("rejects more than 20 files in one request", async () => {
+    const { authUser, listingId } = await createListingWithCar();
+
+    const response = await addMedia(listingId, authUser.accessToken, {
+      files: namedFiles(21),
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.errors[0]).toMatchObject({
+      code: "media.max_files",
+      field: "files",
+      params: { count: 20 },
+    });
+  });
+
+  it("restricts uploads by size and content type", async () => {
+    const { authUser, listingId } = await createListingWithCar();
+
+    const response = await addMedia(listingId, authUser.accessToken, {
+      files: [{ name: "side.png" }, { name: "walkaround.mp4" }],
+    }).expect(201);
+
+    const decode = (policy: string) =>
+      JSON.parse(Buffer.from(policy, "base64").toString("utf8")).conditions;
+    const [image, video] = response.body.carMedia.map(
+      (media: AddedMedia) => decode(media.upload.fields.policy),
+    );
+
+    expect(image).toContainEqual(["content-length-range", 1, 10 * 1024 * 1024]);
+    expect(image).toContainEqual(["starts-with", "$Content-Type", "image/"]);
+    expect(video).toContainEqual(["content-length-range", 1, 50 * 1024 * 1024]);
+    expect(video).toContainEqual(["starts-with", "$Content-Type", "video/"]);
+  });
+
   it("keeps the limit when media is added concurrently", async () => {
     const { authUser, listingId, carId } = await createListingWithCar();
+    await addMedia(listingId, authUser.accessToken, {
+      files: namedFiles(3, "base"),
+    }).expect(201);
 
     const responses = await Promise.all([
       addMedia(listingId, authUser.accessToken, {
@@ -251,6 +287,7 @@ describe("confirming added media", () => {
 
   it("sends an approved listing back to pending once new media is uploaded", async () => {
     const { authUser, listingId } = await createListingWithCar();
+    await submitWithImages(listingId, authUser.accessToken);
     await approve(listingId);
     const added = await addMedia(listingId, authUser.accessToken, {
       files: [{ name: "side.png" }],
@@ -266,6 +303,7 @@ describe("confirming added media", () => {
 
   it("keeps the listing approved while the new media is not uploaded", async () => {
     const { authUser, listingId } = await createListingWithCar();
+    await submitWithImages(listingId, authUser.accessToken);
     await approve(listingId);
     await addMedia(listingId, authUser.accessToken, {
       files: [{ name: "side.png" }],
@@ -279,15 +317,17 @@ describe("confirming added media", () => {
 
 type DetailsMedia = { id: number; link: string; isPrimary: boolean };
 
-// Attaches a car with the 3 required images plus `extra` more, uploads
-// and confirms all of them, and returns the visible media primary first.
-const createCarWithUploadedImages = async (extra = 0) => {
+// Attaches a car, adds 3 images plus `extra` more, uploads and confirms all of
+// them, and returns the visible media primary first. The listing stays a draft
+// unless `submit` is set.
+const createCarWithUploadedImages = async (
+  extra = 0,
+  { submit = false } = {},
+) => {
   const { authUser, listingId, carId } = await createListingWithCar();
-  if (extra > 0) {
-    await addMedia(listingId, authUser.accessToken, {
-      files: namedFiles(extra),
-    }).expect(201);
-  }
+  await addMedia(listingId, authUser.accessToken, {
+    files: namedFiles(3 + extra),
+  }).expect(201);
   const rows = await db
     .select()
     .from(carMediaTable)
@@ -299,6 +339,12 @@ const createCarWithUploadedImages = async (extra = 0) => {
     .post(`/api/listings/${listingId}/media/confirm`)
     .auth(authUser.accessToken, { type: "bearer" })
     .expect(200);
+  if (submit) {
+    await request(app)
+      .post(`/api/listings/${listingId}/submit`)
+      .auth(authUser.accessToken, { type: "bearer" })
+      .expect(200);
+  }
   return { authUser, listingId, carId, media: await visibleMedia(listingId) };
 };
 
@@ -360,7 +406,7 @@ describe("DELETE /api/listings/:id/media", () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.body.errors[0].message).toBe(
-      "Attach a car to this listing before editing it",
+      "Attach a car to this listing first",
     );
   });
 
@@ -396,7 +442,9 @@ describe("DELETE /api/listings/:id/media", () => {
   });
 
   it("refuses to go below 3 uploaded images and keeps everything", async () => {
-    const { authUser, listingId, media } = await createCarWithUploadedImages(1);
+    const { authUser, listingId, media } = await createCarWithUploadedImages(1, {
+      submit: true,
+    });
 
     const response = await deleteMedia(listingId, authUser.accessToken, {
       mediaIds: [media[2].id, media[3].id],
@@ -416,7 +464,9 @@ describe("DELETE /api/listings/:id/media", () => {
   });
 
   it("does not count images waiting for upload towards the minimum", async () => {
-    const { authUser, listingId, media } = await createCarWithUploadedImages();
+    const { authUser, listingId, media } = await createCarWithUploadedImages(0, {
+      submit: true,
+    });
     await addMedia(listingId, authUser.accessToken, {
       files: namedFiles(2, "pending"),
     }).expect(201);
@@ -429,7 +479,9 @@ describe("DELETE /api/listings/:id/media", () => {
   });
 
   it("always allows deleting media that is not uploaded yet", async () => {
-    const { authUser, listingId, carId } = await createCarWithUploadedImages();
+    const { authUser, listingId, carId } = await createCarWithUploadedImages(0, {
+      submit: true,
+    });
     const added = await addMedia(listingId, authUser.accessToken, {
       files: namedFiles(1, "pending"),
     }).expect(201);
@@ -477,7 +529,9 @@ describe("DELETE /api/listings/:id/media", () => {
   });
 
   it("does not send an approved listing back to approval", async () => {
-    const { authUser, listingId, media } = await createCarWithUploadedImages(1);
+    const { authUser, listingId, media } = await createCarWithUploadedImages(1, {
+      submit: true,
+    });
     const admin = await signinUser({
       email: "admin@autosouk.com",
       password: "Admin_@@789",
@@ -496,7 +550,9 @@ describe("DELETE /api/listings/:id/media", () => {
   });
 
   it("keeps the minimum when media is deleted concurrently", async () => {
-    const { authUser, listingId, media } = await createCarWithUploadedImages(1);
+    const { authUser, listingId, media } = await createCarWithUploadedImages(1, {
+      submit: true,
+    });
 
     const responses = await Promise.all([
       deleteMedia(listingId, authUser.accessToken, {
@@ -513,24 +569,21 @@ describe("DELETE /api/listings/:id/media", () => {
     expect(await visibleMedia(listingId)).toHaveLength(3);
   });
 
-  it("gives the car a new primary when confirm rejects the primary upload", async () => {
-    const { authUser, listingId, carId } = await createListingWithCar();
-    const rows = await db
-      .select()
-      .from(carMediaTable)
-      .where(eq(carMediaTable.carId, carId));
-    for (const row of rows) {
-      if (row.isPrimary) {
-        await minioClient.putObject(
-          carBucketName,
-          row.link,
-          Buffer.from("text"),
-          4,
-          { "Content-Type": "text/plain" },
-        );
-      } else {
-        await uploadImage(row.link);
-      }
+  it("makes the oldest valid image primary when confirm rejects the oldest upload", async () => {
+    const { authUser, listingId } = await createListingWithCar();
+    const added = await addMedia(listingId, authUser.accessToken, {
+      files: namedFiles(3),
+    }).expect(201);
+    const [invalid, ...valid]: AddedMedia[] = added.body.carMedia;
+    await minioClient.putObject(
+      carBucketName,
+      invalid.filename,
+      Buffer.from("text"),
+      4,
+      { "Content-Type": "text/plain" },
+    );
+    for (const { filename } of valid) {
+      await uploadImage(filename);
     }
 
     await request(app)
@@ -540,7 +593,7 @@ describe("DELETE /api/listings/:id/media", () => {
 
     const media = await visibleMedia(listingId);
     expect(media).toHaveLength(2);
-    expect(media[0].isPrimary).toBe(true);
+    expect(media[0]).toMatchObject({ id: valid[0].id, isPrimary: true });
   });
 });
 
@@ -589,7 +642,9 @@ describe("PATCH /api/listings/:id/media/:mediaId/primary", () => {
   });
 
   it("keeps an approved listing approved", async () => {
-    const { authUser, listingId, media } = await createCarWithUploadedImages();
+    const { authUser, listingId, media } = await createCarWithUploadedImages(0, {
+      submit: true,
+    });
     const admin = await signinUser({
       email: "admin@autosouk.com",
       password: "Admin_@@789",

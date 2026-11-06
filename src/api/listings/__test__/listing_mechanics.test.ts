@@ -5,7 +5,7 @@ import {
   updateMechanicActiveStatus,
 } from "../../mechanics/db";
 import {
-  carImageFiles,
+  submitWithImages,
   signinUser,
   signupUserWithVerification,
 } from "../../../test/helpers";
@@ -25,7 +25,6 @@ const carPayload = {
   transmission: "automatic",
   fiscalPower: 8,
   doorsNumber: 5,
-  files: carImageFiles(),
 };
 
 const createMechanicProfile = async (
@@ -94,6 +93,7 @@ it("should return active mechanics in the approved listing city with their garag
     .send(carPayload)
     .auth(seller.accessToken, { type: "bearer" })
     .expect(201);
+  await submitWithImages(listingId, seller.accessToken);
 
   const admin = await signinUser({
     email: "admin@autosouk.com",
