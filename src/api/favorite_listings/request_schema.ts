@@ -1,11 +1,11 @@
 import { z } from "zod";
 
 export const createFavoriteListingSchema = z.object({
-  listingId: z.number(),
+  listingId: z.number().int().positive(),
 });
 
 export const removeFavoriteListingSchema = z.object({
-  listingId: z.coerce.number(),
+  listingId: z.coerce.number().int().positive(),
 });
 
 export const getFavoriteListingSchema = z.object({

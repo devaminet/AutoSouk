@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "../../db";
 import { favoriteListingsTable } from "../../db/schema/favorite_listing";
 import { listingTable } from "../../db/schema/listing";
@@ -9,6 +9,19 @@ import { QueryParams } from "./request_schema";
 import { generateGetPresignedUrl } from "../../utils/functions";
 import { carBucketName } from "../../utils/constants";
 
+// Whether buyers can see the listing, and so keep it.
+export const isApprovedListing = async (listingId: number) => {
+  const [listing] = await db
+    .select({ id: listingTable.id })
+    .from(listingTable)
+    .where(
+      and(eq(listingTable.id, listingId), eq(listingTable.status, "approved")),
+    )
+    .limit(1);
+  return listing !== undefined;
+};
+
+// Keeping a listing twice changes nothing. Returns whether it was new.
 export const createFavoriteListing = async ({
   userId,
   listingId,
@@ -22,9 +35,23 @@ export const createFavoriteListing = async ({
       buyerId: userId,
       listingId,
     })
-    .returning();
+    .onConflictDoNothing()
+    .returning({ listingId: favoriteListingsTable.listingId });
 
-  return result[0];
+  return result.length > 0;
+};
+
+// The ids of every listing the buyer keeps, newest first.
+export const favoriteListingIds = async (userId: number) => {
+  const rows = await db
+    .select({ listingId: favoriteListingsTable.listingId })
+    .from(favoriteListingsTable)
+    .where(eq(favoriteListingsTable.buyerId, userId))
+    .orderBy(
+      desc(favoriteListingsTable.createdAt),
+      desc(favoriteListingsTable.listingId),
+    );
+  return rows.map(({ listingId }) => listingId);
 };
 
 export const removeFavoriteListing = async ({
