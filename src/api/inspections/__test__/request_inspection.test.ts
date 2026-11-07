@@ -1,5 +1,8 @@
 import request from "supertest";
+import { eq } from "drizzle-orm";
 import { app } from "../../../app";
+import { db } from "../../../db";
+import { listingTable } from "../../../db/schema/listing";
 import { createApprovedCar, createBuyer, createMechanic } from "./fixtures";
 
 it("should fail if the user requesting an inspection is not logged in", () => {
@@ -27,6 +30,23 @@ it("should fail if the car does not exist", async () => {
     .send({ carId: 999999, mechanicId: mechanic.id })
     .auth(buyer.accessToken, { type: "bearer" })
     .expect(404);
+});
+
+it("should fail if the car's listing is not approved", async () => {
+  const { carId, listingId } = await createApprovedCar("seller@example.com");
+  await db
+    .update(listingTable)
+    .set({ status: "pending" })
+    .where(eq(listingTable.id, listingId));
+  const { mechanic } = await createMechanic("mechanic@example.com");
+  const buyer = await createBuyer("buyer@example.com");
+
+  const response = await request(app)
+    .post("/api/inspections")
+    .send({ carId, mechanicId: mechanic.id })
+    .auth(buyer.accessToken, { type: "bearer" })
+    .expect(404);
+  expect(response.body.errors[0].code).toBe("car.not_found");
 });
 
 it("should fail if the mechanic does not exist or is inactive", async () => {

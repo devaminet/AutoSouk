@@ -3,11 +3,7 @@ import { app } from "../../../app";
 import { updateMechanicActiveStatus } from "../../mechanics/db";
 import { signinUser, signupUserWithVerification } from "../../../test/helpers";
 
-const createMechanic = async (
-  email: string,
-  name: string,
-  cityId: number,
-) => {
+const createMechanic = async (email: string, name: string, cityId: number) => {
   await signupUserWithVerification({ userType: "mechanic", email });
   const mechanicAuth = await signinUser({ email });
   const response = await request(app)
@@ -39,16 +35,8 @@ it("should require a cityId", async () => {
 });
 
 it("should rank mechanics in a city by average rating, best first", async () => {
-  const topMechanic = await createMechanic(
-    "top@example.com",
-    "Top Garage",
-    1,
-  );
-  const midMechanic = await createMechanic(
-    "mid@example.com",
-    "Mid Garage",
-    1,
-  );
+  const topMechanic = await createMechanic("top@example.com", "Top Garage", 1);
+  const midMechanic = await createMechanic("mid@example.com", "Mid Garage", 1);
   await review(topMechanic.id, "buyer1@example.com", 5);
   await review(topMechanic.id, "buyer2@example.com", 5);
   await review(midMechanic.id, "buyer3@example.com", 2);
@@ -65,7 +53,12 @@ it("should rank mechanics in a city by average rating, best first", async () => 
   const top = response.body.rankings.find(
     (entry: { mechanicId: number }) => entry.mechanicId === topMechanic.id,
   );
-  expect(top).toMatchObject({ averageRating: 5, reviewCount: 2 });
+  expect(top).toMatchObject({
+    averageRating: 5,
+    reviewCount: 2,
+    address: expect.any(String),
+  });
+  expect(top).toHaveProperty("inspectionPrice");
 });
 
 it("should not include mechanics from a different city", async () => {
