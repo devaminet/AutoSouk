@@ -5,9 +5,10 @@ import {
   favoriteListingIds,
   isApprovedListing,
   removeFavoriteListing,
-  userFavoriteListings,
+  findFavoriteListings,
 } from "./db";
 import { QueryParams } from "./request_schema";
+import { signCarMediaLinks } from "../listings/services";
 
 // Buyers can only keep listings they can see. Keeping one twice is not an
 // error, so a repeated request is safe.
@@ -40,11 +41,25 @@ export const removeFavorite = async (data: {
   }
 };
 
+// A page of the buyer's saved listings, with signed media links, and how
+// many are saved and inspected in all, whatever the filter.
 export const getUserFavoriteListings = async (
   userId: number,
-  options: QueryParams,
+  query: QueryParams,
 ) => {
-  return await userFavoriteListings(userId, options);
+  const { page, limit } = query;
+  const { listings, counts } = await findFavoriteListings(userId, query);
+  await signCarMediaLinks(listings);
+  return {
+    listings,
+    meta: {
+      total: counts.total,
+      page,
+      limit,
+      totalPages: Math.ceil(counts.total / limit),
+    },
+    counts: { all: counts.all, inspected: counts.inspected },
+  };
 };
 
 export const getFavoriteListingIds = async (userId: number) => ({

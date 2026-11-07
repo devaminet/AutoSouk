@@ -185,7 +185,7 @@ it("should succeed when removing a listing that is not a favorite", async () => 
 });
 
 it("should return user favorite list", async () => {
-  const { listingId, description, title } = await createListing();
+  const { listingId, title } = await createListing();
   const buyerEmail = "john@example.com";
   (readTemplateFile as jest.Mock).mockReset();
 
@@ -212,10 +212,9 @@ it("should return user favorite list", async () => {
   const listings = response.body.listings;
 
   expect(listings).toHaveLength(1);
-  expect(listings[0].listingId).toBe(listingId);
-  expect(listings[0].listingTitle).toBe(title);
-  expect(listings[0].listingDescription).toBe(description);
-  expect(listings[0].images.length).toBeGreaterThanOrEqual(1);
+  expect(listings[0].id).toBe(listingId);
+  expect(listings[0].title).toBe(title);
+  expect(listings[0].car.carMedias.length).toBeGreaterThanOrEqual(1);
 });
 
 const signinBuyer = async () => {

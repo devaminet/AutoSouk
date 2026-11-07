@@ -8,9 +8,21 @@ export const removeFavoriteListingSchema = z.object({
   listingId: z.coerce.number().int().positive(),
 });
 
+export const favoriteListingSorts = [
+  "recent",
+  "price_asc",
+  "price_desc",
+] as const;
+
 export const getFavoriteListingSchema = z.object({
-  limit: z.coerce.number().min(1).max(100).default(10),
-  offset: z.coerce.number().min(1).default(1),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(12),
+  // Only listings whose car has a completed inspection, or only the others.
+  inspected: z
+    .enum(["true", "false"])
+    .transform((value) => value === "true")
+    .optional(),
+  sort: z.enum(favoriteListingSorts).default("recent"),
 });
 
 export type QueryParams = z.infer<typeof getFavoriteListingSchema>;

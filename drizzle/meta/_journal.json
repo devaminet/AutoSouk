@@ -211,6 +211,13 @@
       "when": 1793606055505,
       "tag": "0030_add_listing_rejection_reason",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1794032866965,
+      "tag": "0031_favorite_listing_timestamps",
+      "breakpoints": true
     }
   ]
 }

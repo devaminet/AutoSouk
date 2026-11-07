@@ -551,7 +551,8 @@ export const rejectListing = async (listingId: number, reason: string) => {
   return rejected;
 };
 
-const signCarMediaLinks = async (
+// Swaps each car media file name for a signed download URL.
+export const signCarMediaLinks = async (
   listings: { car: { carMedias: { link: string }[] } | null }[],
 ) => {
   for (const listing of listings) {
