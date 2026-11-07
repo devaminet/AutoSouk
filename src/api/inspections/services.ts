@@ -40,8 +40,9 @@ export const requestInspection = async (
   buyerId: number,
   data: CreateInspectionData,
 ) => {
+  // Buyers can only see, and so inspect, the cars of approved listings.
   const car = await findCarWithCityById(data.carId);
-  if (!car) {
+  if (!car || car.listing?.status !== "approved") {
     throw new NotFoundError("car.not_found");
   }
 
@@ -69,7 +70,10 @@ export const requestInspection = async (
   return { inspection };
 };
 
-export const getInspectionById = async (id: number, requesterUserId: number) => {
+export const getInspectionById = async (
+  id: number,
+  requesterUserId: number,
+) => {
   const inspection = await findInspectionById(id);
   if (!inspection) {
     throw new NotFoundError("inspection.not_found");

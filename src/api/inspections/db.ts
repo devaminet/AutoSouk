@@ -12,6 +12,7 @@ export const findCarWithCityById = async (carId: number) => {
     where: eq(carTable.id, carId),
     with: {
       city: true,
+      listing: { columns: { status: true } },
     },
   });
 

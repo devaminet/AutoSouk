@@ -294,6 +294,30 @@ mechanicsRouter.delete(
  *     responses:
  *       200:
  *         description: Ranked mechanics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 rankings:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       mechanicId: { type: integer }
+ *                       name: { type: string }
+ *                       cityId: { type: integer }
+ *                       address: { type: string }
+ *                       inspectionPrice: { type: integer, nullable: true, description: "In MAD, paid at the garage" }
+ *                       averageRating: { type: number, nullable: true }
+ *                       reviewCount: { type: integer }
+ *                 meta:
+ *                   type: object
+ *                   properties:
+ *                     total: { type: integer }
+ *                     page: { type: integer }
+ *                     limit: { type: integer }
+ *                     totalPages: { type: integer }
  *       400:
  *         description: Validation error
  */

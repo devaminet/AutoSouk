@@ -126,6 +126,8 @@ export const findMechanicRankingsByCity = async (
       mechanicId: mechanicTable.id,
       name: mechanicTable.name,
       cityId: mechanicTable.cityId,
+      address: mechanicTable.address,
+      inspectionPrice: mechanicTable.inspectionPrice,
       averageRating: averageRatingExpr,
       reviewCount: reviewCountExpr,
     })
@@ -154,6 +156,8 @@ export const findMechanicRankingsByCity = async (
       mechanicId: row.mechanicId,
       name: row.name,
       cityId: row.cityId,
+      address: row.address,
+      inspectionPrice: row.inspectionPrice,
       averageRating: row.averageRating ? Number(row.averageRating) : null,
       reviewCount: Number(row.reviewCount),
     })),

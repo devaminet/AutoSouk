@@ -47,7 +47,7 @@ const inspectionsRouter = Router();
  *       403:
  *         description: Not a buyer
  *       404:
- *         description: Car or mechanic not found
+ *         description: Car or mechanic not found, or the car's listing is not approved
  */
 inspectionsRouter.post("/", isAuthenticated, isBuyer, async (req, res) => {
   const validationResult = createInspectionSchema.safeParse(req.body);
