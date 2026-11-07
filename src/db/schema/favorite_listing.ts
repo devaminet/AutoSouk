@@ -1,10 +1,10 @@
 import { relations } from "drizzle-orm";
 import {
-  date,
   foreignKey,
   integer,
   pgTable,
   primaryKey,
+  timestamp,
 } from "drizzle-orm/pg-core";
 import { usersTable } from "./user";
 import { listingTable } from "./listing";
@@ -18,8 +18,9 @@ export const favoriteListingsTable = pgTable(
     listingId: integer("listing_id")
       .notNull()
       .references(() => listingTable.id, { onDelete: "cascade" }),
-    createdAt: date("created_at").defaultNow().notNull(),
-    updatedAt: date("updated_at").defaultNow().notNull(),
+    // The time, not only the day, so the list can show the latest first.
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => [primaryKey({ columns: [table.buyerId, table.listingId] })],
 );

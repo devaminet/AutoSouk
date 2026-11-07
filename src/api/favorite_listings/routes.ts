@@ -21,23 +21,94 @@ const favoriteListingRouter = Router();
  * /api/favorite_listings:
  *   get:
  *     tags: [Favorite Listings]
- *     summary: Get the current buyer's favorite listings
+ *     summary: Get a page of the current buyer's saved listings
+ *     description: >
+ *       Each listing has the same card details as GET /api/listings, plus its
+ *       `status` and `savedAt`. Listings buyers can no longer see, such as sold
+ *       ones, stay in the list with their status. `counts` covers every saved
+ *       listing, whatever the filter.
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
+ *         name: page
+ *         schema: { type: integer, minimum: 1, default: 1 }
  *       - in: query
- *         name: offset
+ *         name: limit
+ *         schema: { type: integer, minimum: 1, maximum: 100, default: 12 }
+ *       - in: query
+ *         name: inspected
+ *         description: "true for listings whose car has a completed inspection, false for the others"
+ *         schema: { type: string, enum: ["true", "false"] }
+ *       - in: query
+ *         name: sort
  *         schema:
- *           type: integer
- *           default: 1
+ *           type: string
+ *           enum: [recent, price_asc, price_desc]
+ *           default: recent
  *     responses:
  *       200:
- *         description: List of favorite listings
+ *         description: A page of saved listings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 listings:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id: { type: integer }
+ *                       title: { type: string }
+ *                       status:
+ *                         type: string
+ *                         enum: [draft, pending, approved, withdrawn, rejected, sold]
+ *                       savedAt: { type: string, format: date-time }
+ *                       inspectionScore: { type: integer, nullable: true }
+ *                       car:
+ *                         type: object
+ *                         nullable: true
+ *                         properties:
+ *                           makeId: { type: integer }
+ *                           modelId: { type: integer }
+ *                           price: { type: integer }
+ *                           year: { type: integer }
+ *                           distance: { type: string }
+ *                           transmission: { type: string, enum: [manual, automatic] }
+ *                           carburant:
+ *                             type: object
+ *                             nullable: true
+ *                             properties:
+ *                               carburant: { type: string }
+ *                           carMedias:
+ *                             type: array
+ *                             items:
+ *                               type: object
+ *                               properties:
+ *                                 type: { type: string }
+ *                                 link: { type: string }
+ *                                 isPrimary: { type: boolean }
+ *                           city:
+ *                             type: object
+ *                             nullable: true
+ *                             properties:
+ *                               name: { type: string }
+ *                               slug: { type: string }
+ *                 meta:
+ *                   type: object
+ *                   properties:
+ *                     total: { type: integer }
+ *                     page: { type: integer }
+ *                     limit: { type: integer }
+ *                     totalPages: { type: integer }
+ *                 counts:
+ *                   type: object
+ *                   properties:
+ *                     all: { type: integer }
+ *                     inspected: { type: integer }
+ *       400:
+ *         description: Validation error
  *       401:
  *         description: Not authenticated
  *       403:
@@ -45,13 +116,17 @@ const favoriteListingRouter = Router();
  */
 favoriteListingRouter.get("/", isAuthenticated, isBuyer, async (req, res) => {
   const validationResult = getFavoriteListingSchema.safeParse(req.query);
-  let limit = validationResult.success ? validationResult.data.limit : 10;
-  let offset = validationResult.success ? validationResult.data.offset : 1;
-  const listings = await getUserFavoriteListings(req.currentUser?.id!, {
-    limit,
-    offset,
-  });
-  res.status(200).json({ listings });
+  if (!validationResult.success) {
+    throw new RequestValidationError(validationResult.error.errors);
+  }
+  res
+    .status(200)
+    .json(
+      await getUserFavoriteListings(
+        req.currentUser?.id!,
+        validationResult.data,
+      ),
+    );
 });
 
 /**

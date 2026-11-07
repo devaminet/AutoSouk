@@ -42,9 +42,42 @@ const listingIdsWithAllEquipment = (equipmentIds: number[]) =>
     .groupBy(carTable.listingId)
     .having(eq(count(), equipmentIds.length));
 
+// What a listing card shows of the car. Shared by the public listings and the
+// buyer's saved listings.
+export const listingCardCar = {
+  columns: {
+    // To search for similar cars.
+    makeId: true,
+    modelId: true,
+    price: true,
+    year: true,
+    distance: true,
+    transmission: true,
+  },
+  with: {
+    // The slug, as in the listing details. Translate it with `carburant.<slug>`.
+    carburant: { columns: { carburant: true } },
+    carMedias: {
+      columns: {
+        type: true,
+        link: true,
+        isPrimary: true,
+      },
+      where: eq(carMediaTable.isUploaded, true),
+      orderBy: [desc(carMediaTable.isPrimary), asc(carMediaTable.id)] as SQL[],
+    },
+    city: {
+      columns: {
+        name: true,
+        slug: true,
+      },
+    },
+  },
+} as const;
+
 // The score of the latest completed inspection of each listing's car, by
 // listing id. Listings whose car was never inspected are left out.
-const latestInspectionScores = async (listingIds: number[]) => {
+export const latestInspectionScores = async (listingIds: number[]) => {
   const rows = await db
     .selectDistinctOn([carTable.listingId], {
       listingId: carTable.listingId,
@@ -154,35 +187,7 @@ export const findListings = async (
           phone: true,
         },
       },
-      car: {
-        columns: {
-          price: true,
-          year: true,
-          distance: true,
-          transmission: true,
-        },
-        with: {
-          // The slug, as in the listing details. Translate it with `carburant.<slug>`.
-          carburant: { columns: { carburant: true } },
-          carMedias: {
-            columns: {
-              type: true,
-              link: true,
-              isPrimary: true,
-            },
-            where: eq(carMediaTable.isUploaded, true),
-            orderBy(fields, operators) {
-              return operators.desc(fields.isPrimary);
-            },
-          },
-          city: {
-            columns: {
-              name: true,
-              slug: true,
-            },
-          },
-        },
-      },
+      car: listingCardCar,
     },
     where: inArray(listingTable.id, pageIds),
   });

@@ -98,8 +98,9 @@ const listingRouter = Router();
  *     responses:
  *       200:
  *         description: >
- *           Paginated list of approved listings. Each car has its price, year,
- *           distance, transmission and fuel slug (`carburant.carburant`).
+ *           Paginated list of approved listings. Each car has its make and
+ *           model ids, price, year, distance, transmission and fuel slug
+ *           (`carburant.carburant`).
  *           `inspectionScore` is the 0-100 score of the car's latest completed
  *           inspection, or null when it has none.
  *       400:
