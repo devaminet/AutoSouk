@@ -126,3 +126,39 @@ it("should include active mechanics with no reviews, ranked after rated ones", a
     ids.indexOf(unratedMechanic.id),
   );
 });
+
+it("should give each garage's position and logo link", async () => {
+  await signupUserWithVerification({
+    userType: "mechanic",
+    email: "logo@example.com",
+  });
+  const mechanicAuth = await signinUser({ email: "logo@example.com" });
+  const centre = await cityCentre(1);
+  await request(app)
+    .post("/api/mechanics")
+    .send({
+      name: "Logo Garage",
+      cityId: 1,
+      address: "12 Rue Example",
+      profileImageFilename: "logo.png",
+      ...centre,
+    })
+    .auth(mechanicAuth.accessToken, { type: "bearer" })
+    .expect(201);
+  const plain = await createMechanic("plain@example.com", "Plain Garage", 1);
+
+  const response = await request(app)
+    .get("/api/mechanics/rankings")
+    .query({ cityId: 1 });
+
+  const byName = (name: string) =>
+    response.body.rankings.find(
+      (entry: { name: string }) => entry.name === name,
+    );
+  expect(byName("Logo Garage")).toMatchObject({
+    ...centre,
+    profileImageLink: expect.stringContaining("mechanic-"),
+  });
+  expect(byName("Logo Garage")).not.toHaveProperty("profileImageUrl");
+  expect(byName(plain.name).profileImageLink).toBeNull();
+});

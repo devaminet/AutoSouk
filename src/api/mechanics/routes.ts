@@ -351,7 +351,10 @@ mechanicsRouter.delete(
  *                       name: { type: string }
  *                       cityId: { type: integer }
  *                       address: { type: string }
+ *                       latitude: { type: number }
+ *                       longitude: { type: number }
  *                       inspectionPrice: { type: integer, nullable: true, description: "In MAD, paid at the garage" }
+ *                       profileImageLink: { type: string, nullable: true, description: "Presigned link to the workshop's logo" }
  *                       averageRating: { type: number, nullable: true }
  *                       reviewCount: { type: integer }
  *                 meta:
