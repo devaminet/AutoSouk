@@ -7,12 +7,14 @@ import {
   completeInspectionSchema,
   createInspectionSchema,
   inspectionIdParamSchema,
+  reportDraftSchema,
   updateInspectionStatusSchema,
 } from "./request_schema";
 import {
   getInspectionById,
   getMyInspections,
   requestInspection,
+  saveInspectionReportDraft,
   submitInspectionReport,
   updateInspectionStatus,
 } from "./services";
@@ -37,9 +39,13 @@ const inspectionsRouter = Router();
  *             properties:
  *               carId: { type: integer }
  *               mechanicId: { type: integer }
+ *               reportLanguage:
+ *                 type: string
+ *                 enum: [fr, en, ar]
+ *                 description: The language of the PDF report and the email that sends it. Defaults to the request's language (?lang= or Accept-Language).
  *     responses:
  *       201:
- *         description: Inspection requested
+ *         description: Inspection requested, with its reportLanguage
  *       400:
  *         description: Validation error
  *       401:
@@ -58,6 +64,7 @@ inspectionsRouter.post("/", isAuthenticated, isBuyer, async (req, res) => {
   const result = await requestInspection(
     req.currentUser!.id,
     validationResult.data,
+    req.locale,
   );
   res.status(201).json(result);
 });
@@ -151,6 +158,13 @@ inspectionsRouter.get("/", isAuthenticated, async (req, res) => {
  *   get:
  *     tags: [Inspections]
  *     summary: Get an inspection by id (buyer or assigned mechanic only)
+ *     description: |
+ *       `car.photoUrl` is the listing's first photo, presigned. The assigned
+ *       mechanic also gets `reportDraft`, their unfinished report as last
+ *       saved with `PUT /api/inspections/{id}/draft`, and `reportDraftSavedAt`.
+ *       Both are null before the first save and after the report is submitted.
+ *       `reportLanguage` (fr, en or ar) is the language the buyer chose for the
+ *       report; the mechanic writes the checklist item names in it.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -325,6 +339,104 @@ inspectionsRouter.post(
       bodyResult.data,
     );
     res.status(200).json(result);
+  },
+);
+
+/**
+ * @openapi
+ * /api/inspections/{id}/draft:
+ *   put:
+ *     tags: [Inspections]
+ *     summary: Save the mechanic's unfinished report
+ *     description: |
+ *       Replaces the saved draft. Takes the same fields as the report, all
+ *       optional, and checklist items whose `status` may be null. Only an
+ *       inspection in progress takes a draft. Submitting the report clears it.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               matricule: { type: string }
+ *               vin: { type: string }
+ *               carteGriseNumber: { type: string }
+ *               mileage: { type: integer }
+ *               mileageConsistency: { type: string, enum: [consistent, suspicious, unverifiable] }
+ *               mileageConsistencyNote: { type: string }
+ *               firstRegistrationDate: { type: string, format: date }
+ *               inspectedAt: { type: string, format: date-time }
+ *               controleTechniqueValid: { type: boolean }
+ *               controleTechniqueExpiry: { type: string, format: date }
+ *               vignetteValid: { type: boolean }
+ *               verdict: { type: string, enum: [excellent, good, fair, poor] }
+ *               overallScore: { type: integer, minimum: 0, maximum: 100 }
+ *               summary: { type: string }
+ *               estimatedRepairCost: { type: integer }
+ *               sections:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: [category, items]
+ *                   properties:
+ *                     category: { type: string, enum: [exterior, interior, mechanical, electrical, under_vehicle, road_test] }
+ *                     items:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         required: [label, status]
+ *                         properties:
+ *                           label: { type: string }
+ *                           status: { type: string, nullable: true, enum: [pass, attention, fail] }
+ *                           note: { type: string }
+ *     responses:
+ *       200:
+ *         description: Draft saved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 reportDraft: { type: object }
+ *                 reportDraftSavedAt: { type: string, format: date-time }
+ *       400:
+ *         description: Validation error, or the inspection is not in progress (`inspection.not_in_progress`)
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not a mechanic
+ *       404:
+ *         description: Inspection not found
+ */
+inspectionsRouter.put(
+  "/:id/draft",
+  isAuthenticated,
+  isMechanic,
+  async (req, res) => {
+    const paramsResult = inspectionIdParamSchema.safeParse(req.params);
+    if (!paramsResult.success) {
+      throw new RequestValidationError(paramsResult.error.errors);
+    }
+
+    const bodyResult = reportDraftSchema.safeParse(req.body);
+    if (!bodyResult.success) {
+      throw new RequestValidationError(bodyResult.error.errors);
+    }
+
+    const saved = await saveInspectionReportDraft(
+      req.currentUser!.id,
+      paramsResult.data.id,
+      bodyResult.data,
+    );
+    res.status(200).json(saved);
   },
 );
 

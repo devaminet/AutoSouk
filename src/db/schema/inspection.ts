@@ -14,6 +14,7 @@ import { relations, sql } from "drizzle-orm";
 import { usersTable } from "./user";
 import { carTable } from "./car";
 import { mechanicTable } from "./mechanic";
+import { defaultLocale, supportedLocales } from "../../utils/constants";
 
 export const inspectionStatusEnum = pgEnum("inspection_status", [
   "pending",
@@ -71,6 +72,13 @@ export const inspectionTable = pgTable(
     summary: varchar("summary"),
     findings: jsonb("findings"),
     reportPdfLink: varchar("report_pdf_link"),
+    // The language the buyer chose for the report and its email.
+    reportLanguage: varchar("report_language", { enum: supportedLocales })
+      .notNull()
+      .default(defaultLocale),
+    // The mechanic's unfinished report, saved as they fill it in.
+    reportDraft: jsonb("report_draft"),
+    reportDraftSavedAt: timestamp("report_draft_saved_at"),
 
     requestedAt: timestamp("requested_at").notNull().defaultNow(),
     acceptedAt: timestamp("accepted_at"),
