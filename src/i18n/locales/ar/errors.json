@@ -148,6 +148,7 @@
     "not_cancellable": "الفحص غير موجود أو لم يعد من الممكن إلغاؤه",
     "mechanic_city_mismatch": "يجب أن يكون الميكانيكي في نفس مدينة السيارة",
     "already_active": "لهذه السيارة طلب فحص نشط بالفعل",
+    "invalid_transition": "تجاوز هذا الفحص هذه المرحلة بالفعل",
     "not_in_progress": "يجب أن يكون الفحص جاريًا قبل إنهائه",
     "report_generation_failed": "تعذر إنشاء تقرير الفحص بصيغة PDF",
     "report_storage_failed": "تعذر حفظ تقرير الفحص بصيغة PDF",

@@ -1,6 +1,8 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import type { SQL } from "drizzle-orm";
 import { db } from "../../db";
 import { carTable } from "../../db/schema/car";
+import { carMediaTable } from "../../db/schema/car_media";
 import { mechanicTable } from "../../db/schema/mechanic";
 import { inspectionTable } from "../../db/schema/inspection";
 import { CompleteInspectionData } from "./services";
@@ -67,13 +69,41 @@ export const findInspectionById = async (id: number) => {
   return inspection ?? null;
 };
 
+// The car as the inspection lists show it: its name, first photo and seller.
+const inspectionCar = {
+  columns: { id: true, year: true },
+  with: {
+    make: { columns: { name: true } },
+    model: { columns: { name: true } },
+    listing: { columns: { id: true, title: true } },
+    // The seller shows the car to the mechanic, so the mechanic calls them.
+    user: { columns: { firstName: true, lastName: true, phone: true } },
+    carMedias: {
+      columns: { link: true },
+      where: and(
+        eq(carMediaTable.isUploaded, true),
+        eq(carMediaTable.type, "image"),
+      ),
+      orderBy: [desc(carMediaTable.isPrimary), asc(carMediaTable.id)] as SQL[],
+      limit: 1,
+    },
+  },
+} as const;
+
+// Newest requests first.
+const newestFirst = [
+  desc(inspectionTable.requestedAt),
+  desc(inspectionTable.id),
+] as SQL[];
+
 export const findInspectionsByBuyer = async (buyerId: number) => {
   return await db.query.inspectionTable.findMany({
     where: eq(inspectionTable.buyerId, buyerId),
     with: {
-      car: { with: { make: true, model: true } },
+      car: inspectionCar,
       mechanic: true,
     },
+    orderBy: newestFirst,
   });
 };
 
@@ -81,9 +111,11 @@ export const findInspectionsByMechanicId = async (mechanicId: number) => {
   return await db.query.inspectionTable.findMany({
     where: eq(inspectionTable.mechanicId, mechanicId),
     with: {
-      car: { with: { make: true, model: true } },
-      buyer: true,
+      car: inspectionCar,
+      // Only what the mechanic needs to know who asked.
+      buyer: { columns: { id: true, firstName: true, lastName: true } },
     },
+    orderBy: newestFirst,
   });
 };
 
@@ -101,6 +133,13 @@ export const insertInspection = async (data: {
   return inspection;
 };
 
+// The status each mechanic transition starts from.
+const previousStatus = {
+  accepted: "pending",
+  rejected: "pending",
+  in_progress: "accepted",
+} as const;
+
 export const updateInspectionStatusByMechanic = async (
   id: number,
   mechanicId: number,
@@ -116,6 +155,7 @@ export const updateInspectionStatusByMechanic = async (
       and(
         eq(inspectionTable.id, id),
         eq(inspectionTable.mechanicId, mechanicId),
+        eq(inspectionTable.status, previousStatus[status]),
       ),
     )
     .returning();

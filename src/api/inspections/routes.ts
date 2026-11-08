@@ -68,11 +68,73 @@ inspectionsRouter.post("/", isAuthenticated, isBuyer, async (req, res) => {
  *   get:
  *     tags: [Inspections]
  *     summary: List the current user's inspections (buyer's requests or mechanic's queue)
+ *     description: |
+ *       Newest requests first. Each inspection has its `car` as the lists show
+ *       it, and `reportPdfLink` is a presigned URL once the report exists.
+ *       Mechanics also get the `buyer`'s name; buyers get the `mechanic`.
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Inspections
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 inspections:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id: { type: integer }
+ *                       status:
+ *                         type: string
+ *                         enum: [pending, accepted, rejected, in_progress, completed, cancelled]
+ *                       priceAtRequest: { type: integer, description: In MAD }
+ *                       requestedAt: { type: string, format: date-time }
+ *                       acceptedAt: { type: string, format: date-time, nullable: true }
+ *                       completedAt: { type: string, format: date-time, nullable: true }
+ *                       verdict:
+ *                         type: string
+ *                         nullable: true
+ *                         enum: [excellent, good, fair, poor]
+ *                       overallScore: { type: integer, nullable: true }
+ *                       reportPdfLink: { type: string, nullable: true }
+ *                       car:
+ *                         type: object
+ *                         properties:
+ *                           id: { type: integer }
+ *                           year: { type: integer }
+ *                           make:
+ *                             type: object
+ *                             nullable: true
+ *                             properties: { name: { type: string } }
+ *                           model:
+ *                             type: object
+ *                             nullable: true
+ *                             properties: { name: { type: string } }
+ *                           listingId: { type: integer, nullable: true }
+ *                           title: { type: string, nullable: true }
+ *                           photoUrl:
+ *                             type: string
+ *                             nullable: true
+ *                             description: The listing's first photo
+ *                           seller:
+ *                             type: object
+ *                             nullable: true
+ *                             description: Who shows the car to the mechanic
+ *                             properties:
+ *                               firstName: { type: string }
+ *                               lastName: { type: string }
+ *                               phone: { type: string }
+ *                       buyer:
+ *                         type: object
+ *                         description: Mechanics only
+ *                         properties:
+ *                           id: { type: integer }
+ *                           firstName: { type: string }
+ *                           lastName: { type: string }
  *       401:
  *         description: Not authenticated
  *       403:
@@ -125,6 +187,9 @@ inspectionsRouter.get("/:id", isAuthenticated, async (req, res) => {
  *   patch:
  *     tags: [Inspections]
  *     summary: Transition an inspection's status (buyer cancels; mechanic accepts, rejects, or starts)
+ *     description: |
+ *       Mechanics accept or reject a pending request, and start an accepted
+ *       one. Any other move fails with `inspection.invalid_transition`.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -147,7 +212,7 @@ inspectionsRouter.get("/:id", isAuthenticated, async (req, res) => {
  *       200:
  *         description: Inspection status updated
  *       400:
- *         description: Validation error
+ *         description: Validation error, or the inspection can't make this move (`inspection.invalid_transition`)
  *       401:
  *         description: Not authenticated
  *       403:

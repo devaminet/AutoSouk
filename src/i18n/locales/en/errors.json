@@ -116,6 +116,7 @@
     "not_cancellable": "Inspection was not found or can no longer be cancelled",
     "mechanic_city_mismatch": "Mechanic must be located in the same city as the car",
     "already_active": "This car already has an active inspection request",
+    "invalid_transition": "This inspection has already moved past that step",
     "not_in_progress": "Inspection must be in progress before it can be completed",
     "report_generation_failed": "Could not generate inspection report PDF",
     "report_storage_failed": "Could not store inspection report PDF",

@@ -150,3 +150,50 @@ it("should reject a mechanic trying to cancel an inspection", async () => {
     .auth(mechanicUser.accessToken, { type: "bearer" })
     .expect(403);
 });
+
+describe("refused moves", () => {
+  const setUp = async () => {
+    const { carId } = await createApprovedCar("seller@example.com");
+    const { mechanic, mechanicUser } = await createMechanic(
+      "mechanic@example.com",
+    );
+    const buyer = await createBuyer("buyer@example.com");
+    const inspection = await requestInspection(
+      buyer.accessToken,
+      carId,
+      mechanic.id,
+    );
+    const move = (status: string) =>
+      request(app)
+        .patch(`/api/inspections/${inspection.id}`)
+        .send({ status })
+        .auth(mechanicUser.accessToken, { type: "bearer" });
+    return { move };
+  };
+
+  it("should not start a request before accepting it", async () => {
+    const { move } = await setUp();
+
+    const response = await move("in_progress");
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.errors[0].code).toBe("inspection.invalid_transition");
+  });
+
+  it("should not reject an accepted request", async () => {
+    const { move } = await setUp();
+    await move("accepted").expect(200);
+
+    const response = await move("rejected");
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.errors[0].code).toBe("inspection.invalid_transition");
+  });
+
+  it("should not accept a rejected request again", async () => {
+    const { move } = await setUp();
+    await move("rejected").expect(200);
+
+    await move("accepted").expect(400);
+  });
+});

@@ -115,3 +115,86 @@ it("should list the mechanic's inspection queue", async () => {
   expect(response.body.inspections).toHaveLength(1);
   expect(response.body.inspections[0].mechanicId).toBe(mechanic.id);
 });
+
+it("should show the mechanic the car, its seller and the buyer's name only", async () => {
+  const { carId, listingId } = await createApprovedCar("seller@example.com");
+  const { mechanic, mechanicUser } = await createMechanic(
+    "mechanic@example.com",
+  );
+  const buyer = await createBuyer("buyer@example.com");
+  await requestInspection(buyer.accessToken, carId, mechanic.id);
+
+  const response = await request(app)
+    .get("/api/inspections")
+    .auth(mechanicUser.accessToken, { type: "bearer" })
+    .expect(200);
+
+  const [listed] = response.body.inspections;
+  expect(listed.buyer).toEqual({
+    id: expect.any(Number),
+    firstName: "John",
+    lastName: "Doe",
+  });
+  expect(listed.car).toMatchObject({
+    id: carId,
+    year: 2025,
+    listingId,
+    title: "A black car for sale",
+    make: { name: expect.any(String) },
+    model: { name: expect.any(String) },
+    seller: {
+      firstName: "John",
+      lastName: "Doe",
+      phone: expect.any(String),
+    },
+  });
+  expect(listed.car.photoUrl).toContain(`car-seeded-${listingId}-1.png`);
+  expect(listed.car.carMedias).toBeUndefined();
+  expect(listed.reportPdfLink).toBeNull();
+});
+
+it("should list the newest requests first", async () => {
+  const { carId: firstCarId } = await createApprovedCar("seller@example.com");
+  const { carId: secondCarId } = await createApprovedCar(
+    "other-seller@example.com",
+  );
+  const { mechanic, mechanicUser } = await createMechanic(
+    "mechanic@example.com",
+  );
+  const buyer = await createBuyer("buyer@example.com");
+  await requestInspection(buyer.accessToken, firstCarId, mechanic.id);
+  await requestInspection(buyer.accessToken, secondCarId, mechanic.id);
+
+  const response = await request(app)
+    .get("/api/inspections")
+    .auth(mechanicUser.accessToken, { type: "bearer" })
+    .expect(200);
+
+  expect(
+    response.body.inspections.map(({ carId }: { carId: number }) => carId),
+  ).toEqual([secondCarId, firstCarId]);
+});
+
+it("should leave the buyer's account details out of one inspection", async () => {
+  const { carId } = await createApprovedCar("seller@example.com");
+  const { mechanic, mechanicUser } = await createMechanic(
+    "mechanic@example.com",
+  );
+  const buyer = await createBuyer("buyer@example.com");
+  const inspection = await requestInspection(
+    buyer.accessToken,
+    carId,
+    mechanic.id,
+  );
+
+  const response = await request(app)
+    .get(`/api/inspections/${inspection.id}`)
+    .auth(mechanicUser.accessToken, { type: "bearer" })
+    .expect(200);
+
+  expect(response.body.inspection.buyer).toEqual({
+    id: expect.any(Number),
+    firstName: "John",
+    lastName: "Doe",
+  });
+});

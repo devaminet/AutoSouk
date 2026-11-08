@@ -124,6 +124,7 @@
     "not_cancellable": "L'inspection est introuvable ou ne peut plus être annulée",
     "mechanic_city_mismatch": "Le mécanicien doit se trouver dans la même ville que la voiture",
     "already_active": "Cette voiture a déjà une demande d'inspection en cours",
+    "invalid_transition": "Cette inspection a déjà dépassé cette étape",
     "not_in_progress": "L'inspection doit être en cours avant de pouvoir être terminée",
     "report_generation_failed": "Impossible de générer le rapport d'inspection en PDF",
     "report_storage_failed": "Impossible d'enregistrer le rapport d'inspection en PDF",

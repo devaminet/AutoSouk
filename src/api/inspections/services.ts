@@ -3,9 +3,13 @@ import { BadRequestError } from "../../errors/bad_request_error";
 import { InternalServerError } from "../../errors/internal_server_error";
 import { NotAllowedError } from "../../errors/not_allowed";
 import { NotFoundError } from "../../errors/not_found_error";
-import { inspectionReportsBucketName } from "../../utils/constants";
+import {
+  carBucketName,
+  inspectionReportsBucketName,
+} from "../../utils/constants";
 import {
   generateGetPresignedUrl,
+  generateGetPresignedUrls,
   readTemplateFile,
   sendMail,
 } from "../../utils/functions";
@@ -92,7 +96,57 @@ export const getInspectionById = async (
     );
   }
 
-  return inspection;
+  // Leave out the buyer's account details, such as their password hash.
+  const { buyer, ...rest } = inspection;
+  return {
+    ...rest,
+    buyer: { id: buyer.id, firstName: buyer.firstName, lastName: buyer.lastName },
+  };
+};
+
+type ListedInspection = Awaited<
+  ReturnType<typeof findInspectionsByMechanicId>
+>[number];
+
+type ListedCar = ListedInspection["car"];
+
+// Presigns the cars' photos and the reports, and shapes each car as the
+// lists show it.
+const withLinks = async <T extends { car: ListedCar; reportPdfLink: string | null }>(
+  inspections: T[],
+) => {
+  const photos = inspections.flatMap(({ car }) =>
+    car.carMedias.map(({ link }) => link),
+  );
+  const reports = inspections.flatMap(({ reportPdfLink }) =>
+    reportPdfLink ? [reportPdfLink] : [],
+  );
+  let photoUrls = new Map<string, string>();
+  let reportUrls = new Map<string, string>();
+  try {
+    [photoUrls, reportUrls] = await Promise.all([
+      generateGetPresignedUrls(carBucketName, photos),
+      generateGetPresignedUrls(inspectionReportsBucketName, reports),
+    ]);
+  } catch (error) {
+    console.error("Error generating inspection URLs:", error);
+  }
+
+  return inspections.map(({ car, reportPdfLink, ...inspection }) => {
+    const { carMedias, user, listing, ...carDetails } = car;
+    const photo = carMedias[0]?.link;
+    return {
+      ...inspection,
+      reportPdfLink: reportPdfLink ? (reportUrls.get(reportPdfLink) ?? null) : null,
+      car: {
+        ...carDetails,
+        listingId: listing?.id ?? null,
+        title: listing?.title ?? null,
+        photoUrl: photo ? (photoUrls.get(photo) ?? null) : null,
+        seller: user,
+      },
+    };
+  });
 };
 
 export const getMyInspections = async (currentUser: {
@@ -100,7 +154,7 @@ export const getMyInspections = async (currentUser: {
   role: string;
 }) => {
   if (currentUser.role === "buyer") {
-    return await findInspectionsByBuyer(currentUser.id);
+    return await withLinks(await findInspectionsByBuyer(currentUser.id));
   }
 
   if (currentUser.role === "mechanic") {
@@ -108,7 +162,7 @@ export const getMyInspections = async (currentUser: {
     if (!mechanic) {
       throw new NotFoundError("mechanic.profile_not_found");
     }
-    return await findInspectionsByMechanicId(mechanic.id);
+    return await withLinks(await findInspectionsByMechanicId(mechanic.id));
   }
 
   throw new NotAllowedError();
@@ -150,7 +204,12 @@ export const updateInspectionStatus = async (
     data.status,
   );
   if (!inspection) {
-    throw new NotFoundError("inspection.not_found");
+    const existing = await findInspectionById(inspectionId);
+    if (!existing || existing.mechanicId !== mechanic.id) {
+      throw new NotFoundError("inspection.not_found");
+    }
+    // Accepting and rejecting answer a new request. Starting follows accepting.
+    throw new BadRequestError("inspection.invalid_transition");
   }
 
   return { inspection };
