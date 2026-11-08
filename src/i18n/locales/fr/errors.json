@@ -137,7 +137,9 @@
     "image_urls_failed": "Impossible de générer les URL des images du mécanicien",
     "profile_image_url_failed": "Impossible de générer l'URL de la photo de profil",
     "garage_upload_urls_failed": "Impossible de générer les URL d'envoi des images du garage",
-    "garage_image_not_found": "Image du garage introuvable"
+    "garage_image_not_found": "Image du garage introuvable",
+    "garage_images_limit": "Un garage peut afficher {{max}} photos au maximum",
+    "location_outside_city": "L'épingle est en dehors de {{city}}. Placez-la dans la ville, ou choisissez la ville de votre atelier."
   },
   "review": {
     "not_found": "Avis introuvable",

@@ -8,6 +8,7 @@ import { minCarImageCount } from "../utils/constants";
 import { and, eq } from "drizzle-orm";
 import { db } from "../db";
 import { carTable } from "../db/schema/car";
+import { cityTable } from "../db/schema/city";
 import { carMediaTable } from "../db/schema/car_media";
 
 type TestUserRole = z.infer<typeof registrationRoleSchema>;
@@ -169,4 +170,15 @@ export const getListingDetailsAsAdmin = async (listingId: number) => {
     .get(`/api/listings/${listingId}`)
     .auth(admin.accessToken, { type: "bearer" })
     .expect(200);
+};
+
+// The centre of a seeded city, where a workshop of that city may be placed.
+export const cityCentre = async (cityId: number) => {
+  const city = await db.query.cityTable.findFirst({
+    where: eq(cityTable.id, cityId),
+  });
+  if (city?.latitude == null || city.longitude == null) {
+    throw new Error(`City ${cityId} has no coordinates`);
+  }
+  return { latitude: city.latitude, longitude: city.longitude };
 };

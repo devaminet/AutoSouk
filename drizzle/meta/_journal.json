@@ -218,6 +218,13 @@
       "when": 1794032866965,
       "tag": "0031_favorite_listing_timestamps",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1794087365544,
+      "tag": "0032_city_coordinates",
+      "breakpoints": true
     }
   ]
 }

@@ -49,10 +49,21 @@ const mechanicsRouter = Router();
  *               description: { type: string }
  *               phone: { type: string }
  *               inspectionPrice: { type: integer, minimum: 0 }
- *               profileImageFilename: { type: string }
+ *               profileImageFilename: { type: string, description: "The image's name on the device. The API stores it under a name of its own." }
  *     responses:
  *       201:
- *         description: Mechanic profile created
+ *         description: Mechanic profile created. When an image name was sent, profileImageUpload is the form to post the image to, with the file last under "file".
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 mechanic: { type: object }
+ *                 profileImageUpload:
+ *                   type: object
+ *                   properties:
+ *                     url: { type: string }
+ *                     fields: { type: object, additionalProperties: { type: string } }
  *       400:
  *         description: Validation error
  *       401:
@@ -108,19 +119,31 @@ mechanicsRouter.get("/me", isAuthenticated, isMechanic, async (req, res) => {
  *         application/json:
  *           schema:
  *             type: object
+ *             description: Only the details sent change. null clears an optional detail, or removes the profile image.
  *             properties:
  *               name: { type: string }
  *               cityId: { type: integer }
  *               address: { type: string }
  *               latitude: { type: number, minimum: -90, maximum: 90 }
  *               longitude: { type: number, minimum: -180, maximum: 180 }
- *               description: { type: string }
- *               phone: { type: string }
- *               inspectionPrice: { type: integer, minimum: 0 }
- *               profileImageFilename: { type: string }
+ *               description: { type: string, nullable: true }
+ *               phone: { type: string, nullable: true }
+ *               inspectionPrice: { type: integer, minimum: 0, nullable: true }
+ *               profileImageFilename: { type: string, nullable: true, description: "The image's name on the device. The API stores it under a name of its own." }
  *     responses:
  *       200:
- *         description: Mechanic profile updated
+ *         description: Mechanic profile updated. When an image name was sent, profileImageUpload is the form to post the image to, with the file last under "file".
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 mechanic: { type: object }
+ *                 profileImageUpload:
+ *                   type: object
+ *                   properties:
+ *                     url: { type: string }
+ *                     fields: { type: object, additionalProperties: { type: string } }
  *       400:
  *         description: Validation error
  *       401:
@@ -204,12 +227,32 @@ mechanicsRouter.patch(
  *             properties:
  *               filenames:
  *                 type: array
+ *                 minItems: 1
+ *                 description: The images' names on the device. The API stores them under names of its own.
  *                 items: { type: string }
  *     responses:
  *       201:
- *         description: Garage images added
+ *         description: Garage images added. Post each file to its upload form, with the file last under "file".
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 garageImages:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id: { type: integer }
+ *                       filename: { type: string }
+ *                       originalName: { type: string }
+ *                       upload:
+ *                         type: object
+ *                         properties:
+ *                           url: { type: string }
+ *                           fields: { type: object, additionalProperties: { type: string } }
  *       400:
- *         description: Validation error
+ *         description: Validation error, or more than 12 garage images (mechanic.garage_images_limit)
  *       401:
  *         description: Not authenticated
  *       403:

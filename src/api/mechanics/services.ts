@@ -2,18 +2,27 @@ import { z } from "zod";
 import { BadRequestError } from "../../errors/bad_request_error";
 import { InternalServerError } from "../../errors/internal_server_error";
 import { NotFoundError } from "../../errors/not_found_error";
-import { mechanicsBucketName } from "../../utils/constants";
+import { RequestValidationError } from "../../errors/request_validation_error";
+import { customIssue } from "../../i18n/zod_issues";
+import { distanceKm } from "../../utils/geo";
+import {
+  maxGarageImageCount,
+  maxMechanicImageSizeBytes,
+  mechanicImageUploadExpirationSeconds,
+  mechanicsBucketName,
+} from "../../utils/constants";
 import {
   generateGetPresignedUrl,
   generateGetPresignedUrls,
-  generatePresignedUrl,
-  generatePresignedUrls,
+  generateImagePostPolicy,
+  generateToken,
 } from "../../utils/functions";
 import { findListingCityById } from "../listings/db";
 import { getMechanicRatingSummary } from "../mechanic_reviews/services";
 import {
   deleteGarageImageByOwner,
   findActiveMechanicsByCity,
+  findCityById,
   findMechanicById,
   findMechanicByUserId,
   insertGarageImages,
@@ -67,18 +76,69 @@ const attachRatingSummary = async <T extends { id: number }>(mechanic: T) => ({
   rating: await getMechanicRatingSummary(mechanic.id),
 });
 
-const getProfileImageUploadUrl = async (filename?: string) => {
-  if (!filename) {
-    return undefined;
+// Buyers look for workshops by city, so the pin must be in the chosen one:
+// within the city's radius of its centre.
+const assertPinInCity = async (location: {
+  cityId: number;
+  latitude: number;
+  longitude: number;
+}) => {
+  const city = await findCityById(location.cityId);
+  if (!city) {
+    throw new RequestValidationError([
+      customIssue(["cityId"], "car.city_not_found"),
+    ]);
+  }
+  const { latitude, longitude, radiusKm } = city;
+  if (latitude === null || longitude === null || radiusKm === null) {
+    return;
+  }
+  if (distanceKm(location, { latitude, longitude }) > radiusKm) {
+    throw new RequestValidationError([
+      customIssue(["latitude"], "mechanic.location_outside_city", {
+        city: city.name,
+      }),
+    ]);
+  }
+};
+
+// A name of the API's own, so an upload never overwrites another file.
+const buildMechanicImageName = (prefix: string, originalName: string) => {
+  const extension = originalName.substring(originalName.lastIndexOf(".") + 1);
+  return `${prefix}-${generateToken(16)}.${extension.toLowerCase()}`;
+};
+
+// A form the client posts the image to, limited to one image of at most 10 MB.
+const createImageUpload = async (filename: string) => {
+  const { postURL, formData } = await generateImagePostPolicy(
+    mechanicsBucketName,
+    filename,
+    maxMechanicImageSizeBytes,
+    mechanicImageUploadExpirationSeconds,
+  );
+  return { url: postURL, fields: formData };
+};
+
+// Swaps the profile image's original name for the stored one, and prepares
+// its upload. null removes the image.
+const prepareProfileImage = async <
+  T extends { profileImageFilename?: string | null },
+>(
+  data: T,
+) => {
+  const original = data.profileImageFilename;
+  if (!original) {
+    return { values: data, profileImageUpload: undefined };
   }
 
+  const filename = buildMechanicImageName("mechanic", original);
   try {
-    return await generatePresignedUrl(mechanicsBucketName, filename);
+    return {
+      values: { ...data, profileImageFilename: filename },
+      profileImageUpload: await createImageUpload(filename),
+    };
   } catch (error) {
-    console.error(
-      `Error generating profile image upload URL for ${filename}:`,
-      error,
-    );
+    console.error("Error generating profile image upload:", error);
     throw new InternalServerError("mechanic.profile_image_url_failed");
   }
 };
@@ -92,17 +152,18 @@ export const createMechanicProfile = async (
     throw new BadRequestError("mechanic.already_exists");
   }
 
-  await insertMechanic(userId, data);
+  await assertPinInCity(data);
+  const { values, profileImageUpload } = await prepareProfileImage(data);
+  await insertMechanic(userId, values);
   const mechanic = await findMechanicByUserId(userId);
   if (!mechanic) {
     throw new InternalServerError("mechanic.profile_reload_failed");
   }
 
-  const profileImageUploadUrl = await getProfileImageUploadUrl(
-    data.profileImageFilename,
-  );
-
-  return { mechanic: await attachMechanicImageUrls(mechanic), profileImageUploadUrl };
+  return {
+    mechanic: await attachRatingSummary(await attachMechanicImageUrls(mechanic)),
+    profileImageUpload,
+  };
 };
 
 export const getOwnMechanicProfile = async (userId: number) => {
@@ -123,27 +184,30 @@ export const addGarageImages = async (
     throw new NotFoundError("mechanic.profile_not_found");
   }
 
-  let uploadUrls: Map<string, string>;
+  if (mechanic.garageImages.length + data.filenames.length > maxGarageImageCount) {
+    throw new BadRequestError("mechanic.garage_images_limit", {
+      max: maxGarageImageCount,
+    });
+  }
+
+  const filenames = data.filenames.map((original) =>
+    buildMechanicImageName("garage", original),
+  );
+  let uploads: { url: string; fields: Record<string, string> }[];
   try {
-    uploadUrls = await generatePresignedUrls(
-      mechanicsBucketName,
-      data.filenames,
-    );
+    uploads = await Promise.all(filenames.map(createImageUpload));
   } catch (error) {
-    console.error("Error generating garage image upload URLs:", error);
+    console.error("Error generating garage image uploads:", error);
     throw new InternalServerError("mechanic.garage_upload_urls_failed");
   }
 
-  if (data.filenames.some((filename) => !uploadUrls.has(filename))) {
-    throw new InternalServerError("mechanic.garage_upload_urls_failed");
-  }
-
-  const garageImages = await insertGarageImages(mechanic.id, data.filenames);
+  const garageImages = await insertGarageImages(mechanic.id, filenames);
   return {
-    garageImages: garageImages.map((image) => ({
+    garageImages: garageImages.map((image, index) => ({
       id: image.id,
       filename: image.link,
-      signedUrl: uploadUrls.get(image.link)!,
+      originalName: data.filenames[index],
+      upload: uploads[index],
     })),
   };
 };
@@ -220,20 +284,33 @@ export const updateMechanicProfile = async (
   userId: number,
   data: UpdateMechanicData,
 ) => {
-  const updated = await updateMechanicByUserId(userId, data);
-  if (!updated) {
+  const existing = await findMechanicByUserId(userId);
+  if (!existing) {
     throw new NotFoundError("mechanic.profile_not_found");
   }
+  if (
+    data.cityId !== undefined ||
+    data.latitude !== undefined ||
+    data.longitude !== undefined
+  ) {
+    await assertPinInCity({
+      cityId: data.cityId ?? existing.cityId,
+      latitude: data.latitude ?? existing.latitude,
+      longitude: data.longitude ?? existing.longitude,
+    });
+  }
+
+  const { values, profileImageUpload } = await prepareProfileImage(data);
+  await updateMechanicByUserId(userId, values);
   const mechanic = await findMechanicByUserId(userId);
   if (!mechanic) {
     throw new InternalServerError("mechanic.profile_reload_failed");
   }
 
-  const profileImageUploadUrl = await getProfileImageUploadUrl(
-    data.profileImageFilename,
-  );
-
-  return { mechanic: await attachMechanicImageUrls(mechanic), profileImageUploadUrl };
+  return {
+    mechanic: await attachRatingSummary(await attachMechanicImageUrls(mechanic)),
+    profileImageUpload,
+  };
 };
 
 export const updateMechanicStatus = async (
@@ -249,5 +326,5 @@ export const updateMechanicStatus = async (
     throw new InternalServerError("mechanic.profile_reload_failed");
   }
 
-  return attachMechanicImageUrls(mechanic);
+  return attachRatingSummary(await attachMechanicImageUrls(mechanic));
 };

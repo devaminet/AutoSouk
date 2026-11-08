@@ -16,7 +16,7 @@ describe("GET /api/lookups", () => {
     expect(response.headers["cache-control"]).toBe("public, max-age=3600");
   });
 
-  it("returns the id, slug and name of every city, sorted by name", async () => {
+  it("returns the id, slug, name and area of every city, sorted by name", async () => {
     const { body } = await getLookups();
     const names = body.cities.map(({ name }: { name: string }) => name);
 
@@ -24,6 +24,9 @@ describe("GET /api/lookups", () => {
       id: expect.any(Number),
       slug: "casablanca",
       name: "Casablanca",
+      latitude: 33.5731,
+      longitude: -7.5898,
+      radiusKm: 20,
     });
     expect(names.indexOf("Agadir")).toBeLessThan(names.indexOf("Casablanca"));
     expect(names.indexOf("Casablanca")).toBeLessThan(names.indexOf("Zagora"));

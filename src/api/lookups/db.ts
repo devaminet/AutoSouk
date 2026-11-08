@@ -7,7 +7,14 @@ import { carStateTable } from "../../db/schema/state";
 
 export const findCities = async () => {
   return await db
-    .select({ id: cityTable.id, slug: cityTable.slug, name: cityTable.name })
+    .select({
+      id: cityTable.id,
+      slug: cityTable.slug,
+      name: cityTable.name,
+      latitude: cityTable.latitude,
+      longitude: cityTable.longitude,
+      radiusKm: cityTable.radiusKm,
+    })
     .from(cityTable)
     .orderBy(asc(cityTable.name));
 };

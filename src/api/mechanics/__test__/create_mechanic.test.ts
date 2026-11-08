@@ -6,8 +6,8 @@ const validMechanicPayload = {
   name: "Atlas Auto Care",
   cityId: 1,
   address: "12 Rue Example",
-  latitude: 33.5731,
-  longitude: -7.5898,
+  latitude: 30.4278,
+  longitude: -9.5981,
 };
 
 it("should fail if the user who wants to create a mechanic profile is not logged in", () => {
@@ -70,4 +70,34 @@ it("should reject a second profile creation attempt for the same mechanic", asyn
     .auth(authUser.accessToken, { type: "bearer" });
 
   expect(secondResponse.statusCode).toBe(400);
+});
+
+it("should refuse a pin outside the chosen city", async () => {
+  await signupUserWithVerification({ userType: "mechanic" });
+  const authUser = await signinUser();
+
+  // Casablanca's centre, with Agadir as the city.
+  const response = await request(app)
+    .post("/api/mechanics")
+    .send({ ...validMechanicPayload, latitude: 33.5731, longitude: -7.5898 })
+    .auth(authUser.accessToken, { type: "bearer" });
+
+  expect(response.statusCode).toBe(400);
+  expect(response.body.errors[0]).toMatchObject({
+    code: "mechanic.location_outside_city",
+    field: "latitude",
+  });
+});
+
+it("should refuse a city that doesn't exist", async () => {
+  await signupUserWithVerification({ userType: "mechanic" });
+  const authUser = await signinUser();
+
+  const response = await request(app)
+    .post("/api/mechanics")
+    .send({ ...validMechanicPayload, cityId: 99999 })
+    .auth(authUser.accessToken, { type: "bearer" });
+
+  expect(response.statusCode).toBe(400);
+  expect(response.body.errors[0].field).toBe("cityId");
 });
