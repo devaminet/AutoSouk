@@ -6,6 +6,7 @@ import {
   createMechanicReview,
   deleteMechanicReview,
   getMechanicReviews,
+  getOwnMechanicReview,
   updateMechanicReview,
 } from "./services";
 import {
@@ -95,7 +96,9 @@ mechanicReviewsRouter.post(
  *         schema: { type: integer, default: 10 }
  *     responses:
  *       200:
- *         description: Reviews and rating summary
+ *         description: >
+ *           Reviews and rating summary. rating.distribution gives the number
+ *           of reviews for each number of stars, from "1" to "5".
  *       400:
  *         description: Validation error
  *       404:
@@ -118,6 +121,49 @@ mechanicReviewsRouter.get("/:mechanicId/reviews", async (req, res) => {
   );
   res.status(200).json(result);
 });
+
+/**
+ * @openapi
+ * /api/mechanics/{mechanicId}/reviews/me:
+ *   get:
+ *     tags: [Mechanic Reviews]
+ *     summary: Get the current buyer's review for a mechanic
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: mechanicId
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: The buyer's review
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not a buyer
+ *       404:
+ *         description: Mechanic not found, or the buyer has no review for it
+ */
+mechanicReviewsRouter.get(
+  "/:mechanicId/reviews/me",
+  isAuthenticated,
+  isBuyer,
+  async (req, res) => {
+    const paramsResult = mechanicIdParamSchema.safeParse(req.params);
+    if (!paramsResult.success) {
+      throw new RequestValidationError(paramsResult.error.errors);
+    }
+
+    const review = await getOwnMechanicReview(
+      paramsResult.data.mechanicId,
+      req.currentUser!.id,
+    );
+    res.status(200).json({ review });
+  },
+);
 
 /**
  * @openapi

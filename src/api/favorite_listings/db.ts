@@ -91,7 +91,7 @@ const favoritesOrderBy = {
 // sold ones, stay in the list with their status.
 export const findFavoriteListings = async (
   userId: number,
-  { page, limit, inspected, sort }: QueryParams,
+  { page, limit, inspected, sort, cityId }: QueryParams,
 ) => {
   const saved = eq(favoriteListingsTable.buyerId, userId);
   const conditions = [saved];
@@ -99,6 +99,9 @@ export const findFavoriteListings = async (
     conditions.push(
       inspected ? hasCompletedInspection : not(hasCompletedInspection),
     );
+  }
+  if (cityId !== undefined) {
+    conditions.push(eq(carTable.cityId, cityId));
   }
 
   const pageRows = await db

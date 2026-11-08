@@ -55,9 +55,23 @@ export const getRatingSummaryForMechanic = async (mechanicId: number) => {
     .from(mechanicReviewTable)
     .where(eq(mechanicReviewTable.mechanicId, mechanicId));
 
+  const perRating = await db
+    .select({ rating: mechanicReviewTable.rating, count: count() })
+    .from(mechanicReviewTable)
+    .where(eq(mechanicReviewTable.mechanicId, mechanicId))
+    .groupBy(mechanicReviewTable.rating);
+  // How many reviews give each number of stars, from 1 to 5.
+  const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  for (const row of perRating) {
+    if (row.rating in distribution) {
+      distribution[row.rating as keyof typeof distribution] = row.count;
+    }
+  }
+
   return {
     average: summary?.average ? Number(summary.average) : null,
     count: summary?.count ?? 0,
+    distribution,
   };
 };
 

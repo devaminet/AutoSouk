@@ -80,6 +80,20 @@ export const createMechanicReview = async (
   return formatReview(review);
 };
 
+export const getOwnMechanicReview = async (
+  mechanicId: number,
+  buyerId: number,
+) => {
+  await requireMechanic(mechanicId);
+
+  const review = await findReviewByMechanicAndBuyer(mechanicId, buyerId);
+  if (!review) {
+    throw new NotFoundError("review.not_found");
+  }
+
+  return formatReview(review);
+};
+
 export const getMechanicReviews = async (
   mechanicId: number,
   query: ReviewsQuery,

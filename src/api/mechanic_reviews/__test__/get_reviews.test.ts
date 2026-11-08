@@ -52,7 +52,11 @@ it("should return an empty list and null average rating when there are no review
 
   expect(response.statusCode).toBe(200);
   expect(response.body.reviews).toEqual([]);
-  expect(response.body.rating).toEqual({ average: null, count: 0 });
+  expect(response.body.rating).toEqual({
+    average: null,
+    count: 0,
+    distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+  });
 });
 
 it("should list reviews publicly and compute the average rating", async () => {
@@ -66,7 +70,11 @@ it("should list reviews publicly and compute the average rating", async () => {
 
   expect(response.statusCode).toBe(200);
   expect(response.body.reviews).toHaveLength(2);
-  expect(response.body.rating).toEqual({ average: 4, count: 2 });
+  expect(response.body.rating).toEqual({
+    average: 4,
+    count: 2,
+    distribution: { 1: 0, 2: 0, 3: 1, 4: 0, 5: 1 },
+  });
   expect(response.body.meta).toMatchObject({ total: 2, page: 1, limit: 10 });
   expect(response.body.reviews[0].buyer).toHaveProperty("name");
 });
@@ -99,5 +107,45 @@ it("should expose the average rating on the mechanic's public profile", async ()
   const response = await request(app).get(`/api/mechanics/${mechanic.id}`);
 
   expect(response.statusCode).toBe(200);
-  expect(response.body.mechanic.rating).toEqual({ average: 3, count: 2 });
+  expect(response.body.mechanic.rating).toMatchObject({ average: 3, count: 2 });
+});
+
+describe("GET /api/mechanics/:mechanicId/reviews/me", () => {
+  it("should return the buyer's own review", async () => {
+    const mechanic = await createMechanic();
+    await createReview(mechanic.id, "other@example.com", 2, "Late.");
+    await createReview(mechanic.id, "mine@example.com", 5, "Thorough.");
+    const buyerAuth = await signinUser({ email: "mine@example.com" });
+
+    const response = await request(app)
+      .get(`/api/mechanics/${mechanic.id}/reviews/me`)
+      .auth(buyerAuth.accessToken, { type: "bearer" });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.review).toMatchObject({
+      rating: 5,
+      message: "Thorough.",
+    });
+  });
+
+  it("should return 404 when the buyer has no review", async () => {
+    const mechanic = await createMechanic();
+    await signupUserWithVerification({
+      userType: "buyer",
+      email: "none@example.com",
+    });
+    const buyerAuth = await signinUser({ email: "none@example.com" });
+
+    await request(app)
+      .get(`/api/mechanics/${mechanic.id}/reviews/me`)
+      .auth(buyerAuth.accessToken, { type: "bearer" })
+      .expect(404);
+  });
+
+  it("should require a buyer", async () => {
+    const mechanic = await createMechanic();
+    await request(app)
+      .get(`/api/mechanics/${mechanic.id}/reviews/me`)
+      .expect(401);
+  });
 });
