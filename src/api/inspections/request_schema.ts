@@ -58,3 +58,42 @@ export const completeInspectionSchema = z.object({
   estimatedRepairCost: z.number().int().nonnegative().optional(),
   photoFilenames: z.array(z.string()).optional(),
 });
+
+// The mechanic's unfinished report: every field of the report is optional,
+// and a checklist item may wait for its status.
+export const reportDraftSchema = z.object({
+  matricule: z.string().max(50).optional(),
+  vin: z.string().max(50).optional(),
+  carteGriseNumber: z.string().max(50).optional(),
+  mileage: z.number().int().nonnegative().optional(),
+  mileageConsistency: z
+    .enum(["consistent", "suspicious", "unverifiable"])
+    .optional(),
+  mileageConsistencyNote: z.string().max(500).optional(),
+  firstRegistrationDate: z.string().max(10).optional(),
+  inspectedAt: z.string().datetime().optional(),
+  controleTechniqueValid: z.boolean().optional(),
+  controleTechniqueExpiry: z.string().max(10).optional(),
+  vignetteValid: z.boolean().optional(),
+  verdict: z.enum(["excellent", "good", "fair", "poor"]).optional(),
+  overallScore: z.number().int().min(0).max(100).optional(),
+  summary: z.string().max(5000).optional(),
+  estimatedRepairCost: z.number().int().nonnegative().optional(),
+  sections: z
+    .array(
+      z.object({
+        category: inspectionCategorySchema,
+        items: z
+          .array(
+            z.object({
+              label: z.string().max(200),
+              status: inspectionItemStatusSchema.nullable(),
+              note: z.string().max(500).optional(),
+            }),
+          )
+          .max(50),
+      }),
+    )
+    .max(6)
+    .optional(),
+});

@@ -59,6 +59,19 @@ export const findInspectionById = async (id: number) => {
           city: true,
           carburant: true,
           origin: true,
+          listing: { columns: { id: true, title: true } },
+          carMedias: {
+            columns: { link: true },
+            where: and(
+              eq(carMediaTable.isUploaded, true),
+              eq(carMediaTable.type, "image"),
+            ),
+            orderBy: [
+              desc(carMediaTable.isPrimary),
+              asc(carMediaTable.id),
+            ] as SQL[],
+            limit: 1,
+          },
         },
       },
       buyer: true,
@@ -207,6 +220,8 @@ export const completeInspectionByMechanic = async (
       summary: data.summary,
       findings: { sections: findingsData.sections, photoFilenames },
       reportPdfLink,
+      reportDraft: null,
+      reportDraftSavedAt: null,
       completedAt: new Date(),
     })
     .where(
@@ -217,6 +232,31 @@ export const completeInspectionByMechanic = async (
       ),
     )
     .returning();
+
+  return inspection ?? null;
+};
+
+// Saves the mechanic's unfinished report. Only an inspection in progress
+// takes a draft.
+export const saveReportDraft = async (
+  id: number,
+  mechanicId: number,
+  draft: unknown,
+) => {
+  const [inspection] = await db
+    .update(inspectionTable)
+    .set({ reportDraft: draft, reportDraftSavedAt: new Date() })
+    .where(
+      and(
+        eq(inspectionTable.id, id),
+        eq(inspectionTable.mechanicId, mechanicId),
+        eq(inspectionTable.status, "in_progress"),
+      ),
+    )
+    .returning({
+      reportDraft: inspectionTable.reportDraft,
+      reportDraftSavedAt: inspectionTable.reportDraftSavedAt,
+    });
 
   return inspection ?? null;
 };

@@ -71,6 +71,9 @@ export const inspectionTable = pgTable(
     summary: varchar("summary"),
     findings: jsonb("findings"),
     reportPdfLink: varchar("report_pdf_link"),
+    // The mechanic's unfinished report, saved as they fill it in.
+    reportDraft: jsonb("report_draft"),
+    reportDraftSavedAt: timestamp("report_draft_saved_at"),
 
     requestedAt: timestamp("requested_at").notNull().defaultNow(),
     acceptedAt: timestamp("accepted_at"),

@@ -225,6 +225,13 @@
       "when": 1794087365544,
       "tag": "0032_city_coordinates",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794150720640,
+      "tag": "0033_inspection_report_draft",
+      "breakpoints": true
     }
   ]
 }

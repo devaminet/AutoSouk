@@ -18,6 +18,7 @@ import { emailSubject, emailTemplateContext } from "../../i18n/emails";
 import { minioClient } from "../../file_storage/minio";
 import { generateInspectionReportPdf } from "./pdf";
 import {
+  saveReportDraft,
   cancelInspectionByBuyer,
   completeInspectionByMechanic,
   findActiveInspectionByCarId,
@@ -33,12 +34,14 @@ import {
 import {
   completeInspectionSchema,
   createInspectionSchema,
+  reportDraftSchema,
   updateInspectionStatusSchema,
 } from "./request_schema";
 
 type CreateInspectionData = z.infer<typeof createInspectionSchema>;
 type UpdateInspectionStatusData = z.infer<typeof updateInspectionStatusSchema>;
 export type CompleteInspectionData = z.infer<typeof completeInspectionSchema>;
+type ReportDraftData = z.infer<typeof reportDraftSchema>;
 
 export const requestInspection = async (
   buyerId: number,
@@ -96,11 +99,24 @@ export const getInspectionById = async (
     );
   }
 
-  // Leave out the buyer's account details, such as their password hash.
-  const { buyer, ...rest } = inspection;
+  // Leave out the buyer's account details, such as their password hash, and
+  // the mechanic's unfinished report from the buyer.
+  const { buyer, reportDraft, reportDraftSavedAt, car, ...rest } = inspection;
+  const { carMedias, ...carDetails } = car;
+  const photo = carMedias[0]?.link;
+  let photoUrl: string | null = null;
+  if (photo) {
+    try {
+      photoUrl = await generateGetPresignedUrl(carBucketName, photo);
+    } catch (error) {
+      console.error("Error generating car photo URL:", error);
+    }
+  }
   return {
     ...rest,
+    car: { ...carDetails, photoUrl },
     buyer: { id: buyer.id, firstName: buyer.firstName, lastName: buyer.lastName },
+    ...(isMechanic ? { reportDraft, reportDraftSavedAt } : {}),
   };
 };
 
@@ -343,4 +359,26 @@ export const submitInspectionReport = async (
   await notifyBuyerOfCompletedInspection(inspection.buyer, reportUrl);
 
   return { inspection: { ...updated, reportPdfLink: reportUrl } };
+};
+
+export const saveInspectionReportDraft = async (
+  mechanicUserId: number,
+  inspectionId: number,
+  draft: ReportDraftData,
+) => {
+  const mechanic = await findMechanicByUserId(mechanicUserId);
+  if (!mechanic) {
+    throw new NotFoundError("mechanic.profile_not_found");
+  }
+
+  const saved = await saveReportDraft(inspectionId, mechanic.id, draft);
+  if (saved) {
+    return saved;
+  }
+
+  const inspection = await findInspectionById(inspectionId);
+  if (!inspection || inspection.mechanicId !== mechanic.id) {
+    throw new NotFoundError("inspection.not_found");
+  }
+  throw new BadRequestError("inspection.not_in_progress");
 };
