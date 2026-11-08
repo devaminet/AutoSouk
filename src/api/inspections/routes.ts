@@ -39,9 +39,13 @@ const inspectionsRouter = Router();
  *             properties:
  *               carId: { type: integer }
  *               mechanicId: { type: integer }
+ *               reportLanguage:
+ *                 type: string
+ *                 enum: [fr, en, ar]
+ *                 description: The language of the PDF report and the email that sends it. Defaults to the request's language (?lang= or Accept-Language).
  *     responses:
  *       201:
- *         description: Inspection requested
+ *         description: Inspection requested, with its reportLanguage
  *       400:
  *         description: Validation error
  *       401:
@@ -60,6 +64,7 @@ inspectionsRouter.post("/", isAuthenticated, isBuyer, async (req, res) => {
   const result = await requestInspection(
     req.currentUser!.id,
     validationResult.data,
+    req.locale,
   );
   res.status(201).json(result);
 });
@@ -158,6 +163,8 @@ inspectionsRouter.get("/", isAuthenticated, async (req, res) => {
  *       mechanic also gets `reportDraft`, their unfinished report as last
  *       saved with `PUT /api/inspections/{id}/draft`, and `reportDraftSavedAt`.
  *       Both are null before the first save and after the report is submitted.
+ *       `reportLanguage` (fr, en or ar) is the language the buyer chose for the
+ *       report; the mechanic writes the checklist item names in it.
  *     security:
  *       - bearerAuth: []
  *     parameters:

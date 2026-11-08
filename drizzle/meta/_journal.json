@@ -232,6 +232,13 @@
       "when": 1794150720640,
       "tag": "0033_inspection_report_draft",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794158719209,
+      "tag": "0034_inspection_report_language",
+      "breakpoints": true
     }
   ]
 }

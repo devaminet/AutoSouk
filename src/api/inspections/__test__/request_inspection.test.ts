@@ -105,6 +105,49 @@ it("should create an inspection request snapshotting the mechanic's price", asyn
   });
 });
 
+it("should keep the report language the buyer chose", async () => {
+  const { carId } = await createApprovedCar("seller@example.com");
+  const { mechanic } = await createMechanic("mechanic@example.com");
+  const buyer = await createBuyer("buyer@example.com");
+
+  const response = await request(app)
+    .post("/api/inspections")
+    .set("Accept-Language", "en")
+    .send({ carId, mechanicId: mechanic.id, reportLanguage: "ar" })
+    .auth(buyer.accessToken, { type: "bearer" })
+    .expect(201);
+
+  expect(response.body.inspection.reportLanguage).toBe("ar");
+});
+
+it("should write the report in the request's language when the buyer chose none", async () => {
+  const { carId } = await createApprovedCar("seller@example.com");
+  const { mechanic } = await createMechanic("mechanic@example.com");
+  const buyer = await createBuyer("buyer@example.com");
+
+  const response = await request(app)
+    .post("/api/inspections?lang=en")
+    .send({ carId, mechanicId: mechanic.id })
+    .auth(buyer.accessToken, { type: "bearer" })
+    .expect(201);
+
+  expect(response.body.inspection.reportLanguage).toBe("en");
+});
+
+it("should reject a report language the API doesn't support", async () => {
+  const { carId } = await createApprovedCar("seller@example.com");
+  const { mechanic } = await createMechanic("mechanic@example.com");
+  const buyer = await createBuyer("buyer@example.com");
+
+  const response = await request(app)
+    .post("/api/inspections")
+    .send({ carId, mechanicId: mechanic.id, reportLanguage: "de" })
+    .auth(buyer.accessToken, { type: "bearer" })
+    .expect(400);
+
+  expect(response.body.errors[0].field).toBe("reportLanguage");
+});
+
 it("should reject a second active inspection request for the same car", async () => {
   const { carId } = await createApprovedCar("seller@example.com");
   const { mechanic: firstMechanic } = await createMechanic(

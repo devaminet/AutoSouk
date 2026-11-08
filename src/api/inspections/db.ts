@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
+import { Locale } from "../../i18n";
 import { db } from "../../db";
 import { carTable } from "../../db/schema/car";
 import { carMediaTable } from "../../db/schema/car_media";
@@ -137,6 +138,7 @@ export const insertInspection = async (data: {
   buyerId: number;
   mechanicId: number;
   priceAtRequest: number;
+  reportLanguage: Locale;
 }) => {
   const [inspection] = await db
     .insert(inspectionTable)

@@ -46,6 +46,7 @@ type ReportDraftData = z.infer<typeof reportDraftSchema>;
 export const requestInspection = async (
   buyerId: number,
   data: CreateInspectionData,
+  requestLocale: Locale,
 ) => {
   // Buyers can only see, and so inspect, the cars of approved listings.
   const car = await findCarWithCityById(data.carId);
@@ -72,6 +73,7 @@ export const requestInspection = async (
     buyerId,
     mechanicId: data.mechanicId,
     priceAtRequest: mechanic.inspectionPrice ?? 0,
+    reportLanguage: data.reportLanguage ?? requestLocale,
   });
 
   return { inspection };
@@ -234,20 +236,21 @@ export const updateInspectionStatus = async (
 const buildReportReference = (inspectionId: number, issuedAt: Date) =>
   `AS-${issuedAt.getFullYear()}-${String(inspectionId).padStart(6, "0")}`;
 
-// Sent in the buyer's saved language, like the report itself.
+// Sent in the language the buyer chose for the report.
 const notifyBuyerOfCompletedInspection = async (
-  buyer: { email: string; firstName: string; locale: Locale },
+  buyer: { email: string; firstName: string },
+  locale: Locale,
   reportUrl: string,
 ) => {
   try {
     const html = await readTemplateFile("inspection_report.ejs", {
-      ...emailTemplateContext(buyer.locale),
+      ...emailTemplateContext(locale),
       firstName: buyer.firstName,
       reportUrl,
     });
     await sendMail({
       to: buyer.email,
-      subject: emailSubject(buyer.locale, "inspection_report.subject"),
+      subject: emailSubject(locale, "inspection_report.subject"),
       html,
     });
   } catch (error) {
@@ -321,7 +324,7 @@ export const submitInspectionReport = async (
         sections: data.sections,
         estimatedRepairCost: data.estimatedRepairCost,
       },
-      inspection.buyer.locale,
+      inspection.reportLanguage,
     );
   } catch (error) {
     console.error("Error generating inspection report PDF:", error);
@@ -356,7 +359,11 @@ export const submitInspectionReport = async (
     inspectionReportsBucketName,
     filename,
   );
-  await notifyBuyerOfCompletedInspection(inspection.buyer, reportUrl);
+  await notifyBuyerOfCompletedInspection(
+    inspection.buyer,
+    inspection.reportLanguage,
+    reportUrl,
+  );
 
   return { inspection: { ...updated, reportPdfLink: reportUrl } };
 };

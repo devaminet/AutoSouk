@@ -12,10 +12,11 @@ const requestInspection = async (
   buyerAccessToken: string,
   carId: number,
   mechanicId: number,
+  reportLanguage?: string,
 ) => {
   const response = await request(app)
     .post("/api/inspections")
-    .send({ carId, mechanicId })
+    .send({ carId, mechanicId, reportLanguage })
     .auth(buyerAccessToken, { type: "bearer" });
 
   expect(response.statusCode).toBe(201);
@@ -206,27 +207,29 @@ it("should generate the PDF report, store it in MinIO, and email the buyer", asy
   );
 });
 
-it("should write the report and the email in the buyer's language", async () => {
+it("should write the report and the email in the language the buyer chose", async () => {
   const generatePdf = jest.spyOn(pdf, "generateInspectionReportPdf");
   const { carId } = await createApprovedCar("seller@example.com");
   const { mechanic, mechanicUser } = await createMechanic(
     "mechanic@example.com",
   );
+  // The buyer's saved language is French, but they ask for Arabic.
   const buyer = await createBuyer("buyer@example.com");
   await db
     .update(usersTable)
-    .set({ locale: "ar" })
+    .set({ locale: "fr" })
     .where(eq(usersTable.email, buyer.user.email));
   const inspection = await requestInspection(
     buyer.accessToken,
     carId,
     mechanic.id,
+    "ar",
   );
   await moveToInProgress(mechanicUser.accessToken, inspection.id);
 
   await request(app)
     .post(`/api/inspections/${inspection.id}/report`)
-    .set("Accept-Language", "fr")
+    .set("Accept-Language", "en")
     .send(validReportPayload)
     .auth(mechanicUser.accessToken, { type: "bearer" })
     .expect(200);

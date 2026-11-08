@@ -1,9 +1,12 @@
 import { z } from "zod";
+import { localeSchema } from "../../i18n/config";
 import { messageKey } from "../../i18n/zod_issues";
 
 export const createInspectionSchema = z.object({
   carId: z.number().int().positive(),
   mechanicId: z.number().int().positive(),
+  // The language of the report. The request's language when left out.
+  reportLanguage: localeSchema.optional(),
 });
 
 export const inspectionIdParamSchema = z.object({
