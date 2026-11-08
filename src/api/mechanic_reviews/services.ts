@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { BadRequestError } from "../../errors/bad_request_error";
+import { InternalServerError } from "../../errors/internal_server_error";
 import { NotFoundError } from "../../errors/not_found_error";
+import { mechanicsBucketName } from "../../utils/constants";
+import { generateGetPresignedUrls } from "../../utils/functions";
 import { findMechanicById } from "../mechanics/db";
 import {
   deleteReviewByBuyer,
@@ -138,8 +141,24 @@ export const rankMechanicsByCity = async (query: MechanicRankingsQuery) => {
   );
   const total = totalCountResult[0]?.count ?? 0;
 
+  const filenames = rankings.flatMap(({ profileImageUrl }) =>
+    profileImageUrl ? [profileImageUrl] : [],
+  );
+  let links: Map<string, string>;
+  try {
+    links = await generateGetPresignedUrls(mechanicsBucketName, filenames);
+  } catch (error) {
+    console.error("Error generating mechanic image URLs:", error);
+    throw new InternalServerError("mechanic.image_urls_failed");
+  }
+
   return {
-    rankings,
+    rankings: rankings.map(({ profileImageUrl, ...ranking }) => ({
+      ...ranking,
+      profileImageLink: profileImageUrl
+        ? (links.get(profileImageUrl) ?? null)
+        : null,
+    })),
     meta: {
       total,
       page: query.page,
