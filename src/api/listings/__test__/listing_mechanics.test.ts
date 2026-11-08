@@ -42,8 +42,8 @@ const createMechanicProfile = async (
       name,
       cityId: 1,
       address: "12 Rue Example",
-      latitude: 33.5731,
-      longitude: -7.5898,
+      latitude: 30.4278,
+      longitude: -9.5981,
     })
     .auth(mechanicUser.accessToken, { type: "bearer" });
 
@@ -115,8 +115,8 @@ it("should return active mechanics in the approved listing city with their garag
       expect.objectContaining({
         id: firstMechanic.id,
         name: "Atlas Auto Care",
-        latitude: 33.5731,
-        longitude: -7.5898,
+        latitude: 30.4278,
+        longitude: -9.5981,
         garageImages: [
           expect.objectContaining({ link: "https://storage.test/garage.jpg" }),
         ],
@@ -124,8 +124,8 @@ it("should return active mechanics in the approved listing city with their garag
       expect.objectContaining({
         id: secondMechanic.id,
         name: "Agadir Garage",
-        latitude: 33.5731,
-        longitude: -7.5898,
+        latitude: 30.4278,
+        longitude: -9.5981,
       }),
     ]),
   );

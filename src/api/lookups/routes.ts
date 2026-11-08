@@ -39,6 +39,9 @@ const lookupsCacheControl = "public, max-age=3600";
  *                       id: { type: integer }
  *                       slug: { type: string, example: casablanca }
  *                       name: { type: string, example: Casablanca }
+ *                       latitude: { type: number, nullable: true, example: 33.5731, description: "The city's centre" }
+ *                       longitude: { type: number, nullable: true, example: -7.5898 }
+ *                       radiusKm: { type: number, nullable: true, example: 20, description: "How far the city reaches from its centre. A workshop's pin must be within it." }
  *                 carburants:
  *                   type: array
  *                   items:

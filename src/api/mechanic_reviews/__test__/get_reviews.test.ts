@@ -6,8 +6,8 @@ const validMechanicPayload = {
   name: "Atlas Auto Care",
   cityId: 1,
   address: "12 Rue Example",
-  latitude: 33.5731,
-  longitude: -7.5898,
+  latitude: 30.4278,
+  longitude: -9.5981,
 };
 
 const createMechanic = async () => {

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "../../db";
 import { mechanicGarageImageTable } from "../../db/schema/mechanic_garage_image";
 import { mechanicTable } from "../../db/schema/mechanic";
+import { cityTable } from "../../db/schema/city";
 import { createMechanicSchema, updateMechanicSchema } from "./request_schema";
 
 type CreateMechanicData = z.infer<typeof createMechanicSchema>;
@@ -165,4 +166,12 @@ export const deleteGarageImageByOwner = async (
     .returning();
 
   return garageImage ?? null;
+};
+
+export const findCityById = async (cityId: number) => {
+  const city = await db.query.cityTable.findFirst({
+    where: eq(cityTable.id, cityId),
+  });
+
+  return city ?? null;
 };

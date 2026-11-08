@@ -1,7 +1,11 @@
 import request from "supertest";
 import { app } from "../../../app";
 import { updateMechanicActiveStatus } from "../../mechanics/db";
-import { signinUser, signupUserWithVerification } from "../../../test/helpers";
+import {
+  cityCentre,
+  signinUser,
+  signupUserWithVerification,
+} from "../../../test/helpers";
 
 const createMechanic = async (email: string, name: string, cityId: number) => {
   await signupUserWithVerification({ userType: "mechanic", email });
@@ -12,8 +16,7 @@ const createMechanic = async (email: string, name: string, cityId: number) => {
       name,
       cityId,
       address: "12 Rue Example",
-      latitude: 33.5731,
-      longitude: -7.5898,
+      ...(await cityCentre(cityId)),
     })
     .auth(mechanicAuth.accessToken, { type: "bearer" });
 

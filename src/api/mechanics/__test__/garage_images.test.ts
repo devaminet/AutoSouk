@@ -8,8 +8,8 @@ const validMechanicPayload = {
   name: "Atlas Auto Care",
   cityId: 1,
   address: "12 Rue Example",
-  latitude: 33.5731,
-  longitude: -7.5898,
+  latitude: 30.4278,
+  longitude: -9.5981,
 };
 
 const createMechanicProfile = async (accessToken: string) => {
@@ -22,29 +22,64 @@ const createMechanicProfile = async (accessToken: string) => {
   return response.body.mechanic;
 };
 
-it("should add garage images and return presigned upload URLs", async () => {
-  jest
-    .spyOn(fileUtils, "generatePresignedUrls")
-    .mockResolvedValue(
-      new Map([["atlas-garage.jpg", "https://storage.test/atlas-garage.jpg"]]),
-    );
+it("should add garage images and return their upload forms", async () => {
   await signupUserWithVerification({ userType: "mechanic" });
   const authUser = await signinUser();
   await createMechanicProfile(authUser.accessToken);
 
   const response = await request(app)
     .post("/api/mechanics/me/garage-images")
-    .send({ filenames: ["atlas-garage.jpg"] })
+    .send({ filenames: ["atlas-garage.JPG"] })
     .auth(authUser.accessToken, { type: "bearer" });
 
   expect(response.statusCode).toBe(201);
-  expect(response.body.garageImages).toEqual([
-    expect.objectContaining({
-      id: expect.any(Number),
-      filename: "atlas-garage.jpg",
-      signedUrl: "https://storage.test/atlas-garage.jpg",
-    }),
-  ]);
+  const [garageImage] = response.body.garageImages;
+  expect(garageImage).toEqual({
+    id: expect.any(Number),
+    filename: expect.stringMatching(/^garage-[0-9a-f]{32}\.jpg$/),
+    originalName: "atlas-garage.JPG",
+    upload: { url: expect.stringContaining("/mechanics"), fields: expect.any(Object) },
+  });
+  expect(garageImage.upload.fields.key).toBe(garageImage.filename);
+  expect(garageImage.upload.fields.policy).toBeDefined();
+});
+
+it("should store two images with the same name under different names", async () => {
+  await signupUserWithVerification({ userType: "mechanic" });
+  const authUser = await signinUser();
+  await createMechanicProfile(authUser.accessToken);
+
+  const response = await request(app)
+    .post("/api/mechanics/me/garage-images")
+    .send({ filenames: ["lift.jpg", "lift.jpg"] })
+    .auth(authUser.accessToken, { type: "bearer" })
+    .expect(201);
+
+  const [first, second] = response.body.garageImages;
+  expect(first.filename).not.toBe(second.filename);
+});
+
+it("should refuse more than 12 garage images", async () => {
+  await signupUserWithVerification({ userType: "mechanic" });
+  const authUser = await signinUser();
+  const mechanic = await createMechanicProfile(authUser.accessToken);
+  for (let index = 0; index < 11; index++) {
+    await insertMechanicGarageImage(mechanic.id, `garage-${index}.jpg`);
+  }
+
+  const response = await request(app)
+    .post("/api/mechanics/me/garage-images")
+    .send({ filenames: ["one.jpg", "two.jpg"] })
+    .auth(authUser.accessToken, { type: "bearer" });
+
+  expect(response.statusCode).toBe(400);
+  expect(response.body.errors[0].code).toBe("mechanic.garage_images_limit");
+
+  await request(app)
+    .post("/api/mechanics/me/garage-images")
+    .send({ filenames: ["one.jpg"] })
+    .auth(authUser.accessToken, { type: "bearer" })
+    .expect(201);
 });
 
 it("should return an empty garage image list for a profile without images", async () => {

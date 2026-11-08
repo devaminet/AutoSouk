@@ -161,7 +161,9 @@
     "image_urls_failed": "تعذر إنشاء روابط صور الميكانيكي",
     "profile_image_url_failed": "تعذر إنشاء رابط صورة الملف الشخصي",
     "garage_upload_urls_failed": "تعذر إنشاء روابط رفع صور المرآب",
-    "garage_image_not_found": "صورة المرآب غير موجودة"
+    "garage_image_not_found": "صورة المرآب غير موجودة",
+    "garage_images_limit": "يمكن للمرآب عرض {{max}} صورة كحد أقصى",
+    "location_outside_city": "الدبوس خارج {{city}}. ضعه داخل المدينة، أو اختر المدينة التي توجد فيها ورشتك."
   },
   "review": {
     "not_found": "التقييم غير موجود",

@@ -1,6 +1,7 @@
 import request from "supertest";
 import { app } from "../../../app";
 import {
+  cityCentre,
   submitWithImages,
   signinUser,
   signupUserWithVerification,
@@ -73,8 +74,7 @@ export const createMechanic = async (
       name: "Atlas Auto Care",
       cityId,
       address: "12 Rue Example",
-      latitude: 33.5731,
-      longitude: -7.5898,
+      ...(await cityCentre(cityId)),
       inspectionPrice,
     })
     .auth(mechanicUser.accessToken, { type: "bearer" });

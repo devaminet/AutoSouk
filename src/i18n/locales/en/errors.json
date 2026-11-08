@@ -129,7 +129,9 @@
     "image_urls_failed": "Could not generate mechanic image URLs",
     "profile_image_url_failed": "Could not generate URL for profile image",
     "garage_upload_urls_failed": "Could not generate garage image upload URLs",
-    "garage_image_not_found": "Garage image was not found"
+    "garage_image_not_found": "Garage image was not found",
+    "garage_images_limit": "A garage can show at most {{max}} photos",
+    "location_outside_city": "The pin is outside {{city}}. Move it into the city, or choose the city where your workshop is."
   },
   "review": {
     "not_found": "Review was not found",
