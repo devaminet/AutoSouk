@@ -23,6 +23,8 @@ export const getFavoriteListingSchema = z.object({
     .transform((value) => value === "true")
     .optional(),
   sort: z.enum(favoriteListingSorts).default("recent"),
+  // Only listings whose car is in this city.
+  cityId: z.coerce.number().int().positive().optional(),
 });
 
 export type QueryParams = z.infer<typeof getFavoriteListingSchema>;

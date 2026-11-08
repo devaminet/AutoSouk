@@ -102,6 +102,7 @@ describe("GET /api/favorite_listings", () => {
       status: "approved",
       inspectionScore: 88,
       car: {
+        id: expect.any(Number),
         makeId: 449,
         modelId: 2085,
         price: 200000,
@@ -123,6 +124,24 @@ describe("GET /api/favorite_listings", () => {
     const notInspected = await savedListings("?inspected=false");
     expect(ids(notInspected)).toEqual([sold, cheap]);
     expect(notInspected.meta.total).toBe(2);
+  });
+
+  it("filters by the car's city", async () => {
+    const [car] = await db
+      .select({ cityId: carTable.cityId })
+      .from(carTable)
+      .where(eq(carTable.listingId, cheap));
+    const otherCity = car.cityId === 1 ? 2 : 1;
+    await db
+      .update(carTable)
+      .set({ cityId: otherCity })
+      .where(eq(carTable.listingId, cheap));
+
+    expect(ids(await savedListings(`?cityId=${otherCity}`))).toEqual([cheap]);
+    expect(ids(await savedListings(`?cityId=${car.cityId}`))).toEqual([
+      sold,
+      inspected,
+    ]);
   });
 
   it("sorts by price", async () => {

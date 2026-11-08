@@ -46,6 +46,8 @@ const listingIdsWithAllEquipment = (equipmentIds: number[]) =>
 // buyer's saved listings.
 export const listingCardCar = {
   columns: {
+    // To request an inspection of the car.
+    id: true,
     // To search for similar cars.
     makeId: true,
     modelId: true,

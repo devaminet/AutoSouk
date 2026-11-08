@@ -46,6 +46,10 @@ const favoriteListingRouter = Router();
  *           type: string
  *           enum: [recent, price_asc, price_desc]
  *           default: recent
+ *       - in: query
+ *         name: cityId
+ *         description: Only listings whose car is in this city
+ *         schema: { type: integer }
  *     responses:
  *       200:
  *         description: A page of saved listings
@@ -70,6 +74,7 @@ const favoriteListingRouter = Router();
  *                         type: object
  *                         nullable: true
  *                         properties:
+ *                           id: { type: integer }
  *                           makeId: { type: integer }
  *                           modelId: { type: integer }
  *                           price: { type: integer }

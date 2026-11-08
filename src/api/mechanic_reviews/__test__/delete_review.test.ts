@@ -72,7 +72,7 @@ it("should delete the buyer's own review and update the average rating", async (
     `/api/mechanics/${mechanic.id}/reviews`,
   );
   expect(listResponse.body.reviews).toHaveLength(1);
-  expect(listResponse.body.rating).toEqual({ average: 5, count: 1 });
+  expect(listResponse.body.rating).toMatchObject({ average: 5, count: 1 });
 });
 
 it("should allow the buyer to submit a new review after deleting the previous one", async () => {

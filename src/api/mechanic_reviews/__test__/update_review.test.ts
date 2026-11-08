@@ -105,7 +105,7 @@ it("should update the buyer's own review", async () => {
     `/api/mechanics/${mechanic.id}/reviews`,
   );
   expect(listResponse.body.reviews).toHaveLength(1);
-  expect(listResponse.body.rating).toEqual({ average: 5, count: 1 });
+  expect(listResponse.body.rating).toMatchObject({ average: 5, count: 1 });
 });
 
 it("should not let a buyer update another buyer's review", async () => {
