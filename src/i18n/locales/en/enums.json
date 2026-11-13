@@ -239,5 +239,20 @@
     "tiznit": "Tiznit",
     "youssoufia": "Youssoufia",
     "zagora": "Zagora"
+  },
+  "identity_status": {
+    "not_submitted": "Not checked",
+    "pending": "Being checked",
+    "approved": "Verified",
+    "rejected": "Not verified"
+  },
+  "identity_challenge": {
+    "look_straight": "Look straight at the camera",
+    "turn_left": "Turn your head left",
+    "turn_right": "Turn your head right",
+    "look_up": "Look up",
+    "look_down": "Look down",
+    "smile": "Smile",
+    "blink": "Blink twice"
   }
 }

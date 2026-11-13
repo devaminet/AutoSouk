@@ -14,6 +14,7 @@ import {
 } from "./request_schema";
 import { listingMechanicsQuerySchema } from "../mechanics/request_schema";
 import { RequestValidationError } from "../../errors/request_validation_error";
+import { isIdentityVerified } from "../../middlewares/is_identity_verified";
 import isAuthenticated from "../../middlewares/is_authenticated";
 import {
   approveListing,
@@ -313,6 +314,7 @@ listingRouter.post(
   "/",
   isAuthenticated,
   isSeller,
+  isIdentityVerified,
   async (req: Request, res: Response) => {
     const validationResult = createListingSchema.safeParse(req.body);
     if (!validationResult.success) {
@@ -382,6 +384,7 @@ listingRouter.post(
   "/:id/car",
   isAuthenticated,
   isSeller,
+  isIdentityVerified,
   async (req: Request, res: Response) => {
     const requestParamValidation = attachListingParamSchema.safeParse(
       req.params,
@@ -471,6 +474,7 @@ listingRouter.post(
   "/:id/media",
   isAuthenticated,
   isSeller,
+  isIdentityVerified,
   async (req: Request, res: Response) => {
     const paramValidation = attachListingParamSchema.safeParse(req.params);
     if (!paramValidation.success) {
@@ -625,6 +629,7 @@ listingRouter.patch(
   "/:id/media/:mediaId/primary",
   isAuthenticated,
   isSeller,
+  isIdentityVerified,
   async (req: Request, res: Response) => {
     const paramValidation = listingMediaParamSchema.safeParse(req.params);
     if (!paramValidation.success) {
@@ -687,6 +692,7 @@ listingRouter.post(
   "/:id/media/confirm",
   isAuthenticated,
   isSeller,
+  isIdentityVerified,
   async (req: Request, res: Response) => {
     const paramValidation = attachListingParamSchema.safeParse(req.params);
     if (!paramValidation.success) {
@@ -745,6 +751,7 @@ listingRouter.post(
   "/:id/submit",
   isAuthenticated,
   isSeller,
+  isIdentityVerified,
   async (req: Request, res: Response) => {
     const paramValidation = attachListingParamSchema.safeParse(req.params);
     if (!paramValidation.success) {
@@ -937,6 +944,7 @@ listingRouter.patch(
   "/:id",
   isAuthenticated,
   isSeller,
+  isIdentityVerified,
   async (req: Request, res: Response) => {
     const paramValidation = attachListingParamSchema.safeParse(req.params);
     if (!paramValidation.success) {
@@ -986,6 +994,7 @@ listingRouter.patch(
   "/:id/approve",
   isAuthenticated,
   isAdmin,
+  isIdentityVerified,
   async (req: Request, res: Response) => {
     const listingId = +req.params.id;
     const result = await approveListing(listingId);
@@ -1045,6 +1054,7 @@ listingRouter.patch(
   "/:id/reject",
   isAuthenticated,
   isAdmin,
+  isIdentityVerified,
   async (req: Request, res: Response) => {
     const paramValidation = attachListingParamSchema.safeParse(req.params);
     if (!paramValidation.success) {

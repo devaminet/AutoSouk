@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { RequestValidationError } from "../../errors/request_validation_error";
+import { isIdentityVerified } from "../../middlewares/is_identity_verified";
 import isAuthenticated from "../../middlewares/is_authenticated";
 import { isBuyer } from "../../middlewares/is_buyer";
 import {
@@ -57,6 +58,7 @@ mechanicReviewsRouter.post(
   "/:mechanicId/reviews",
   isAuthenticated,
   isBuyer,
+  isIdentityVerified,
   async (req, res) => {
     const paramsResult = mechanicIdParamSchema.safeParse(req.params);
     if (!paramsResult.success) {
@@ -203,6 +205,7 @@ mechanicReviewsRouter.patch(
   "/:mechanicId/reviews/me",
   isAuthenticated,
   isBuyer,
+  isIdentityVerified,
   async (req, res) => {
     const paramsResult = mechanicIdParamSchema.safeParse(req.params);
     if (!paramsResult.success) {

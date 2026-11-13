@@ -11,5 +11,8 @@
     "password_reset_email_sent_other": "تم إرسال رسالة إعادة تعيين كلمة المرور. تنتهي صلاحية الرابط خلال {{count}} دقيقة",
     "password_updated": "تم تحديث كلمة المرور",
     "logged_out": "تم تسجيل خروجك"
+  },
+  "sms": {
+    "phone_code": "AutoSouk: رمزك هو {{code}}. تنتهي صلاحيته بعد {{minutes}} دقائق. لا تشاركه أبدًا."
   }
 }

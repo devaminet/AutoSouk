@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { RequestValidationError } from "../../errors/request_validation_error";
+import { isIdentityVerified } from "../../middlewares/is_identity_verified";
 import isAuthenticated from "../../middlewares/is_authenticated";
 import { isMechanic } from "../../middlewares/is_mechanic";
 import currentUser from "../../middlewares/current_user";
@@ -71,7 +72,7 @@ const mechanicsRouter = Router();
  *       403:
  *         description: Not a mechanic
  */
-mechanicsRouter.post("/", isAuthenticated, isMechanic, async (req, res) => {
+mechanicsRouter.post("/", isAuthenticated, isMechanic, isIdentityVerified, async (req, res) => {
   const validationResult = createMechanicSchema.safeParse(req.body);
   if (!validationResult.success) {
     throw new RequestValidationError(validationResult.error.errors);
@@ -151,7 +152,7 @@ mechanicsRouter.get("/me", isAuthenticated, isMechanic, async (req, res) => {
  *       403:
  *         description: Not a mechanic
  */
-mechanicsRouter.patch("/me", isAuthenticated, isMechanic, async (req, res) => {
+mechanicsRouter.patch("/me", isAuthenticated, isMechanic, isIdentityVerified, async (req, res) => {
   const validationResult = updateMechanicSchema.safeParse(req.body);
   if (!validationResult.success) {
     throw new RequestValidationError(validationResult.error.errors);
@@ -195,6 +196,7 @@ mechanicsRouter.patch(
   "/me/status",
   isAuthenticated,
   isMechanic,
+  isIdentityVerified,
   async (req, res) => {
     const validationResult = updateStatusSchema.safeParse(req.body);
     if (!validationResult.success) {
@@ -262,6 +264,7 @@ mechanicsRouter.post(
   "/me/garage-images",
   isAuthenticated,
   isMechanic,
+  isIdentityVerified,
   async (req, res) => {
     const validationResult = addGarageImagesSchema.safeParse(req.body);
     if (!validationResult.success) {

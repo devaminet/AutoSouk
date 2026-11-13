@@ -34,5 +34,16 @@
     "subject": "Your AutoSouk inspection report is ready",
     "body": "The inspection report for the vehicle you were following is now available.",
     "link": "View the report"
+  },
+  "identity_approved": {
+    "subject": "Your identity is verified",
+    "body": "An AutoSouk admin checked your face video. All AutoSouk features are now open to you.",
+    "button": "Open AutoSouk"
+  },
+  "identity_rejected": {
+    "subject": "We couldn't verify your identity",
+    "body": "An AutoSouk admin couldn't verify your face video.",
+    "reason_label": "Reason:",
+    "button": "Record it again"
   }
 }

@@ -84,7 +84,16 @@
     "role_unresolved": "Le rôle de l'utilisateur n'a pas pu être déterminé",
     "login_failed": "La connexion a échoué",
     "already_verified": "Ce compte est déjà vérifié",
-    "email_not_found": "Aucun compte n'est associé à cette adresse e-mail"
+    "email_not_found": "Aucun compte n'est associé à cette adresse e-mail",
+    "phone_already_verified": "Votre numéro de téléphone est déjà vérifié",
+    "phone_in_use": "Ce numéro de téléphone est déjà utilisé par un autre compte",
+    "phone_code_wait": "Attendez {{seconds}} secondes avant de demander un nouveau code",
+    "phone_code_limit": "Trop de codes demandés. Réessayez dans une heure",
+    "phone_code_missing": "Demandez d'abord un code",
+    "phone_code_expired": "Ce code a expiré ou a déjà servi. Demandez-en un nouveau",
+    "phone_code_invalid": "Ce code est faux. Essais restants : {{count}}",
+    "sms_failed": "Impossible d'envoyer le SMS. Réessayez",
+    "phone_unsupported": "AutoSouk ne peut envoyer de SMS qu'aux numéros marocains pour le moment"
   },
   "listing": {
     "not_found": "Annonce introuvable",
@@ -152,5 +161,19 @@
   },
   "equipment": {
     "not_found": "L'équipement {{id}} n'existe pas"
+  },
+  "identity": {
+    "phone_not_verified": "Vérifiez d'abord votre numéro de téléphone",
+    "already_approved": "Votre identité est déjà vérifiée",
+    "already_pending": "Votre vidéo attend déjà d'être vérifiée",
+    "too_many_attempts": "Vous avez utilisé tous vos essais. Contactez le support",
+    "not_found": "Vérification d'identité introuvable",
+    "expired": "Cette session d'enregistrement a expiré. Recommencez",
+    "video_missing": "La vidéo n'est pas arrivée. Envoyez-la à nouveau",
+    "video_invalid": "La vidéo est vide, trop lourde ou n'est pas une vidéo. Enregistrez-la à nouveau",
+    "not_pending": "Cette vérification d'identité n'attend plus de décision",
+    "reason_required": "Indiquez la raison du refus",
+    "required": "Vérifiez votre numéro de téléphone et votre identité pour faire cela",
+    "upload_url_failed": "Impossible de préparer l'envoi de la vidéo"
   }
 }

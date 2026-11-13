@@ -268,7 +268,8 @@ export type SanitizedUser = Pick<
   | "isVerified"
   | "phone"
   | "locale"
-> & { role: string; imageUrl: string };
+  | "identityStatus"
+> & { role: string; imageUrl: string; phoneVerified: boolean };
 
 export const sanitizeUser = async (
   user: UserWithRole,
@@ -284,6 +285,8 @@ export const sanitizeUser = async (
     isVerified: user.isVerified,
     phone: user.phone,
     locale: user.locale,
+    phoneVerified: user.phoneVerifiedAt !== null,
+    identityStatus: user.identityStatus,
     role: user.role.name,
   };
 };

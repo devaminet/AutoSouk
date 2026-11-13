@@ -35,5 +35,16 @@
     "subject": "Votre rapport d'inspection AutoSouk est prêt",
     "body": "Le rapport d'inspection du véhicule que vous suiviez est maintenant disponible.",
     "link": "Consulter le rapport"
+  },
+  "identity_approved": {
+    "subject": "Votre identité est vérifiée",
+    "body": "Un administrateur AutoSouk a vérifié votre vidéo. Toutes les fonctionnalités d'AutoSouk vous sont ouvertes.",
+    "button": "Ouvrir AutoSouk"
+  },
+  "identity_rejected": {
+    "subject": "Nous n'avons pas pu vérifier votre identité",
+    "body": "Un administrateur AutoSouk n'a pas pu vérifier votre vidéo.",
+    "reason_label": "Raison :",
+    "button": "L'enregistrer à nouveau"
   }
 }

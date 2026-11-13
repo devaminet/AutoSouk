@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { RequestValidationError } from "../../errors/request_validation_error";
+import { isIdentityVerified } from "../../middlewares/is_identity_verified";
 import isAuthenticated from "../../middlewares/is_authenticated";
 import { isBuyer } from "../../middlewares/is_buyer";
 import { isMechanic } from "../../middlewares/is_mechanic";
@@ -55,7 +56,7 @@ const inspectionsRouter = Router();
  *       404:
  *         description: Car or mechanic not found, or the car's listing is not approved
  */
-inspectionsRouter.post("/", isAuthenticated, isBuyer, async (req, res) => {
+inspectionsRouter.post("/", isAuthenticated, isBuyer, isIdentityVerified, async (req, res) => {
   const validationResult = createInspectionSchema.safeParse(req.body);
   if (!validationResult.success) {
     throw new RequestValidationError(validationResult.error.errors);
@@ -234,7 +235,7 @@ inspectionsRouter.get("/:id", isAuthenticated, async (req, res) => {
  *       404:
  *         description: Inspection not found
  */
-inspectionsRouter.patch("/:id", isAuthenticated, async (req, res) => {
+inspectionsRouter.patch("/:id", isAuthenticated, isIdentityVerified, async (req, res) => {
   const paramsResult = inspectionIdParamSchema.safeParse(req.params);
   if (!paramsResult.success) {
     throw new RequestValidationError(paramsResult.error.errors);
@@ -322,6 +323,7 @@ inspectionsRouter.post(
   "/:id/report",
   isAuthenticated,
   isMechanic,
+  isIdentityVerified,
   async (req, res) => {
     const paramsResult = inspectionIdParamSchema.safeParse(req.params);
     if (!paramsResult.success) {
@@ -420,6 +422,7 @@ inspectionsRouter.put(
   "/:id/draft",
   isAuthenticated,
   isMechanic,
+  isIdentityVerified,
   async (req, res) => {
     const paramsResult = inspectionIdParamSchema.safeParse(req.params);
     if (!paramsResult.success) {

@@ -19,6 +19,17 @@ jest.mock("../utils/functions", () => {
   };
 });
 
+// Texts never leave the tests; they read the codes from this mock.
+jest.mock("../utils/sms", () => ({ __esModule: true, sendSms: jest.fn() }));
+
+// Most tests aren't about the phone and face checks, so this gate lets them
+// through. identity_gate.test.ts unmocks it to test the real thing.
+jest.mock("../middlewares/is_identity_verified", () => ({
+  __esModule: true,
+  isIdentityVerified: (_req: unknown, _res: unknown, next: () => void) =>
+    next(),
+}));
+
 beforeAll(async () => {
   await db.execute(sql`DROP SCHEMA public CASCADE`);
   await db.execute(sql`CREATE SCHEMA public`);
@@ -57,6 +68,7 @@ afterEach(async () => {
   jest.resetAllMocks();
   readTemplateFileMock.mockResolvedValue("<html></html>");
 
+  await db.execute("DELETE FROM audit_log");
   await db.execute("DELETE FROM inspections");
   await db.execute("DELETE FROM cars");
   await db.execute("DELETE FROM listings");

@@ -35,6 +35,8 @@ it("should return a new access token", async () => {
     isVerified: true,
     phone: "+212685412593",
     locale: "en",
+    phoneVerified: false,
+    identityStatus: "not_submitted",
     role: "buyer",
   });
   expect(response.body.user).not.toHaveProperty("roleId");

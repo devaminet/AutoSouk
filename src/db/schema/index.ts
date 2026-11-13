@@ -17,6 +17,9 @@ import * as mechanicGarageImages from "./mechanic_garage_image";
 import * as mechanicReviews from "./mechanic_review";
 import * as inspections from "./inspection";
 import * as equipment from "./equipment";
+import * as phoneVerificationCodes from "./phone_verification_codes";
+import * as identityVerifications from "./identity_verification";
+import * as auditLog from "./audit_log";
 
 export const schema = {
   ...cars,
@@ -28,6 +31,9 @@ export const schema = {
   ...carModels,
   ...carStates,
   ...users,
+  ...phoneVerificationCodes,
+  ...identityVerifications,
+  ...auditLog,
   ...refreshTokens,
   ...emailVerificationTokens,
   ...forgetPasswordToken,

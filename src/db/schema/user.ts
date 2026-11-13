@@ -1,10 +1,13 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
   date,
   index,
   integer,
+  pgEnum,
   pgTable,
+  timestamp,
+  uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core";
 import { emailVerificationTokensTable } from "./email_verification_tokens";
@@ -14,6 +17,14 @@ import { cityTable } from "./city";
 import { rolesTable } from "./roles";
 import { mechanicTable } from "./mechanic";
 import { defaultLocale, supportedLocales } from "../../utils/constants";
+
+// Where the user is with the face check an admin reviews by hand.
+export const identityStatusEnum = pgEnum("identity_status", [
+  "not_submitted",
+  "pending",
+  "approved",
+  "rejected",
+]);
 
 export const usersTable = pgTable(
   "users",
@@ -32,6 +43,11 @@ export const usersTable = pgTable(
     imageName: varchar("image_name"),
     pendingImageName: varchar("pending_image_name"),
     isVerified: boolean("is_verified").default(false),
+    // Set once the user typed the code texted to `phone`.
+    phoneVerifiedAt: timestamp("phone_verified_at"),
+    identityStatus: identityStatusEnum("identity_status")
+      .notNull()
+      .default("not_submitted"),
     // The language of the emails and documents sent to this user.
     locale: varchar({ enum: supportedLocales })
       .notNull()
@@ -39,7 +55,13 @@ export const usersTable = pgTable(
     createdAt: date("created_at").defaultNow().notNull(),
     updatedAt: date("updated_at").defaultNow().notNull(),
   },
-  (table) => [index("users_role_id_idx").on(table.roleId)],
+  (table) => [
+    index("users_role_id_idx").on(table.roleId),
+    // One account per verified phone number.
+    uniqueIndex("users_verified_phone_unique")
+      .on(table.phone)
+      .where(sql`${table.phoneVerifiedAt} IS NOT NULL`),
+  ],
 );
 
 export const userRelations = relations(usersTable, ({ one, many }) => ({

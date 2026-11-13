@@ -26,6 +26,8 @@ it("should return status code of 200 and response body on valid login", async ()
     isVerified: true,
     phone: formData.phone,
     locale: "en",
+    phoneVerified: false,
+    identityStatus: "not_submitted",
     role: formData.userType,
   });
   expect(loginResponse.body.user).not.toHaveProperty("roleId");
