@@ -9,6 +9,7 @@ import { hashPassword } from "../utils/functions";
 import { seeds } from "../db/seeds";
 import { findRoleIdByName, insertUserWithRoleId } from "../api/auth/db";
 import { resetRateLimits } from "../middlewares/rate_limit";
+import { closeRedis, connectRedis } from "../redis/client";
 
 jest.mock("../utils/functions", () => {
   const originalModule = jest.requireActual("../utils/functions");
@@ -32,6 +33,7 @@ jest.mock("../middlewares/is_identity_verified", () => ({
 }));
 
 beforeAll(async () => {
+  await connectRedis();
   await db.execute(sql`DROP SCHEMA public CASCADE`);
   await db.execute(sql`CREATE SCHEMA public`);
   await db.execute(sql`DROP SCHEMA IF EXISTS drizzle CASCADE`);
@@ -67,7 +69,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   jest.resetAllMocks();
-  resetRateLimits();
+  await resetRateLimits();
   readTemplateFileMock.mockResolvedValue("<html></html>");
 
   await db.execute("DELETE FROM audit_log");
@@ -82,5 +84,6 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
+  await closeRedis();
   await pool.end();
 });

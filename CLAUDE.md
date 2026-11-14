@@ -17,16 +17,16 @@ npm run start:copy       # copy non-ts assets (json/html/css/images/ejs) into di
 npm run start             # build + copy + run compiled dist/index.js
 npm run db:migrate        # apply drizzle migrations (drizzle-kit migrate)
 npx drizzle-kit generate  # generate a migration after editing src/db/schema/*.ts
-npm test                  # starts docker-compose-test.yml postgres, runs jest --runInBand --watchAll
+npm test                  # starts docker-compose-test.yml postgres and redis, runs jest --runInBand --watchAll
 npm run test-dev          # run jest against an already-running test DB (no docker compose)
 ```
 
 Run a single test file: `npx jest src/api/mechanics/__test__/get_mechanic.test.ts`
 Run a single test by name: `npx jest -t "some test name"`
 
-Tests need Postgres reachable at `TEST_DB_CONNECTION_STRING` (see `.env-sample`); `npm test` provisions it via `docker-compose-test.yml` (port 5431). `src/test/setup.ts` drops and recreates the `public` schema, re-runs all drizzle migrations, and reseeds before the suite; `beforeEach` inserts a fixed admin user, `afterEach` truncates domain tables and resets mocks — write tests assuming this per-test-clean state, not global fixtures.
+Tests need Postgres reachable at `TEST_DB_CONNECTION_STRING` (see `.env-sample`); `npm test` provisions it via `docker-compose-test.yml` (port 5431), along with Redis on port 6378 (`TEST_REDIS_URL` overrides it). `src/test/setup.ts` drops and recreates the `public` schema, re-runs all drizzle migrations, and reseeds before the suite; `beforeEach` inserts a fixed admin user, `afterEach` truncates domain tables, clears rate-limit counts in Redis and resets mocks — write tests assuming this per-test-clean state, not global fixtures.
 
-The dev stack (`docker-compose.yml`) also runs MinIO for object storage (car/mechanic images), started separately from Postgres; `src/index.ts` creates the required buckets on boot and runs DB seeds before listening.
+The dev stack (`docker-compose.yml`) also runs MinIO for object storage (car/mechanic images) and Redis for the rate-limit counts shared by every server process (`REDIS_URL`, required in production, defaults to `redis://localhost:6379` elsewhere), started separately from Postgres; `src/index.ts` creates the required buckets on boot and runs DB seeds before listening.
 
 ## Architecture
 
