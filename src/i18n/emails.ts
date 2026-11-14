@@ -6,7 +6,8 @@ export type EmailSubjectKey =
   | "forgot_password.subject"
   | "inspection_report.subject"
   | "identity_approved.subject"
-  | "identity_rejected.subject";
+  | "identity_rejected.subject"
+  | "new_sign_in.subject";
 
 /**
  * What every email template gets: `t` for its text (keys of the emails

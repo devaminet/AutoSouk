@@ -129,6 +129,10 @@ export const signupUserWithVerification = async (options?: {
   };
 };
 
+// The session cookie among a response's cookies.
+export const sessionCookie = (cookies: string[] | undefined) =>
+  cookies?.find((cookie) => cookie.startsWith("session="));
+
 export const extractRefreshTokenFromCookie = (cookie: string) => {
   const session = cookie?.split(";")[0].split("=")[1]!;
   const refreshToken = JSON.parse(atob(session)).refreshToken;
@@ -148,7 +152,7 @@ export const signinUser = async (options?: {
     .send({ email, password });
 
   const refreshToken = extractRefreshTokenFromCookie(
-    response.get("Set-Cookie")?.[0]!,
+    sessionCookie(response.get("Set-Cookie"))!,
   );
 
   return {

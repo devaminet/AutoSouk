@@ -12,11 +12,13 @@ import equipmentRouter from "./api/equipment/routes";
 import i18nRouter from "./api/i18n/routes";
 import lookupsRouter from "./api/lookups/routes";
 import phoneRouter from "./api/phone/routes";
+import sessionsRouter from "./api/sessions/routes";
 import identityRouter from "./api/identity/routes";
 
 const router = express.Router();
 
 router.use("/api/auth/phone", phoneRouter);
+router.use("/api/auth", sessionsRouter);
 router.use("/api/auth", authRouter);
 router.use("/api/makes", makeRouter);
 router.use("/api/models", carModelRouter);

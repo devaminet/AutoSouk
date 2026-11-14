@@ -46,5 +46,11 @@
     "body": "Un administrateur AutoSouk n'a pas pu vérifier votre vidéo.",
     "reason_label": "Raison :",
     "button": "L'enregistrer à nouveau"
+  },
+  "new_sign_in": {
+    "subject": "Nouvelle connexion à votre compte AutoSouk",
+    "body": "Votre compte vient d'être utilisé pour se connecter sur {{device}} (IP {{ip}}) le {{time}}.",
+    "warning": "Si ce n'était pas vous, réinitialisez votre mot de passe tout de suite et déconnectez cet appareil depuis les paramètres de votre compte.",
+    "button": "Voir mes appareils"
   }
 }

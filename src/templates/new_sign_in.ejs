@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="<%= locale %>" dir="<%= dir %>">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= t("new_sign_in.subject") %></title>
+  </head>
+  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1a1a1a;">
+    <p><%= t("common.greeting", { firstName }) %></p>
+    <p><%= t("new_sign_in.body", { device, ip, time }) %></p>
+    <p><strong><%= t("new_sign_in.warning") %></strong></p>
+    <p><a href="<%= link %>" style="color: #667eea"><%= t("new_sign_in.button") %></a></p>
+    <p><strong><%= t("common.signature") %></strong></p>
+  </body>
+</html>

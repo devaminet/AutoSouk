@@ -20,6 +20,8 @@ import * as equipment from "./equipment";
 import * as phoneVerificationCodes from "./phone_verification_codes";
 import * as identityVerifications from "./identity_verification";
 import * as auditLog from "./audit_log";
+import * as userDevices from "./user_device";
+import * as twoFactorChallenges from "./two_factor_challenge";
 
 export const schema = {
   ...cars,
@@ -34,6 +36,8 @@ export const schema = {
   ...phoneVerificationCodes,
   ...identityVerifications,
   ...auditLog,
+  ...userDevices,
+  ...twoFactorChallenges,
   ...refreshTokens,
   ...emailVerificationTokens,
   ...forgetPasswordToken,

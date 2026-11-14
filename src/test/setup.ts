@@ -8,6 +8,7 @@ import { db, pool } from "../db";
 import { hashPassword } from "../utils/functions";
 import { seeds } from "../db/seeds";
 import { findRoleIdByName, insertUserWithRoleId } from "../api/auth/db";
+import { resetRateLimits } from "../middlewares/rate_limit";
 
 jest.mock("../utils/functions", () => {
   const originalModule = jest.requireActual("../utils/functions");
@@ -66,6 +67,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   jest.resetAllMocks();
+  resetRateLimits();
   readTemplateFileMock.mockResolvedValue("<html></html>");
 
   await db.execute("DELETE FROM audit_log");

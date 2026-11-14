@@ -2,6 +2,7 @@ import request from "supertest";
 import { app } from "../../../app";
 import {
   extractRefreshTokenFromCookie,
+  sessionCookie,
   signinUser,
   signupUserWithVerification,
 } from "../../../test/helpers";
@@ -18,7 +19,7 @@ it("should return a new access token", async () => {
     .post("/api/auth/refresh-token")
     .set("Cookie", cookies!);
   const newRefreshToken = extractRefreshTokenFromCookie(
-    response.get("Set-Cookie")?.[0]!,
+    sessionCookie(response.get("Set-Cookie"))!,
   );
 
   expect(response.body.accessToken).toBeDefined();
@@ -37,6 +38,8 @@ it("should return a new access token", async () => {
     locale: "en",
     phoneVerified: false,
     identityStatus: "not_submitted",
+    twoFactorEnabled: false,
+    twoFactorRequired: false,
     role: "buyer",
   });
   expect(response.body.user).not.toHaveProperty("roleId");

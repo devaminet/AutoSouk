@@ -87,7 +87,12 @@
     "phone_code_expired": "This code expired or was used up. Ask for a new one",
     "phone_code_invalid": "That code is wrong. Tries left: {{count}}",
     "sms_failed": "Could not send the text message. Try again",
-    "phone_unsupported": "AutoSouk can only text Moroccan phone numbers for now"
+    "phone_unsupported": "AutoSouk can only text Moroccan phone numbers for now",
+    "too_many_attempts": "Too many attempts. Try again in {{minutes}} minutes",
+    "two_factor_expired": "This sign-in code expired or was used up. Log in again",
+    "two_factor_required": "Two-step sign-in can't be turned off for mechanics and admins",
+    "device_is_current": "This is the device you're using. Log out instead",
+    "device_not_found": "Device was not found"
   },
   "listing": {
     "not_found": "Listing was not found",

@@ -13,6 +13,7 @@
     "logged_out": "تم تسجيل خروجك"
   },
   "sms": {
-    "phone_code": "AutoSouk: رمزك هو {{code}}. تنتهي صلاحيته بعد {{minutes}} دقائق. لا تشاركه أبدًا."
+    "phone_code": "AutoSouk: رمزك هو {{code}}. تنتهي صلاحيته بعد {{minutes}} دقائق. لا تشاركه أبدًا.",
+    "login_code": "AutoSouk: رمز الدخول هو {{code}}. تنتهي صلاحيته بعد {{minutes}} دقائق. لا تشاركه أبدًا."
   }
 }

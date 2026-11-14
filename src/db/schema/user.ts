@@ -45,6 +45,9 @@ export const usersTable = pgTable(
     isVerified: boolean("is_verified").default(false),
     // Set once the user typed the code texted to `phone`.
     phoneVerifiedAt: timestamp("phone_verified_at"),
+    // A code by SMS when signing in on a new device. Always on for mechanics
+    // and admins, whatever this says.
+    twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
     identityStatus: identityStatusEnum("identity_status")
       .notNull()
       .default("not_submitted"),

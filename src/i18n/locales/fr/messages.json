@@ -10,6 +10,7 @@
     "logged_out": "Vous êtes déconnecté"
   },
   "sms": {
-    "phone_code": "AutoSouk : votre code est {{code}}. Il expire dans {{minutes}} minutes. Ne le partagez jamais."
+    "phone_code": "AutoSouk : votre code est {{code}}. Il expire dans {{minutes}} minutes. Ne le partagez jamais.",
+    "login_code": "AutoSouk : votre code de connexion est {{code}}. Il expire dans {{minutes}} minutes. Ne le partagez jamais."
   }
 }

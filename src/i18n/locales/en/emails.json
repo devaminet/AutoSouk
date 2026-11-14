@@ -45,5 +45,11 @@
     "body": "An AutoSouk admin couldn't verify your face video.",
     "reason_label": "Reason:",
     "button": "Record it again"
+  },
+  "new_sign_in": {
+    "subject": "New sign-in to your AutoSouk account",
+    "body": "Your account was just used to sign in on {{device}} (IP {{ip}}) on {{time}}.",
+    "warning": "If it wasn't you, reset your password now and sign that device out from your account settings.",
+    "button": "Review my devices"
   }
 }

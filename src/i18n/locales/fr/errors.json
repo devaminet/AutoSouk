@@ -93,7 +93,12 @@
     "phone_code_expired": "Ce code a expiré ou a déjà servi. Demandez-en un nouveau",
     "phone_code_invalid": "Ce code est faux. Essais restants : {{count}}",
     "sms_failed": "Impossible d'envoyer le SMS. Réessayez",
-    "phone_unsupported": "AutoSouk ne peut envoyer de SMS qu'aux numéros marocains pour le moment"
+    "phone_unsupported": "AutoSouk ne peut envoyer de SMS qu'aux numéros marocains pour le moment",
+    "too_many_attempts": "Trop de tentatives. Réessayez dans {{minutes}} minutes",
+    "two_factor_expired": "Ce code de connexion a expiré ou a déjà servi. Reconnectez-vous",
+    "two_factor_required": "La connexion en deux étapes ne peut pas être désactivée pour les mécaniciens et les administrateurs",
+    "device_is_current": "C'est l'appareil que vous utilisez. Déconnectez-vous plutôt",
+    "device_not_found": "Appareil introuvable"
   },
   "listing": {
     "not_found": "Annonce introuvable",
