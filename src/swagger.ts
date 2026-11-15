@@ -141,6 +141,16 @@ const options: swaggerJsdoc.Options = {
               enum: supportedLocales,
               description: "Language of the user's emails and report PDFs.",
             },
+            phoneVerified: {
+              type: "boolean",
+              description: "Whether the user typed the code texted to phone.",
+            },
+            identityStatus: {
+              type: "string",
+              enum: ["not_submitted", "pending", "approved", "rejected"],
+              description:
+                "The face check an admin reviews. Until both checks pass, write actions return 403 identity.required.",
+            },
             role: {
               type: "string",
               enum: ["buyer", "seller", "mechanic", "admin"],

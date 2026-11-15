@@ -7,5 +7,9 @@
     "password_reset_email_sent_other": "Password reset email sent successfully. The reset link expires in {{count}} minutes",
     "password_updated": "Your password was updated successfully",
     "logged_out": "Success"
+  },
+  "sms": {
+    "phone_code": "AutoSouk: your code is {{code}}. It expires in {{minutes}} minutes. Never share it.",
+    "login_code": "AutoSouk: your sign-in code is {{code}}. It expires in {{minutes}} minutes. Never share it."
   }
 }

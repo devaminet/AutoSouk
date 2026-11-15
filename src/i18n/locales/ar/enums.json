@@ -239,5 +239,20 @@
     "tiznit": "تزنيت",
     "youssoufia": "اليوسفية",
     "zagora": "زاكورة"
+  },
+  "identity_status": {
+    "not_submitted": "غير موثّقة",
+    "pending": "قيد التحقق",
+    "approved": "موثّقة",
+    "rejected": "مرفوضة"
+  },
+  "identity_challenge": {
+    "look_straight": "انظر مباشرة إلى الكاميرا",
+    "turn_left": "أدر رأسك إلى اليسار",
+    "turn_right": "أدر رأسك إلى اليمين",
+    "look_up": "انظر إلى الأعلى",
+    "look_down": "انظر إلى الأسفل",
+    "smile": "ابتسم",
+    "blink": "ارمش مرتين"
   }
 }

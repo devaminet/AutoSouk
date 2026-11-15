@@ -13,6 +13,9 @@ import { RequestValidationError } from "../../errors/request_validation_error";
 import { BadRequestError } from "../../errors/bad_request_error";
 import { NotAuthorizedError } from "../../errors/not_authorized_error";
 import isAuthenticated from "../../middlewares/is_authenticated";
+import { byEmail, byIp, rateLimit } from "../../middlewares/rate_limit";
+import { finishSignIn, sessionRefreshToken, signInContext } from "../sessions/http";
+import { endSession } from "../sessions/services";
 import {
   confirmProfileImage,
   requestProfileImageUpload,
@@ -68,19 +71,30 @@ const authRouter = Router();
  *                     imageUpload: { type: object, nullable: true }
  *       400:
  *         description: Validation error
+ *       429:
+ *         description: auth.too_many_attempts (params.minutes)
  */
-authRouter.post("/register", async (req, res) => {
-  const validationResult = registerSchema.safeParse(req.body);
-  if (validationResult.error) {
-    throw new RequestValidationError(validationResult.error.errors);
-  }
+authRouter.post(
+  "/register",
+  rateLimit({
+    name: "register-ip",
+    windowMs: 60 * 60 * 1000,
+    max: 10,
+    key: byIp,
+  }),
+  async (req, res) => {
+    const validationResult = registerSchema.safeParse(req.body);
+    if (validationResult.error) {
+      throw new RequestValidationError(validationResult.error.errors);
+    }
 
-  const { imageUpload } = await setupUser(validationResult.data, req.locale);
-  res.status(201).json({
-    ...localizedMessage(req.locale, "auth.account_created"),
-    imageUpload,
-  });
-});
+    const { imageUpload } = await setupUser(validationResult.data, req.locale);
+    res.status(201).json({
+      ...localizedMessage(req.locale, "auth.account_created"),
+      imageUpload,
+    });
+  },
+);
 
 // Verification links are opened in a browser, so the outcome goes to a client
 // page, which translates `code` with its catalogs.
@@ -163,21 +177,32 @@ authRouter.get("/verify", async (req, res) => {
  *         description: Validation error
  *       500:
  *         description: Could not send verification email
+ *       429:
+ *         description: auth.too_many_attempts (params.minutes)
  */
-authRouter.post("/re-verify", async (req, res, next) => {
-  const validationResult = resendTokenSchema.safeParse(req.body);
-  if (validationResult.error) {
-    throw new RequestValidationError(validationResult.error.errors);
-  }
+authRouter.post(
+  "/re-verify",
+  rateLimit({
+    name: "re-verify-email",
+    windowMs: 60 * 60 * 1000,
+    max: 5,
+    key: byEmail,
+  }),
+  async (req, res, next) => {
+    const validationResult = resendTokenSchema.safeParse(req.body);
+    if (validationResult.error) {
+      throw new RequestValidationError(validationResult.error.errors);
+    }
 
-  const result = await resendVerificationEmail(validationResult.data.email);
-  if (!result.success) {
-    throw new InternalServerError("auth.verification_email_failed");
-  }
-  res
-    .status(200)
-    .json(localizedMessage(req.locale, "auth.verification_email_sent"));
-});
+    const result = await resendVerificationEmail(validationResult.data.email);
+    if (!result.success) {
+      throw new InternalServerError("auth.verification_email_failed");
+    }
+    res
+      .status(200)
+      .json(localizedMessage(req.locale, "auth.verification_email_sent"));
+  },
+);
 
 /**
  * @openapi
@@ -195,32 +220,59 @@ authRouter.post("/re-verify", async (req, res, next) => {
  *             properties:
  *               email: { type: string, format: email }
  *               password: { type: string }
+ *     description: |
+ *       On a device the account already used (the autosouk_device cookie), or
+ *       when two-step sign-in doesn't apply, signs the user in. On a new
+ *       device, when the phone is verified and two-step sign-in is on (always
+ *       for mechanics and admins), texts a code instead and returns
+ *       `twoFactorRequired: true` with a `challengeToken` for
+ *       `POST /api/auth/login/two-factor`. A new device other than the first
+ *       one gets an email alert. Limited to 10 tries per email and 30 per IP
+ *       every 15 minutes.
  *     responses:
  *       200:
- *         description: Access token and user issued (refresh token set as a session cookie)
+ *         description: |
+ *           Either a session (access token and user, refresh token in the
+ *           session cookie, device token in the autosouk_device cookie) or a
+ *           two-step challenge.
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 accessToken: { type: string }
- *                 user: { $ref: '#/components/schemas/AuthUser' }
+ *               oneOf:
+ *                 - type: object
+ *                   properties:
+ *                     twoFactorRequired: { type: boolean, enum: [false] }
+ *                     accessToken: { type: string }
+ *                     user: { $ref: '#/components/schemas/AuthUser' }
+ *                 - type: object
+ *                   properties:
+ *                     twoFactorRequired: { type: boolean, enum: [true] }
+ *                     challengeToken: { type: string }
+ *                     phoneHint: { type: string, example: "•• 78" }
+ *                     expiresAt: { type: string, format: date-time }
  *       400:
  *         description: Validation error
+ *       429:
+ *         description: auth.too_many_attempts (params.minutes)
  */
-authRouter.post("/login", async (req, res) => {
-  const validateResult = loginSchema.safeParse(req.body);
-  if (validateResult.error) {
-    throw new RequestValidationError(validateResult.error.errors);
-  }
-  const { accessToken, refreshToken, user } = await loginUser(
-    validateResult.data,
-  );
-  req.session = {
-    refreshToken,
-  };
-  res.status(200).json({ accessToken, user });
-});
+authRouter.post(
+  "/login",
+  rateLimit({ name: "login-ip", windowMs: 15 * 60 * 1000, max: 30, key: byIp }),
+  rateLimit({
+    name: "login-email",
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    key: byEmail,
+  }),
+  async (req, res) => {
+    const validateResult = loginSchema.safeParse(req.body);
+    if (validateResult.error) {
+      throw new RequestValidationError(validateResult.error.errors);
+    }
+    const result = await loginUser(validateResult.data, signInContext(req));
+    res.status(200).json(finishSignIn(req, res, result));
+  },
+);
 
 /**
  * @openapi
@@ -247,7 +299,7 @@ authRouter.post("/refresh-token", async (req, res) => {
     throw new RequestValidationError(validateResult.error.errors);
   }
   const token = validateResult.data.refreshToken;
-  const result = await refreshTokens(token);
+  const result = await refreshTokens(token, req.ip ?? null);
   if (!result.success) {
     req.session = undefined;
     throw new NotAuthorizedError("not_authorized");
@@ -286,23 +338,40 @@ authRouter.post("/refresh-token", async (req, res) => {
  *         description: Validation error
  *       500:
  *         description: Could not send forgot password email
+ *       429:
+ *         description: auth.too_many_attempts (params.minutes)
  */
-authRouter.post("/forgot-password", async (req, res, next) => {
-  const validateResult = forgotPasswordSchema.safeParse(req.body);
-  if (!validateResult.success) {
-    throw new RequestValidationError(validateResult.error.errors);
-  }
+authRouter.post(
+  "/forgot-password",
+  rateLimit({
+    name: "forgot-ip",
+    windowMs: 60 * 60 * 1000,
+    max: 10,
+    key: byIp,
+  }),
+  rateLimit({
+    name: "forgot-email",
+    windowMs: 60 * 60 * 1000,
+    max: 5,
+    key: byEmail,
+  }),
+  async (req, res, next) => {
+    const validateResult = forgotPasswordSchema.safeParse(req.body);
+    if (!validateResult.success) {
+      throw new RequestValidationError(validateResult.error.errors);
+    }
 
-  const result = await sendForgotPasswordLink(validateResult.data.email);
-  if (!result.success) {
-    throw new InternalServerError("auth.forgot_password_email_failed");
-  }
-  res.status(200).json(
-    localizedMessage(req.locale, "auth.password_reset_email_sent", {
-      count: tokenExpirationMinutes,
-    }),
-  );
-});
+    const result = await sendForgotPasswordLink(validateResult.data.email);
+    if (!result.success) {
+      throw new InternalServerError("auth.forgot_password_email_failed");
+    }
+    res.status(200).json(
+      localizedMessage(req.locale, "auth.password_reset_email_sent", {
+        count: tokenExpirationMinutes,
+      }),
+    );
+  },
+);
 
 /**
  * @openapi
@@ -439,7 +508,8 @@ authRouter.put("/reset-password", isAuthenticated, async (req, res) => {
  *           application/json:
  *             schema: { $ref: '#/components/schemas/LocalizedMessage' }
  */
-authRouter.post("/logout", (req, res) => {
+authRouter.post("/logout", async (req, res) => {
+  await endSession(sessionRefreshToken(req));
   req.session = undefined;
   res.status(200).json(localizedMessage(req.locale, "auth.logged_out"));
 });

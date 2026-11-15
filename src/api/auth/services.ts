@@ -1,3 +1,7 @@
+import { generateAccessToken, isSessionDeviceActive, startSignIn } from "../sessions/services";
+import type { SignInContext } from "../sessions/services";
+import { touchDevice } from "../sessions/db";
+import { publishDevicesChanged, publishSessionRevoked } from "../sessions/events";
 import { z } from "zod";
 import {
   registerSchema,
@@ -233,7 +237,13 @@ export const resetPassword = async (
   return result;
 };
 
-export const loginUser = async (data: { email: string; password: string }) => {
+// Checks the email and password, then hands over to the sign-in step: a
+// session, or a code to type when the device is new and two-step sign-in
+// applies.
+export const loginUser = async (
+  data: { email: string; password: string },
+  context: SignInContext,
+) => {
   const { email, password } = data;
   const foundUser = await findUserByEmail(email);
 
@@ -249,8 +259,11 @@ export const loginUser = async (data: { email: string; password: string }) => {
     throw new NotAuthorizedError("auth.role_unresolved");
   }
 
-  const { password: storedPassword, salt, ...user } = foundUser;
-  const isPasswordValid = await verifyPassword(password, storedPassword, salt);
+  const isPasswordValid = await verifyPassword(
+    password,
+    foundUser.password,
+    foundUser.salt,
+  );
 
   if (!isPasswordValid) {
     throw new NotAuthorizedError("auth.invalid_credentials");
@@ -259,37 +272,7 @@ export const loginUser = async (data: { email: string; password: string }) => {
   const { imageName } = await resolvePendingProfileImage(foundUser);
   foundUser.imageName = imageName;
 
-  const accessToken = await generateJWT(
-    {
-      id: user.id,
-      email: user.email,
-      issuedAt: new Date().getTime(),
-      role: user.role.name,
-    },
-    Number(process.env.JWT_ACCESS_TOKEN_EXPIRATION_SECONDS!),
-  );
-  const refreshToken = await generateJWT(
-    {
-      id: user.id,
-      email: user.email,
-      issuedAt: new Date().getTime(),
-      role: user.role.name,
-    },
-    Number(process.env.JWT_REFRESH_TOKEN_EXPIRATION_SECONDS!),
-  );
-
-  if (!refreshToken) {
-    throw new InternalServerError("auth.login_failed");
-  }
-
-  await insertUserRefreshToken(user.id, refreshToken);
-  const sanitizedUser = await sanitizeUser(foundUser);
-
-  return {
-    accessToken,
-    refreshToken,
-    user: sanitizedUser,
-  };
+  return startSignIn(foundUser, context);
 };
 
 export const verifyUser = async (token: string) => {
@@ -339,21 +322,36 @@ export const resendVerificationEmail = async (email: string) => {
   return { success: true };
 };
 
-export const refreshTokens = async (token: string) => {
+export const refreshTokens = async (token: string, ipAddress: string | null) => {
   const decoded = await verifyJWT<{ id: number; email: string; role: string }>(
     token,
   );
 
   // re-use detection
   const usedToken = await findReusedRefreshToken(token);
+  // A session that logged out: a request sent before the logout may still
+  // carry its token. Refuse it, without treating it as theft.
+  if (usedToken?.endedAt) {
+    return { success: false };
+  }
+  // A stolen token may be in use: end every session of the user, on every
+  // device, and tell their browsers.
   if (usedToken) {
     await deleteRefreshToken(decoded.id);
+    await publishSessionRevoked(decoded.id, "all");
+    await publishDevicesChanged(decoded.id);
     return { success: false };
   }
 
   const userToken = await findUserRefreshToken(decoded.id, token);
   if (!userToken) {
     await deleteRefreshToken(decoded.id);
+    await publishSessionRevoked(decoded.id, "all");
+    await publishDevicesChanged(decoded.id);
+    return { success: false };
+  }
+  // A session that logged out, or a signed-out device, stays that way.
+  if (userToken.endedAt || !(await isSessionDeviceActive(userToken))) {
     return { success: false };
   }
 
@@ -365,15 +363,7 @@ export const refreshTokens = async (token: string) => {
     throw new NotAuthorizedError("auth.role_unresolved");
   }
 
-  const accessToken = await generateJWT(
-    {
-      id: user.id,
-      email: user.email,
-      issuedAt: new Date().getTime(),
-      role: user.role.name,
-    },
-    Number(process.env.JWT_ACCESS_TOKEN_EXPIRATION_SECONDS!),
-  );
+  const accessToken = await generateAccessToken(user, userToken.id);
   const refreshToken = await generateJWT(
     {
       id: user.id,
@@ -384,10 +374,13 @@ export const refreshTokens = async (token: string) => {
     Number(process.env.JWT_REFRESH_TOKEN_EXPIRATION_SECONDS!),
   );
 
-  if (!refreshToken) {
+  if (!accessToken || !refreshToken) {
     throw new InternalServerError("internal");
   }
   await updateRefreshToken(decoded.id, token, refreshToken);
+  if (userToken.deviceId !== null) {
+    await touchDevice(userToken.deviceId, ipAddress);
+  }
   const sanitizedUser = await sanitizeUser(user);
 
   return {

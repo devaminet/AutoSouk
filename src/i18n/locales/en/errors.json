@@ -78,7 +78,21 @@
     "role_unresolved": "User role could not be resolved",
     "login_failed": "Failed to log the user in",
     "already_verified": "User is already verified",
-    "email_not_found": "No account was found with this email"
+    "email_not_found": "No account was found with this email",
+    "phone_already_verified": "Your phone number is already verified",
+    "phone_in_use": "This phone number is already used by another account",
+    "phone_code_wait": "Wait {{seconds}} seconds before asking for a new code",
+    "phone_code_limit": "Too many codes were asked for. Try again in an hour",
+    "phone_code_missing": "Ask for a code first",
+    "phone_code_expired": "This code expired or was used up. Ask for a new one",
+    "phone_code_invalid": "That code is wrong. Tries left: {{count}}",
+    "sms_failed": "Could not send the text message. Try again",
+    "phone_unsupported": "AutoSouk can only text Moroccan phone numbers for now",
+    "too_many_attempts": "Too many attempts. Try again in {{minutes}} minutes",
+    "two_factor_expired": "This sign-in code expired or was used up. Log in again",
+    "two_factor_required": "Two-step sign-in can't be turned off for mechanics and admins",
+    "device_is_current": "This is the device you're using. Log out instead",
+    "device_not_found": "Device was not found"
   },
   "listing": {
     "not_found": "Listing was not found",
@@ -144,5 +158,19 @@
   },
   "equipment": {
     "not_found": "Equipment {{id}} does not exist"
+  },
+  "identity": {
+    "phone_not_verified": "Verify your phone number first",
+    "already_approved": "Your identity is already verified",
+    "already_pending": "Your face video is already waiting for review",
+    "too_many_attempts": "You have used all your attempts. Contact support",
+    "not_found": "Identity check was not found",
+    "expired": "This recording session expired. Start again",
+    "video_missing": "The video didn't arrive. Upload it again",
+    "video_invalid": "The video is empty, too large or not a video. Record it again",
+    "not_pending": "This identity check is no longer waiting for review",
+    "reason_required": "Give the reason for the rejection",
+    "required": "Verify your phone number and your identity to do this",
+    "upload_url_failed": "Could not prepare the video upload"
   }
 }

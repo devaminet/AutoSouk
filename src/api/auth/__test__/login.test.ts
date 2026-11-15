@@ -26,6 +26,10 @@ it("should return status code of 200 and response body on valid login", async ()
     isVerified: true,
     phone: formData.phone,
     locale: "en",
+    phoneVerified: false,
+    identityStatus: "not_submitted",
+    twoFactorEnabled: false,
+    twoFactorRequired: false,
     role: formData.userType,
   });
   expect(loginResponse.body.user).not.toHaveProperty("roleId");
@@ -79,7 +83,7 @@ it("should set a session cookie that browsers accept", async () => {
     .expect(200);
 
   // Browsers reject SameSite=None without Secure, which needs HTTPS.
-  const sessionCookie = response.get("Set-Cookie")?.[0].toLowerCase();
+  const sessionCookie = response.get("Set-Cookie")?.find((cookie) => cookie.startsWith("session="))?.toLowerCase();
   expect(sessionCookie).toContain("samesite=lax");
   expect(sessionCookie).toContain("httponly");
 });

@@ -239,6 +239,27 @@
       "when": 1794158719209,
       "tag": "0034_inspection_report_language",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1794555094333,
+      "tag": "0035_identity_verification",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1794585496278,
+      "tag": "0036_sign_in_security",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1794763428050,
+      "tag": "0037_session_lifecycle",
+      "breakpoints": true
     }
   ]
 }

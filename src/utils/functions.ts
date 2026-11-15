@@ -268,7 +268,15 @@ export type SanitizedUser = Pick<
   | "isVerified"
   | "phone"
   | "locale"
-> & { role: string; imageUrl: string };
+  | "identityStatus"
+  | "twoFactorEnabled"
+> & {
+  role: string;
+  imageUrl: string;
+  phoneVerified: boolean;
+  // Mechanics and admins can't turn two-step sign-in off.
+  twoFactorRequired: boolean;
+};
 
 export const sanitizeUser = async (
   user: UserWithRole,
@@ -284,6 +292,11 @@ export const sanitizeUser = async (
     isVerified: user.isVerified,
     phone: user.phone,
     locale: user.locale,
+    phoneVerified: user.phoneVerifiedAt !== null,
+    identityStatus: user.identityStatus,
+    twoFactorEnabled:
+      user.twoFactorEnabled || ["mechanic", "admin"].includes(user.role.name),
+    twoFactorRequired: ["mechanic", "admin"].includes(user.role.name),
     role: user.role.name,
   };
 };

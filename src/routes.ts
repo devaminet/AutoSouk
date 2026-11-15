@@ -11,9 +11,14 @@ import inspectionsRouter from "./api/inspections/routes";
 import equipmentRouter from "./api/equipment/routes";
 import i18nRouter from "./api/i18n/routes";
 import lookupsRouter from "./api/lookups/routes";
+import phoneRouter from "./api/phone/routes";
+import sessionsRouter from "./api/sessions/routes";
+import identityRouter from "./api/identity/routes";
 
 const router = express.Router();
 
+router.use("/api/auth/phone", phoneRouter);
+router.use("/api/auth", sessionsRouter);
 router.use("/api/auth", authRouter);
 router.use("/api/makes", makeRouter);
 router.use("/api/models", carModelRouter);
@@ -26,5 +31,6 @@ router.use("/api/inspections", inspectionsRouter);
 router.use("/api/equipment", equipmentRouter);
 router.use("/api/i18n", i18nRouter);
 router.use("/api/lookups", lookupsRouter);
+router.use("/api/identity", identityRouter);
 
 export default router;

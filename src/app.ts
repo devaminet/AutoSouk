@@ -22,6 +22,13 @@ app.use(
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
+    // Lasts as long as the refresh token in it, up to the 400 days browsers
+    // allow. Without it, closing the browser drops the cookie and leaves its
+    // session behind.
+    maxAge: Math.min(
+      Number(process.env.JWT_REFRESH_TOKEN_EXPIRATION_SECONDS) * 1000,
+      400 * 24 * 60 * 60 * 1000,
+    ),
   }),
 );
 app.use(currentUser);

@@ -1,4 +1,5 @@
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, isNull, ne } from "drizzle-orm";
+import { sessionExpiry } from "../sessions/db";
 import { z } from "zod";
 import { db } from "../../db";
 import { rolesTable } from "../../db/schema/roles";
@@ -235,11 +236,13 @@ export const updateRefreshToken = async (
     .set({
       currentToken: newToken,
       lastToken: oldToken,
+      expiresAt: sessionExpiry(),
     })
     .where(
       and(
         eq(refreshTokensTable.currentToken, oldToken),
         eq(refreshTokensTable.userId, userId),
+        isNull(refreshTokensTable.endedAt),
       ),
     )
     .returning();

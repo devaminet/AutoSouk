@@ -8,5 +8,9 @@
     "password_reset_email_sent_other": "L'e-mail de réinitialisation du mot de passe a été envoyé. Le lien expire dans {{count}} minutes",
     "password_updated": "Votre mot de passe a été mis à jour",
     "logged_out": "Vous êtes déconnecté"
+  },
+  "sms": {
+    "phone_code": "AutoSouk : votre code est {{code}}. Il expire dans {{minutes}} minutes. Ne le partagez jamais.",
+    "login_code": "AutoSouk : votre code de connexion est {{code}}. Il expire dans {{minutes}} minutes. Ne le partagez jamais."
   }
 }
