@@ -6,11 +6,12 @@ import { NotFoundError } from "../../errors/not_found_error";
 import { TooManyRequestsError } from "../../errors/too_many_requests_error";
 import { translate } from "../../i18n";
 import { emailSubject, emailTemplateContext } from "../../i18n/emails";
-import { findUserById } from "../auth/db";
+import { findUserById, findUserRefreshToken } from "../auth/db";
 import { SmsRecipientError } from "../../sms/errors";
 import {
   generateJWT,
   readTemplateFile,
+  verifyJWT,
   sanitizeUser,
   sendMail,
 } from "../../utils/functions";
@@ -22,13 +23,17 @@ import {
   phoneCodeLength,
   phoneCodeResendSeconds,
 } from "../../utils/constants";
+import { publishDevicesChanged, publishSessionRevoked } from "./events";
 import {
   countDevices,
+  endSessionToken,
   deleteChallenge,
   deleteChallenges,
   findActiveDevice,
-  findActiveDevices,
+  findSignedInDevices,
   findChallenge,
+  isActiveDevice,
+  isLiveSession,
   incrementChallengeAttempts,
   insertChallenge,
   insertDevice,
@@ -91,6 +96,7 @@ const issueTokens = async (user: UserWithRole, deviceId: number) => {
     throw new InternalServerError("auth.login_failed");
   }
   await insertSessionToken(user.id, deviceId, refreshToken);
+  await publishDevicesChanged(user.id);
   return { accessToken, refreshToken, user: await sanitizeUser(user) };
 };
 
@@ -271,7 +277,7 @@ export const resendTwoFactorCode = async (challengeToken: string) => {
 
 // The browsers and phones signed in to the account, the current one marked.
 export const listDevices = async (userId: number, deviceToken: string | null) => {
-  const devices = await findActiveDevices(userId);
+  const devices = await findSignedInDevices(userId);
   const current = deviceToken ? hash(deviceToken) : null;
   return {
     devices: devices.map((device) => ({
@@ -297,6 +303,50 @@ export const signOutDevice = async (
   }
   if (!(await revokeDevice(userId, deviceId))) {
     throw new NotFoundError("auth.device_not_found");
+  }
+  await publishSessionRevoked(userId, { deviceId });
+  await publishDevicesChanged(userId);
+};
+
+// A session lives while its device isn't signed out. Sessions from before
+// devices were remembered have none.
+export const isSessionDeviceActive = async (session: { deviceId: number | null }) =>
+  session.deviceId === null || isActiveDevice(session.deviceId);
+
+// The live session behind a refresh token, or null. Unlike a refresh, it
+// doesn't rotate the token.
+export const findCurrentSession = async (refreshToken: string | null) => {
+  if (!refreshToken) {
+    return null;
+  }
+  let userId: number;
+  try {
+    ({ id: userId } = await verifyJWT<{ id: number }>(refreshToken));
+  } catch {
+    return null;
+  }
+  const session = await findUserRefreshToken(userId, refreshToken);
+  if (!session || session.endedAt || !(await isSessionDeviceActive(session))) {
+    return null;
+  }
+  return { id: session.id, userId: session.userId, deviceId: session.deviceId };
+};
+
+// Whether a session found earlier still lives: not logged out, not expired,
+// and its device not signed out. It checks the row, as refreshing in another
+// tab rotates the token.
+export const isSessionStillLive = async (session: { id: number; deviceId: number | null }) =>
+  (await isLiveSession(session.id)) && (await isSessionDeviceActive(session));
+
+// Logs out: ends the session, and tells the device's other tabs.
+export const endSession = async (refreshToken: string | null) => {
+  if (!refreshToken) {
+    return;
+  }
+  const session = await endSessionToken(refreshToken);
+  if (session) {
+    await publishSessionRevoked(session.userId, { sessionId: session.id });
+    await publishDevicesChanged(session.userId);
   }
 };
 

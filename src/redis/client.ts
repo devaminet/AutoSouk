@@ -13,7 +13,28 @@ const redisUrl = () => {
   return "redis://localhost:6379";
 };
 
-export const redis = createClient({ url: redisUrl() });
+// Set once the first connection succeeds.
+let connectedOnce = false;
+
+export const redis = createClient({
+  url: redisUrl(),
+  // While Redis is unreachable, commands fail at once instead of waiting in
+  // a queue. Callers that can do without Redis, such as rate limits and
+  // session events, then go on instead of hanging the request.
+  disableOfflineQueue: true,
+  socket: {
+    connectTimeout: 5000,
+    // Gives up at once when Redis can't be reached at start, so the server
+    // (or a test run) fails with a clear error. After that, it keeps trying,
+    // waiting up to 3 seconds between tries.
+    reconnectStrategy: (retries: number, cause: Error) =>
+      connectedOnce ? Math.min(retries * 100, 3000) : cause,
+  },
+});
+
+redis.on("ready", () => {
+  connectedOnce = true;
+});
 
 // Without a listener, a lost connection would crash the process. The client
 // reconnects on its own.

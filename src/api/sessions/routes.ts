@@ -1,10 +1,12 @@
 import { Request, Router } from "express";
 import { z } from "zod";
+import { NotAuthorizedError } from "../../errors/not_authorized_error";
 import { RequestValidationError } from "../../errors/request_validation_error";
 import isAuthenticated from "../../middlewares/is_authenticated";
 import { byIp, rateLimit } from "../../middlewares/rate_limit";
 import { deviceCookieName, readCookie } from "../../utils/cookies";
-import { finishSignIn, signInContext } from "./http";
+import { watchSession } from "./events";
+import { finishSignIn, sessionRefreshToken, signInContext } from "./http";
 import {
   deviceIdParamSchema,
   twoFactorCodeSchema,
@@ -13,6 +15,8 @@ import {
 } from "./request_schema";
 import {
   completeTwoFactor,
+  findCurrentSession,
+  isSessionStillLive,
   listDevices,
   resendTwoFactorCode,
   signOutDevice,
@@ -204,6 +208,93 @@ sessionsRouter.delete("/devices/:id", isAuthenticated, async (req, res) => {
 sessionsRouter.patch("/two-factor", isAuthenticated, async (req, res) => {
   const { enabled } = parse(twoFactorSettingSchema, req.body);
   res.status(200).json(await updateTwoFactor(req.currentUser!.id, enabled));
+});
+
+// Proxies and load balancers close idle connections, so the stream sends a
+// comment this often.
+const heartbeatMs = 25 * 1000;
+
+/**
+ * @openapi
+ * /api/auth/events:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Stream the session's events
+ *     description: |
+ *       A Server-Sent Events stream for the session in the cookie, which
+ *       browsers open with `EventSource` (it can't send a bearer token). It
+ *       sends `event: session.revoked` and closes when the session ends:
+ *       the device was signed out from another one, a tab of this device
+ *       logged out, or every session ended because a refresh token was
+ *       reused. It sends `event: devices.changed` when a device of the user
+ *       signs in or out, so the list of signed-in devices can reload. Lines starting with `:` keep the connection alive. Any API
+ *       server can end the session; Redis brings the event to the server
+ *       holding the stream.
+ *     responses:
+ *       200:
+ *         description: The event stream
+ *         content:
+ *           text/event-stream:
+ *             schema:
+ *               type: string
+ *               example: "event: session.revoked\ndata: {}\n\n"
+ *       401:
+ *         description: No live session in the cookie
+ */
+sessionsRouter.get("/events", async (req, res) => {
+  const session = await findCurrentSession(sessionRefreshToken(req));
+  if (!session) {
+    throw new NotAuthorizedError("not_authorized");
+  }
+
+  let open = true;
+  let heartbeat: NodeJS.Timeout | undefined;
+  let stopWatching = () => {};
+  const close = () => {
+    if (!open) {
+      return;
+    }
+    open = false;
+    clearInterval(heartbeat);
+    stopWatching();
+  };
+  const revoke = () => {
+    if (open) {
+      res.write("event: session.revoked\ndata: {}\n\n");
+      res.end();
+      close();
+    }
+  };
+  req.on("close", close);
+
+  stopWatching = await watchSession(session, (event) => {
+    if (event.type === "session.revoked") {
+      revoke();
+    } else if (open) {
+      res.write(`event: ${event.type}\ndata: {}\n\n`);
+    }
+  });
+  if (!open) {
+    // The browser left while the server subscribed.
+    stopWatching();
+    return;
+  }
+
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream; charset=utf-8",
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive",
+    // Nginx would otherwise hold the events in its buffer.
+    "X-Accel-Buffering": "no",
+  });
+  // How long the browser waits before reconnecting after a drop.
+  res.write("retry: 5000\n\n");
+  heartbeat = setInterval(() => res.write(": ping\n\n"), heartbeatMs);
+
+  // The session may have ended before the server was listening.
+  if (!(await isSessionStillLive(session))) {
+    revoke();
+  }
 });
 
 export default sessionsRouter;

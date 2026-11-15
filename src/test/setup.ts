@@ -10,6 +10,7 @@ import { seeds } from "../db/seeds";
 import { findRoleIdByName, insertUserWithRoleId } from "../api/auth/db";
 import { resetRateLimits } from "../middlewares/rate_limit";
 import { closeRedis, connectRedis } from "../redis/client";
+import { closeSessionEvents } from "../api/sessions/events";
 
 jest.mock("../utils/functions", () => {
   const originalModule = jest.requireActual("../utils/functions");
@@ -84,6 +85,7 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
+  await closeSessionEvents();
   await closeRedis();
   await pool.end();
 });

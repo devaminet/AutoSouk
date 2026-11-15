@@ -14,8 +14,8 @@ import { BadRequestError } from "../../errors/bad_request_error";
 import { NotAuthorizedError } from "../../errors/not_authorized_error";
 import isAuthenticated from "../../middlewares/is_authenticated";
 import { byEmail, byIp, rateLimit } from "../../middlewares/rate_limit";
-import { deleteSessionToken } from "../sessions/db";
-import { finishSignIn, signInContext } from "../sessions/http";
+import { finishSignIn, sessionRefreshToken, signInContext } from "../sessions/http";
+import { endSession } from "../sessions/services";
 import {
   confirmProfileImage,
   requestProfileImageUpload,
@@ -509,11 +509,7 @@ authRouter.put("/reset-password", isAuthenticated, async (req, res) => {
  *             schema: { $ref: '#/components/schemas/LocalizedMessage' }
  */
 authRouter.post("/logout", async (req, res) => {
-  const refreshToken = (req.session as { refreshToken?: unknown } | null)
-    ?.refreshToken;
-  if (typeof refreshToken === "string") {
-    await deleteSessionToken(refreshToken);
-  }
+  await endSession(sessionRefreshToken(req));
   req.session = undefined;
   res.status(200).json(localizedMessage(req.locale, "auth.logged_out"));
 });

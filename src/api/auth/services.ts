@@ -1,6 +1,7 @@
-import { startSignIn } from "../sessions/services";
+import { isSessionDeviceActive, startSignIn } from "../sessions/services";
 import type { SignInContext } from "../sessions/services";
-import { isActiveDevice, touchDevice } from "../sessions/db";
+import { touchDevice } from "../sessions/db";
+import { publishDevicesChanged, publishSessionRevoked } from "../sessions/events";
 import { z } from "zod";
 import {
   registerSchema,
@@ -328,18 +329,29 @@ export const refreshTokens = async (token: string, ipAddress: string | null) => 
 
   // re-use detection
   const usedToken = await findReusedRefreshToken(token);
+  // A session that logged out: a request sent before the logout may still
+  // carry its token. Refuse it, without treating it as theft.
+  if (usedToken?.endedAt) {
+    return { success: false };
+  }
+  // A stolen token may be in use: end every session of the user, on every
+  // device, and tell their browsers.
   if (usedToken) {
     await deleteRefreshToken(decoded.id);
+    await publishSessionRevoked(decoded.id, "all");
+    await publishDevicesChanged(decoded.id);
     return { success: false };
   }
 
   const userToken = await findUserRefreshToken(decoded.id, token);
   if (!userToken) {
     await deleteRefreshToken(decoded.id);
+    await publishSessionRevoked(decoded.id, "all");
+    await publishDevicesChanged(decoded.id);
     return { success: false };
   }
-  // A signed-out device has no sessions left; this keeps it that way.
-  if (userToken.deviceId !== null && !(await isActiveDevice(userToken.deviceId))) {
+  // A session that logged out, or a signed-out device, stays that way.
+  if (userToken.endedAt || !(await isSessionDeviceActive(userToken))) {
     return { success: false };
   }
 

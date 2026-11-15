@@ -12,6 +12,12 @@ export const signInContext = (req: Request): SignInContext => ({
   ip: req.ip ?? null,
 });
 
+// The refresh token in the session cookie, if any.
+export const sessionRefreshToken = (req: Request) => {
+  const token = (req.session as { refreshToken?: unknown } | null | undefined)?.refreshToken;
+  return typeof token === "string" ? token : null;
+};
+
 // Sets the cookies of a finished sign-in and returns the response body.
 // A two-step challenge sets none: the user isn't signed in yet.
 export const finishSignIn = (req: Request, res: Response, result: SignInResult) => {
