@@ -129,7 +129,9 @@ describe("devices", () => {
       }),
     );
 
-    const devices = await devicesOf(first.body.accessToken, device).expect(200);
+    // Signing in again replaced the browser's session, and its access token.
+    await devicesOf(first.body.accessToken, device).expect(401);
+    const devices = await devicesOf(again.body.accessToken, device).expect(200);
     expect(devices.body.devices).toEqual([
       expect.objectContaining({ label: "Safari on iOS", current: false }),
       expect.objectContaining({ label: "Chrome on Windows", current: true }),

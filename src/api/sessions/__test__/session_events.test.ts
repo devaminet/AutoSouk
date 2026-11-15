@@ -10,6 +10,7 @@ import {
   signupUserWithVerification,
   testUserCredentials,
 } from "../../../test/helpers";
+import { generateJWT, verifyJWT } from "../../../utils/functions";
 
 const chrome =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36";
@@ -259,5 +260,74 @@ describe("session lifecycle", () => {
     } finally {
       await connectRedis();
     }
+  });
+});
+
+describe("access tokens of ended sessions", () => {
+  const devicesWith = (accessToken: string) =>
+    request(app).get("/api/auth/devices").auth(accessToken, { type: "bearer" });
+
+  it("refuses the access token of a session that logged out, and only that one", async () => {
+    await signupUserWithVerification();
+    const laptop = await login(chrome);
+    const phone = await login(iphone);
+    await devicesWith(laptop.accessToken).expect(200);
+
+    await request(app).post("/api/auth/logout").set("Cookie", laptop.cookies).expect(200);
+
+    await devicesWith(laptop.accessToken).expect(401);
+    await devicesWith(phone.accessToken).expect(200);
+  });
+
+  it("refuses the access token of a device signed out from another one", async () => {
+    await signupUserWithVerification();
+    const laptop = await login(chrome);
+    const phone = await login(iphone);
+    const { body } = await devicesWith(laptop.accessToken).set("Cookie", laptop.cookies).expect(200);
+    const phoneDevice = body.devices.find((d: { current: boolean }) => !d.current);
+
+    await request(app)
+      .delete(`/api/auth/devices/${phoneDevice.id}`)
+      .set("Cookie", laptop.cookies)
+      .auth(laptop.accessToken, { type: "bearer" })
+      .expect(204);
+
+    await devicesWith(phone.accessToken).expect(401);
+    await devicesWith(laptop.accessToken).expect(200);
+  });
+
+  it("keeps the access tokens of a session working across refreshes", async () => {
+    await signupUserWithVerification();
+    const laptop = await login(chrome);
+    const session = laptop.cookies.filter((cookie) => cookie.startsWith("session"));
+
+    const refreshed = await request(app).post("/api/auth/refresh-token").set("Cookie", session).expect(200);
+
+    await devicesWith(refreshed.body.accessToken).expect(200);
+    await devicesWith(laptop.accessToken).expect(200);
+  });
+
+  it("refuses every access token once a reused refresh token ends all sessions", async () => {
+    await signupUserWithVerification();
+    const laptop = await login(chrome);
+    const phone = await login(iphone);
+    const session = laptop.cookies.filter((cookie) => cookie.startsWith("session"));
+    await request(app).post("/api/auth/refresh-token").set("Cookie", session).expect(200);
+    await request(app).post("/api/auth/refresh-token").set("Cookie", session).expect(401);
+
+    await devicesWith(laptop.accessToken).expect(401);
+    await devicesWith(phone.accessToken).expect(401);
+  });
+
+  it("refuses an access token that names no session", async () => {
+    await signupUserWithVerification();
+    const laptop = await login(chrome);
+    const { id } = await verifyJWT<{ id: number }>(laptop.accessToken);
+    const accessToken = await generateJWT(
+      { id, email: testUserCredentials.email, issuedAt: Date.now(), role: "buyer" },
+      Number(process.env.JWT_ACCESS_TOKEN_EXPIRATION_SECONDS),
+    );
+
+    await devicesWith(accessToken!).expect(401);
   });
 });

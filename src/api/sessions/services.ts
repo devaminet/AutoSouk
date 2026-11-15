@@ -34,6 +34,7 @@ import {
   findChallenge,
   isActiveDevice,
   isLiveSession,
+  isLiveUserSession,
   incrementChallengeAttempts,
   insertChallenge,
   insertDevice,
@@ -77,25 +78,38 @@ const needsCode = (user: UserWithRole) =>
 // giving the number to someone who only has the password.
 const phoneHint = (phone: string) => `•• ${phone.replace(/\D/g, "").slice(-2)}`;
 
-const issueTokens = async (user: UserWithRole, deviceId: number) => {
-  const claims = {
-    id: user.id,
-    email: user.email,
-    issuedAt: new Date().getTime(),
-    role: user.role.name,
-  };
-  const accessToken = await generateJWT(
-    claims,
+// The claims both tokens carry.
+const tokenClaims = (user: { id: number; email: string; role: { name: string } }) => ({
+  id: user.id,
+  email: user.email,
+  issuedAt: new Date().getTime(),
+  role: user.role.name,
+});
+
+// The access token names its session, so a request with it is refused once
+// the session ends, before the token expires.
+export const generateAccessToken = (
+  user: { id: number; email: string; role: { name: string } },
+  sessionId: number,
+) =>
+  generateJWT(
+    { ...tokenClaims(user), sid: sessionId },
     Number(process.env.JWT_ACCESS_TOKEN_EXPIRATION_SECONDS!),
   );
+
+const issueTokens = async (user: UserWithRole, deviceId: number) => {
   const refreshToken = await generateJWT(
-    claims,
+    tokenClaims(user),
     Number(process.env.JWT_REFRESH_TOKEN_EXPIRATION_SECONDS!),
   );
-  if (!accessToken || !refreshToken) {
+  if (!refreshToken) {
     throw new InternalServerError("auth.login_failed");
   }
-  await insertSessionToken(user.id, deviceId, refreshToken);
+  const sessionId = await insertSessionToken(user.id, deviceId, refreshToken);
+  const accessToken = await generateAccessToken(user, sessionId);
+  if (!accessToken) {
+    throw new InternalServerError("auth.login_failed");
+  }
   await publishDevicesChanged(user.id);
   return { accessToken, refreshToken, user: await sanitizeUser(user) };
 };
@@ -337,6 +351,11 @@ export const findCurrentSession = async (refreshToken: string | null) => {
 // tab rotates the token.
 export const isSessionStillLive = async (session: { id: number; deviceId: number | null }) =>
   (await isLiveSession(session.id)) && (await isSessionDeviceActive(session));
+
+// Whether an access token's session still lives. A token without a session
+// comes from before tokens named one, and is refused: the browser refreshes it.
+export const isAccessTokenSessionLive = async (userId: number, sessionId: unknown) =>
+  typeof sessionId === "number" && isLiveUserSession(sessionId, userId);
 
 // Logs out: ends the session, and tells the device's other tabs.
 export const endSession = async (refreshToken: string | null) => {

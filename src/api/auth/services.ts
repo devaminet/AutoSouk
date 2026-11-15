@@ -1,4 +1,4 @@
-import { isSessionDeviceActive, startSignIn } from "../sessions/services";
+import { generateAccessToken, isSessionDeviceActive, startSignIn } from "../sessions/services";
 import type { SignInContext } from "../sessions/services";
 import { touchDevice } from "../sessions/db";
 import { publishDevicesChanged, publishSessionRevoked } from "../sessions/events";
@@ -363,15 +363,7 @@ export const refreshTokens = async (token: string, ipAddress: string | null) => 
     throw new NotAuthorizedError("auth.role_unresolved");
   }
 
-  const accessToken = await generateJWT(
-    {
-      id: user.id,
-      email: user.email,
-      issuedAt: new Date().getTime(),
-      role: user.role.name,
-    },
-    Number(process.env.JWT_ACCESS_TOKEN_EXPIRATION_SECONDS!),
-  );
+  const accessToken = await generateAccessToken(user, userToken.id);
   const refreshToken = await generateJWT(
     {
       id: user.id,
@@ -382,7 +374,7 @@ export const refreshTokens = async (token: string, ipAddress: string | null) => 
     Number(process.env.JWT_REFRESH_TOKEN_EXPIRATION_SECONDS!),
   );
 
-  if (!refreshToken) {
+  if (!accessToken || !refreshToken) {
     throw new InternalServerError("internal");
   }
   await updateRefreshToken(decoded.id, token, refreshToken);

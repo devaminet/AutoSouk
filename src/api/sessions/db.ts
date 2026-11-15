@@ -110,13 +110,13 @@ export const revokeDevice = async (userId: number, id: number) => {
 
 // Starts the device's session. A device has one session at a time, so this
 // replaces any it had left, such as one whose cookie the browser dropped. It
-// also drops the user's expired sessions.
+// also drops the user's expired sessions. Returns the new session's id.
 export const insertSessionToken = async (
   userId: number,
   deviceId: number,
   refreshToken: string,
-) => {
-  await db.transaction(async (tx) => {
+) =>
+  db.transaction(async (tx) => {
     await tx
       .delete(refreshTokensTable)
       .where(
@@ -128,11 +128,15 @@ export const insertSessionToken = async (
           ),
         ),
       );
-    await tx
+    const [session] = await tx
       .insert(refreshTokensTable)
-      .values({ userId, deviceId, currentToken: refreshToken, expiresAt: sessionExpiry() });
+      .values({ userId, deviceId, currentToken: refreshToken, expiresAt: sessionExpiry() })
+      .returning({ id: refreshTokensTable.id });
+    if (!session) {
+      throw new Error("The session wasn't saved");
+    }
+    return session.id;
   });
-};
 
 // Logs the session out. The token may be one refresh behind, when another tab
 // rotated it at the same moment. The row stays, marked ended, so a request
@@ -166,6 +170,25 @@ export const isLiveSession = async (id: number) => {
     .select({ id: refreshTokensTable.id })
     .from(refreshTokensTable)
     .where(and(eq(refreshTokensTable.id, id), isLive()));
+  return Boolean(session);
+};
+
+// Whether the user's session still lives and its device isn't signed out, in
+// one query, as every authenticated request asks. Sessions from before devices
+// were remembered have none.
+export const isLiveUserSession = async (id: number, userId: number) => {
+  const [session] = await db
+    .select({ id: refreshTokensTable.id })
+    .from(refreshTokensTable)
+    .leftJoin(userDevicesTable, eq(userDevicesTable.id, refreshTokensTable.deviceId))
+    .where(
+      and(
+        eq(refreshTokensTable.id, id),
+        eq(refreshTokensTable.userId, userId),
+        isLive(),
+        or(isNull(refreshTokensTable.deviceId), isNull(userDevicesTable.revokedAt)),
+      ),
+    );
   return Boolean(session);
 };
 
