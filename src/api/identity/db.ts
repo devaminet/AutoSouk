@@ -6,6 +6,8 @@ import { usersTable } from "../../db/schema/user";
 
 type Decision = "approved" | "rejected";
 
+export type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 export const countRejectedIdentityChecks = async (userId: number) => {
   const [result] = await db
     .select({ total: count() })
@@ -103,13 +105,18 @@ export const findIdentityChecksByStatus = async (
 
 // Records the admin's decision on a pending check, the user's new status and
 // the audit entry together. Returns null when the check wasn't pending.
-export const decideIdentityCheck = async (data: {
-  id: number;
-  adminId: number;
-  decision: Decision;
-  reason: string | null;
-}) =>
-  db.transaction(async (tx) => {
+// Runs in the caller's transaction when given one, so a decision can be saved
+// together with others.
+export const decideIdentityCheck = async (
+  data: {
+    id: number;
+    adminId: number;
+    decision: Decision;
+    reason: string | null;
+  },
+  outer?: Transaction,
+) => {
+  const run = async (tx: Transaction) => {
     const [check] = await tx
       .update(identityVerificationsTable)
       .set({
@@ -140,7 +147,9 @@ export const decideIdentityCheck = async (data: {
       details: data.reason ? { reason: data.reason } : null,
     });
     return check;
-  });
+  };
+  return outer ? run(outer) : db.transaction(run);
+};
 
 export const markIdentityVideoDeleted = async (id: number) => {
   await db

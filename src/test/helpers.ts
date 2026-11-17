@@ -101,10 +101,14 @@ export const verifyEmail = async (token?: string) => {
   };
 };
 
-// Marks a mechanic's documents approved, so buyers can book them. Tests that
-// aren't about the documents start from there.
+// Marks a mechanic's face check and documents approved, so buyers can book
+// them. Tests that aren't about the checks start from there.
 export const approveMechanicDocuments = async (email: string) => {
-  const [user] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, email));
+  const [user] = await db
+    .update(usersTable)
+    .set({ identityStatus: "approved" })
+    .where(eq(usersTable.email, email))
+    .returning({ id: usersTable.id });
   await db
     .insert(mechanicVerificationsTable)
     .values({ userId: user.id, kind: "garage", approvedAt: new Date() })

@@ -7,7 +7,11 @@ import {
   removeObject,
   getFileType,
   generateToken,
+  readTemplateFile,
+  sendMail,
 } from "../../utils/functions";
+import { emailSubject, emailTemplateContext } from "../../i18n/emails";
+import { findUserById } from "../auth/db";
 import {
   createCarSchema,
   getListingsQuerySchema,
@@ -408,15 +412,26 @@ type ListingStatus = (typeof listingStatusEnum.enumValues)[number];
 
 type ListingViewer = { id: number; role: string } | undefined;
 
-// Only approved listings are public. Other statuses answer 404, as if the
-// listing did not exist, except for its seller and admins.
+// Only approved listings of sellers who aren't suspended are public. Others
+// answer 404, as if the listing did not exist, except for its seller and
+// admins.
 const canViewListing = (
-  listing: { status: string | null; userId: number | null },
+  listing: {
+    status: string | null;
+    userId: number | null;
+    user: { suspendedAt: Date | null } | null;
+  },
   viewer: ListingViewer,
 ) =>
-  listing.status === "approved" ||
+  (listing.status === "approved" && !listing.user?.suspendedAt) ||
   viewer?.role === "admin" ||
   viewer?.id === listing.userId;
+
+// The suspension only decides who sees the listing; it isn't shown.
+const withoutSuspension = <T extends { suspendedAt: Date | null }>({
+  suspendedAt: _suspendedAt,
+  ...user
+}: T) => user;
 
 export const getListingDetails = async (
   listingId: number,
@@ -444,7 +459,7 @@ export const getListingDetails = async (
     car: listing.car
       ? { ...listing.car, equipment: toCarEquipment(listing.car.equipment) }
       : null,
-    user: listing.user ? await withProfileImageUrl(listing.user) : null,
+    user: listing.user ? await withProfileImageUrl(withoutSuspension(listing.user)) : null,
   };
 };
 
@@ -512,7 +527,38 @@ export const submitListing = async (listingId: number, userId: number) => {
   }
 };
 
-export const approveListing = async (listingId: number) => {
+// Tells the seller what an admin decided about their listing, in their own
+// language, with the reason for a rejection. A failed email doesn't undo it.
+const notifySeller = async (
+  listing: { id: number; title: string; userId: number | null },
+  key: "listing_approved" | "listing_rejected",
+  reason: string | null,
+) => {
+  const seller = listing.userId ? await findUserById(listing.userId) : null;
+  if (!seller) {
+    return;
+  }
+  const path = key === "listing_approved" ? `/listings/${listing.id}` : "/my-listings";
+  try {
+    const html = await readTemplateFile("listing_review.ejs", {
+      ...emailTemplateContext(seller.locale),
+      key,
+      firstName: seller.firstName,
+      title: listing.title,
+      reason,
+      link: `${process.env.CLIENT_URL}${path}?lang=${seller.locale}`,
+    });
+    await sendMail({
+      to: seller.email,
+      subject: emailSubject(seller.locale, `${key}.subject`),
+      html,
+    });
+  } catch (error) {
+    console.error("Error sending listing review email:", error);
+  }
+};
+
+export const approveListing = async (adminId: number, listingId: number) => {
   const listing = await findListingById(listingId);
 
   if (!listing) {
@@ -523,7 +569,11 @@ export const approveListing = async (listingId: number) => {
     throw new BadRequestError("listing.already_approved");
   }
 
-  const result = await approvePendingListing(listingId, minCarImageCount);
+  const result = await approvePendingListing(
+    listingId,
+    minCarImageCount,
+    adminId,
+  );
   switch (result.status) {
     case "not_pending":
       throw new BadRequestError("listing.not_pending");
@@ -532,21 +582,27 @@ export const approveListing = async (listingId: number) => {
     case "too_few_images":
       return throwTooFewImages();
     case "approved":
+      await notifySeller(listing, "listing_approved", null);
       return result.listings;
   }
 };
 
-export const rejectListing = async (listingId: number, reason: string) => {
+export const rejectListing = async (
+  adminId: number,
+  listingId: number,
+  reason: string,
+) => {
   const listing = await findListingById(listingId);
 
   if (!listing) {
     throw new NotFoundError("listing.not_found");
   }
 
-  const rejected = await rejectPendingListingById(listingId, reason);
+  const rejected = await rejectPendingListingById(listingId, reason, adminId);
   if (!rejected) {
     throw new BadRequestError("listing.not_pending");
   }
+  await notifySeller(rejected, "listing_rejected", reason);
 
   return rejected;
 };

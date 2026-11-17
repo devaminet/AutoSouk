@@ -80,6 +80,10 @@ inspectionsRouter.post("/", isAuthenticated, isBuyer, isIdentityVerified, async 
  *       Newest requests first. Each inspection has its `car` as the lists show
  *       it, and `reportPdfLink` is a presigned URL once the report exists.
  *       Mechanics also get the `buyer`'s name; buyers get the `mechanic`.
+ *       When the car was deleted after the request, `car.removed` is true,
+ *       `car.id`, `listingId`, `title`, `photoUrl` and `seller` are null, and
+ *       `year`, `make` and `model` are the ones it had when the buyer asked.
+ *       The report stays available.
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -112,8 +116,9 @@ inspectionsRouter.post("/", isAuthenticated, isBuyer, isIdentityVerified, async 
  *                       car:
  *                         type: object
  *                         properties:
- *                           id: { type: integer }
- *                           year: { type: integer }
+ *                           id: { type: integer, nullable: true }
+ *                           removed: { type: boolean, description: The car was deleted after the request }
+ *                           year: { type: integer, nullable: true }
  *                           make:
  *                             type: object
  *                             nullable: true
@@ -160,7 +165,9 @@ inspectionsRouter.get("/", isAuthenticated, async (req, res) => {
  *     tags: [Inspections]
  *     summary: Get an inspection by id (buyer or assigned mechanic only)
  *     description: |
- *       `car.photoUrl` is the listing's first photo, presigned. The assigned
+ *       `car.photoUrl` is the listing's first photo, presigned. When the car
+ *       was deleted after the request, `car` only has `removed: true` and the
+ *       `year`, `make` and `model` it had, and the report stays. The assigned
  *       mechanic also gets `reportDraft`, their unfinished report as last
  *       saved with `PUT /api/inspections/{id}/draft`, and `reportDraftSavedAt`.
  *       Both are null before the first save and after the report is submitted.

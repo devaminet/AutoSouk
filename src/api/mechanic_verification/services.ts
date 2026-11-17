@@ -61,7 +61,7 @@ const extensions: Record<ContentType, string> = {
   "application/pdf": "pdf",
 };
 
-const requiredFor = (kind: MechanicKind): readonly MechanicDocumentType[] =>
+export const requiredFor = (kind: MechanicKind): readonly MechanicDocumentType[] =>
   requiredMechanicDocuments[kind];
 
 const isExpired = (validUntil: string | null) => validUntil !== null && validUntil < today();
@@ -142,7 +142,7 @@ export const chooseKind = async (userId: number, kind: MechanicKind) => {
   return getMyVerification(userId);
 };
 
-const removeFiles = async (documents: { id: number; fileName: string }[]) => {
+export const removeFiles = async (documents: { id: number; fileName: string }[]) => {
   const removed: number[] = [];
   for (const document of documents) {
     try {
@@ -387,14 +387,12 @@ const notifyMechanic = async (
   }
 };
 
-// An admin decides every pending document of a mechanic at once. A rejection
-// needs a reason; approving a document that expires needs its end date.
-export const decideDocuments = async (
-  adminId: number,
-  userId: number,
+// A decision must cover every pending document. A rejection needs a reason;
+// approving a document that expires needs its end date, not in the past.
+export const checkDocumentDecisions = (
+  pending: { id: number; type: MechanicDocumentType }[],
   decisions: DocumentDecision[],
 ) => {
-  const pending = await findPendingDocuments(userId);
   if (pending.length === 0) {
     throw new BadRequestError("mechanic_documents.not_pending");
   }
@@ -416,6 +414,16 @@ export const decideDocuments = async (
       }
     }
   }
+};
+
+// An admin decides every pending document of a mechanic at once.
+export const decideDocuments = async (
+  adminId: number,
+  userId: number,
+  decisions: DocumentDecision[],
+) => {
+  const pending = await findPendingDocuments(userId);
+  checkDocumentDecisions(pending, decisions);
 
   let result;
   try {

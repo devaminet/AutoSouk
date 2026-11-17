@@ -55,6 +55,10 @@ export const usersTable = pgTable(
     locale: varchar({ enum: supportedLocales })
       .notNull()
       .default(defaultLocale),
+    // Set when an admin suspends the account: it can't sign in, its sessions
+    // end, and buyers no longer see its listings or its workshop.
+    suspendedAt: timestamp("suspended_at"),
+    suspensionReason: varchar("suspension_reason", { length: 500 }),
     createdAt: date("created_at").defaultNow().notNull(),
     updatedAt: date("updated_at").defaultNow().notNull(),
   },

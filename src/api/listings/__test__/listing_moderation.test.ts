@@ -1,5 +1,9 @@
 import request from "supertest";
+import { and, eq } from "drizzle-orm";
 import { app } from "../../../app";
+import { db } from "../../../db";
+import { auditLogTable } from "../../../db/schema/audit_log";
+import * as fileUtils from "../../../utils/functions";
 import {
   submitWithImages,
   signinUser,
@@ -126,6 +130,76 @@ describe("GET /api/listings/pending", () => {
     expect(listedIds(page2.body)).toEqual([second]);
     expect(listedIds(page2.body)).not.toContain(first);
     expect(page2.body.meta).toMatchObject({ total: 2, totalPages: 2 });
+  });
+});
+
+describe("moderation records", () => {
+  const entriesAbout = (listingId: number) =>
+    db
+      .select()
+      .from(auditLogTable)
+      .where(and(eq(auditLogTable.targetType, "listing"), eq(auditLogTable.targetId, listingId)));
+
+  it("logs an approval and tells the seller the listing is live", async () => {
+    const listingId = await createPendingListing();
+
+    await approve(listingId).expect(200);
+
+    expect(await entriesAbout(listingId)).toEqual([
+      expect.objectContaining({
+        action: "listing.approved",
+        targetType: "listing",
+        details: expect.objectContaining({ title: "A black car" }),
+      }),
+    ]);
+    const log = await request(app)
+      .get(`/api/admin/audit-log?targetType=listing&targetId=${listingId}`)
+      .auth(admin.accessToken, { type: "bearer" })
+      .expect(200);
+    expect(log.body.entries[0]).toMatchObject({ action: "listing.approved", actor: { firstName: "autosouk" } });
+    expect(fileUtils.sendMail).toHaveBeenLastCalledWith(
+      expect.objectContaining({ subject: "Your listing is live on AutoSouk" }),
+    );
+    const templates = (fileUtils.readTemplateFile as jest.Mock).mock.calls;
+    expect(templates.at(-1)).toEqual([
+      "listing_review.ejs",
+      expect.objectContaining({
+        key: "listing_approved",
+        title: "A black car",
+        reason: null,
+        link: expect.stringContaining(`/listings/${listingId}?lang=`),
+      }),
+    ]);
+  });
+
+  it("logs a rejection with its reason and emails it to the seller", async () => {
+    const listingId = await createPendingListing();
+
+    await reject(listingId, "Blurry photos").expect(200);
+
+    expect(await entriesAbout(listingId)).toEqual([
+      expect.objectContaining({
+        action: "listing.rejected",
+        details: expect.objectContaining({ reason: "Blurry photos", title: "A black car" }),
+      }),
+    ]);
+    expect(fileUtils.sendMail).toHaveBeenLastCalledWith(
+      expect.objectContaining({ subject: "Your listing needs changes" }),
+    );
+    const templates = (fileUtils.readTemplateFile as jest.Mock).mock.calls;
+    expect(templates.at(-1)).toEqual([
+      "listing_review.ejs",
+      expect.objectContaining({ key: "listing_rejected", reason: "Blurry photos" }),
+    ]);
+  });
+
+  it("logs nothing when the listing can't be approved or rejected", async () => {
+    const listingId = await createListing();
+
+    await approve(listingId).expect(400);
+    await reject(listingId).expect(400);
+
+    expect(await entriesAbout(listingId)).toEqual([]);
   });
 });
 

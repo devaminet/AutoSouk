@@ -31,6 +31,8 @@ jest.mock("../middlewares/is_identity_verified", () => ({
   __esModule: true,
   isIdentityVerified: (_req: unknown, _res: unknown, next: () => void) =>
     next(),
+  hasSentFaceCheck: (_req: unknown, _res: unknown, next: () => void) =>
+    next(),
 }));
 
 beforeAll(async () => {

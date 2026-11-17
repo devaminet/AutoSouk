@@ -72,6 +72,9 @@ export const requestInspection = async (
 
   const inspection = await insertInspection({
     carId: data.carId,
+    carMake: car.make?.name ?? null,
+    carModel: car.model?.name ?? null,
+    carYear: car.year,
     buyerId,
     mechanicId: data.mechanicId,
     priceAtRequest: mechanic.inspectionPrice ?? 0,
@@ -80,6 +83,24 @@ export const requestInspection = async (
 
   return { inspection };
 };
+
+// What the buyer still sees of a car deleted after the inspection: the name
+// it had. The report stays.
+const removedCar = (inspection: {
+  carMake: string | null;
+  carModel: string | null;
+  carYear: number | null;
+}) => ({
+  id: null,
+  year: inspection.carYear,
+  make: inspection.carMake === null ? null : { name: inspection.carMake },
+  model: inspection.carModel === null ? null : { name: inspection.carModel },
+  listingId: null,
+  title: null,
+  photoUrl: null,
+  seller: null,
+  removed: true,
+});
 
 export const getInspectionById = async (
   id: number,
@@ -106,6 +127,15 @@ export const getInspectionById = async (
   // Leave out the buyer's account details, such as their password hash, and
   // the mechanic's unfinished report from the buyer.
   const { buyer, reportDraft, reportDraftSavedAt, car, ...rest } = inspection;
+  if (!car) {
+    return {
+      ...rest,
+      // The detail names the listing as `listing`, the lists as listingId and title.
+      car: { ...removedCar(inspection), listing: null },
+      buyer: { id: buyer.id, firstName: buyer.firstName, lastName: buyer.lastName },
+      ...(isMechanic ? { reportDraft, reportDraftSavedAt } : {}),
+    };
+  }
   const { carMedias, ...carDetails } = car;
   const photo = carMedias[0]?.link;
   let photoUrl: string | null = null;
@@ -118,7 +148,7 @@ export const getInspectionById = async (
   }
   return {
     ...rest,
-    car: { ...carDetails, photoUrl },
+    car: { ...carDetails, photoUrl, removed: false },
     buyer: { id: buyer.id, firstName: buyer.firstName, lastName: buyer.lastName },
     ...(isMechanic ? { reportDraft, reportDraftSavedAt } : {}),
   };
@@ -132,11 +162,19 @@ type ListedCar = ListedInspection["car"];
 
 // Presigns the cars' photos and the reports, and shapes each car as the
 // lists show it.
-const withLinks = async <T extends { car: ListedCar; reportPdfLink: string | null }>(
+const withLinks = async <
+  T extends {
+    car: ListedCar;
+    reportPdfLink: string | null;
+    carMake: string | null;
+    carModel: string | null;
+    carYear: number | null;
+  },
+>(
   inspections: T[],
 ) => {
   const photos = inspections.flatMap(({ car }) =>
-    car.carMedias.map(({ link }) => link),
+    car ? car.carMedias.map(({ link }) => link) : [],
   );
   const reports = inspections.flatMap(({ reportPdfLink }) =>
     reportPdfLink ? [reportPdfLink] : [],
@@ -153,17 +191,22 @@ const withLinks = async <T extends { car: ListedCar; reportPdfLink: string | nul
   }
 
   return inspections.map(({ car, reportPdfLink, ...inspection }) => {
+    const report = reportPdfLink ? (reportUrls.get(reportPdfLink) ?? null) : null;
+    if (!car) {
+      return { ...inspection, reportPdfLink: report, car: removedCar(inspection) };
+    }
     const { carMedias, user, listing, ...carDetails } = car;
     const photo = carMedias[0]?.link;
     return {
       ...inspection,
-      reportPdfLink: reportPdfLink ? (reportUrls.get(reportPdfLink) ?? null) : null,
+      reportPdfLink: report,
       car: {
         ...carDetails,
         listingId: listing?.id ?? null,
         title: listing?.title ?? null,
         photoUrl: photo ? (photoUrls.get(photo) ?? null) : null,
         seller: user,
+        removed: false,
       },
     };
   });
@@ -278,6 +321,11 @@ export const submitInspectionReport = async (
   if (inspection.status !== "in_progress") {
     throw new BadRequestError("inspection.not_in_progress");
   }
+  // A deleted car's inspections are cancelled, so this only guards the types.
+  const { car } = inspection;
+  if (!car) {
+    throw new BadRequestError("inspection.not_in_progress");
+  }
 
   const issuedAt = new Date();
   let pdfBuffer: Buffer;
@@ -288,9 +336,9 @@ export const submitInspectionReport = async (
         inspectedAt: data.inspectedAt ? new Date(data.inspectedAt) : issuedAt,
         issuedAt,
         vehicle: {
-          make: inspection.car.make?.name ?? null,
-          model: inspection.car.model?.name ?? null,
-          year: inspection.car.year,
+          make: car.make?.name ?? null,
+          model: car.model?.name ?? null,
+          year: car.year,
           matricule: data.matricule,
           vin: data.vin ?? null,
           carteGriseNumber: data.carteGriseNumber ?? null,
@@ -298,13 +346,13 @@ export const submitInspectionReport = async (
           mileageConsistency: data.mileageConsistency,
           mileageConsistencyNote: data.mileageConsistencyNote ?? null,
           firstRegistrationDate: data.firstRegistrationDate ?? null,
-          fuel: inspection.car.carburant?.carburant ?? null,
-          transmission: inspection.car.transmission,
-          fiscalPower: inspection.car.fiscalPower,
-          doorsNumber: inspection.car.doorsNumber,
-          ownersCount: inspection.car.ownersCount,
-          origin: inspection.car.origin?.origin ?? null,
-          city: inspection.car.city ?? null,
+          fuel: car.carburant?.carburant ?? null,
+          transmission: car.transmission,
+          fiscalPower: car.fiscalPower,
+          doorsNumber: car.doorsNumber,
+          ownersCount: car.ownersCount,
+          origin: car.origin?.origin ?? null,
+          city: car.city ?? null,
         },
         administrative: {
           controleTechniqueValid: data.controleTechniqueValid,

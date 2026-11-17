@@ -25,6 +25,7 @@ import {
 import { BadRequestError } from "../../errors/bad_request_error";
 import { NotAuthorizedError } from "../../errors/not_authorized_error";
 import { NotFoundError } from "../../errors/not_found_error";
+import { NotAllowedError } from "../../errors/not_allowed";
 import {
   createUser,
   deletePasswordResetToken,
@@ -269,6 +270,11 @@ export const loginUser = async (
     throw new NotAuthorizedError("auth.invalid_credentials");
   }
 
+  // Checked after the password, so only the account's owner learns of it.
+  if (foundUser.suspendedAt) {
+    throw new NotAllowedError("auth.account_suspended");
+  }
+
   const { imageName } = await resolvePendingProfileImage(foundUser);
   foundUser.imageName = imageName;
 
@@ -361,6 +367,9 @@ export const refreshTokens = async (token: string, ipAddress: string | null) => 
   }
   if (!user.role) {
     throw new NotAuthorizedError("auth.role_unresolved");
+  }
+  if (user.suspendedAt) {
+    return { success: false };
   }
 
   const accessToken = await generateAccessToken(user, userToken.id);
