@@ -13,7 +13,9 @@ export type EmailSubjectKey =
   | "account_suspended.subject"
   | "account_reactivated.subject"
   | "verification_approved.subject"
-  | "verification_rejected.subject";
+  | "verification_rejected.subject"
+  | "listing_approved.subject"
+  | "listing_rejected.subject";
 
 /**
  * What every email template gets: `t` for its text (keys of the emails

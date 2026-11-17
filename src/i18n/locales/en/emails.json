@@ -88,5 +88,18 @@
     "subject": "Something needs a fix on AutoSouk",
     "body": "An AutoSouk admin checked what you sent. Send again what isn't approved; the reasons are below.",
     "button": "Fix it now"
+  },
+  "listing_approved": {
+    "subject": "Your listing is live on AutoSouk",
+    "body": "Good news: your listing “{{title}}” was approved. Buyers can now see it and book an inspection.",
+    "next": "Keep its price and photos up to date so buyers trust it.",
+    "button": "See my listing"
+  },
+  "listing_rejected": {
+    "subject": "Your listing needs changes",
+    "body": "An AutoSouk admin couldn't approve your listing “{{title}}” yet.",
+    "reason_label": "What to fix:",
+    "next": "Edit the listing to fix it. It goes back for review as soon as you save.",
+    "button": "Edit my listings"
   }
 }

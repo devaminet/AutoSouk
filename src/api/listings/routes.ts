@@ -969,7 +969,11 @@ listingRouter.patch(
  *   patch:
  *     tags: [Listings]
  *     summary: Approve a pending listing
- *     description: Requires an attached car and at least 3 uploaded images. Errors use the codes `listing.already_approved`, `listing.not_pending`, `listing.car_required` and `media.min_images`.
+ *     description: >
+ *       Requires an attached car and at least 3 uploaded images. Errors use the
+ *       codes `listing.already_approved`, `listing.not_pending`,
+ *       `listing.car_required` and `media.min_images`. The decision is written
+ *       to the audit log as `listing.approved`, and the seller gets an email.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -980,6 +984,20 @@ listingRouter.patch(
  *     responses:
  *       200:
  *         description: Listing approved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 updatedRows:
+ *                   type: array
+ *                   description: The approved listing, as one row
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id: { type: integer }
+ *                       status: { type: string, example: approved }
+ *                       approvedAt: { type: string, format: date }
  *       400:
  *         description: Not pending, no car attached, or too few uploaded images
  *       401:
@@ -997,7 +1015,7 @@ listingRouter.patch(
   isIdentityVerified,
   async (req: Request, res: Response) => {
     const listingId = +req.params.id;
-    const result = await approveListing(listingId);
+    const result = await approveListing(req.currentUser!.id, listingId);
     res.status(200).json({ updatedRows: result });
   },
 );
@@ -1010,7 +1028,9 @@ listingRouter.patch(
  *     summary: Reject a pending listing with a reason for the seller
  *     description: >
  *       The seller sees `rejectionReason` on /api/listings/mine and on the
- *       listing. Editing the listing sends it back to pending and clears it.
+ *       listing, and gets it by email. Editing the listing sends it back to
+ *       pending and clears it. The decision is written to the audit log as
+ *       `listing.rejected`, with the reason.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -1066,6 +1086,7 @@ listingRouter.patch(
     }
 
     const listing = await rejectListing(
+      req.currentUser!.id,
       paramValidation.data.id,
       bodyValidation.data.reason,
     );

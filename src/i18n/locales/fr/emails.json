@@ -89,5 +89,18 @@
     "subject": "Un élément est à corriger sur AutoSouk",
     "body": "Un administrateur AutoSouk a vérifié ce que vous avez envoyé. Renvoyez ce qui n'est pas approuvé ; les motifs sont ci-dessous.",
     "button": "Corriger maintenant"
+  },
+  "listing_approved": {
+    "subject": "Votre annonce est en ligne sur AutoSouk",
+    "body": "Bonne nouvelle : votre annonce « {{title}} » a été approuvée. Les acheteurs peuvent maintenant la voir et demander une inspection.",
+    "next": "Gardez son prix et ses photos à jour pour que les acheteurs lui fassent confiance.",
+    "button": "Voir mon annonce"
+  },
+  "listing_rejected": {
+    "subject": "Votre annonce doit être modifiée",
+    "body": "Un admin AutoSouk n'a pas encore pu approuver votre annonce « {{title}} ».",
+    "reason_label": "À corriger :",
+    "next": "Modifiez l'annonce pour la corriger. Elle repart en examen dès que vous enregistrez.",
+    "button": "Modifier mes annonces"
   }
 }

@@ -23,6 +23,7 @@ import { listingStatusEnum, listingTable } from "../../db/schema/listing";
 import { cancelActiveInspectionsOfCars } from "../inspections/db";
 import { carTable } from "../../db/schema/car";
 import { db } from "../../db";
+import { auditLogTable } from "../../db/schema/audit_log";
 import { carMediaTable } from "../../db/schema/car_media";
 import { makeTable } from "../../db/schema/car_make";
 import { carModelTable } from "../../db/schema/car_model";
@@ -488,21 +489,36 @@ export const findListingCityById = async (id: number) => {
 };
 
 // Only a pending listing can be rejected; the condition is part of the update
-// so that a listing approved or edited at the same time is left alone.
-export const rejectPendingListingById = async (id: number, reason: string) => {
-  const [listing] = await db
-    .update(listingTable)
-    .set({
-      status: "rejected",
-      rejectionReason: reason,
-      approvedAt: null,
-      updatedAt: new Date().toISOString(),
-    })
-    .where(and(eq(listingTable.id, id), eq(listingTable.status, "pending")))
-    .returning();
-
-  return listing ?? null;
-};
+// so that a listing approved or edited at the same time is left alone. The
+// decision is written to the audit log in the same transaction.
+export const rejectPendingListingById = async (
+  id: number,
+  reason: string,
+  adminId: number,
+) =>
+  db.transaction(async (tx) => {
+    const [listing] = await tx
+      .update(listingTable)
+      .set({
+        status: "rejected",
+        rejectionReason: reason,
+        approvedAt: null,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(and(eq(listingTable.id, id), eq(listingTable.status, "pending")))
+      .returning();
+    if (!listing) {
+      return null;
+    }
+    await tx.insert(auditLogTable).values({
+      actorUserId: adminId,
+      action: "listing.rejected",
+      targetType: "listing",
+      targetId: id,
+      details: { reason, title: listing.title, sellerId: listing.userId },
+    });
+    return listing;
+  });
 
 // Deletes the listing with its car and media, and returns the filenames of all
 // that media, uploaded or not, for the caller to remove from storage after the
@@ -1165,10 +1181,12 @@ export type ApproveListingResult =
   | { status: "approved"; listings: (typeof listingTable.$inferSelect)[] };
 
 // Only a complete pending listing can be approved. The status is checked again
-// in the update, so a listing edited at the same time is left alone.
+// in the update, so a listing edited at the same time is left alone. The
+// decision is written to the audit log in the same transaction.
 export const approvePendingListing = async (
   listingId: number,
   minImages: number,
+  adminId: number,
 ): Promise<ApproveListingResult> => {
   return await db.transaction(async (tx) => {
     const car = await lockListingCar(tx, listingId);
@@ -1194,8 +1212,17 @@ export const approvePendingListing = async (
       )
       .returning();
 
-    return listings.length > 0
-      ? { status: "approved", listings }
-      : { status: "not_pending" };
+    const [listing] = listings;
+    if (!listing) {
+      return { status: "not_pending" };
+    }
+    await tx.insert(auditLogTable).values({
+      actorUserId: adminId,
+      action: "listing.approved",
+      targetType: "listing",
+      targetId: listingId,
+      details: { title: listing.title, sellerId: listing.userId },
+    });
+    return { status: "approved", listings };
   });
 };
