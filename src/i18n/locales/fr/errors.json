@@ -180,5 +180,28 @@
     "reason_required": "Indiquez la raison du refus",
     "required": "Vérifiez votre numéro de téléphone et votre identité pour faire cela",
     "upload_url_failed": "Impossible de préparer l'envoi de la vidéo"
+  },
+  "mechanic_documents": {
+    "kind_required": "Indiquez d'abord si vous travaillez seul ou avec un garage",
+    "kind_locked": "Vous ne pouvez pas changer votre façon de travailler pendant la vérification ou après l'approbation de vos documents. Contactez le support",
+    "type_not_needed": "Ce document n'est pas demandé pour votre façon de travailler",
+    "already_pending": "Ce document est déjà en attente de vérification",
+    "upload_url_failed": "Impossible de préparer l'envoi du document",
+    "not_found": "Document introuvable",
+    "already_uploaded": "Ce document a déjà été envoyé",
+    "file_missing": "Le fichier n'est pas arrivé. Envoyez-le à nouveau",
+    "file_invalid": "Le fichier est vide, dépasse 10 Mo ou n'a pas le bon format. Envoyez-le à nouveau",
+    "expired": "Ce lien d'envoi a expiré. Envoyez le document à nouveau",
+    "not_removable": "Un document envoyé pour vérification ne peut pas être retiré",
+    "incomplete_one": "Il manque encore {{count}} document",
+    "incomplete_other": "Il manque encore {{count}} documents",
+    "incomplete_many": "Il manque encore {{count}} documents",
+    "nothing_to_send": "Ajoutez un nouveau document avant d'envoyer",
+    "mechanic_not_found": "Mécanicien introuvable",
+    "not_pending": "Ces documents ne sont plus en attente de vérification",
+    "decisions_incomplete": "Décidez une fois pour chaque document en attente de ce mécanicien",
+    "reason_required": "Indiquez la raison de chaque document refusé",
+    "valid_until_required": "Indiquez la date de fin de chaque CIN et patente approuvée",
+    "already_expired": "Ce document a déjà expiré"
   }
 }

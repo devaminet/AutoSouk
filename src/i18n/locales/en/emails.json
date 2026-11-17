@@ -51,5 +51,15 @@
     "body": "Your account was just used to sign in on {{device}} (IP {{ip}}) on {{time}}.",
     "warning": "If it wasn't you, reset your password now and sign that device out from your account settings.",
     "button": "Review my devices"
+  },
+  "mechanic_documents_approved": {
+    "subject": "Your documents are approved",
+    "body": "An AutoSouk admin checked your documents. Buyers can now book you for inspections.",
+    "button": "Open your workshop"
+  },
+  "mechanic_documents_rejected": {
+    "subject": "A document needs a fix",
+    "body": "An AutoSouk admin couldn't approve these documents. Upload them again so buyers can book you.",
+    "button": "Replace the documents"
   }
 }

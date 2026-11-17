@@ -172,5 +172,27 @@
     "reason_required": "Give the reason for the rejection",
     "required": "Verify your phone number and your identity to do this",
     "upload_url_failed": "Could not prepare the video upload"
+  },
+  "mechanic_documents": {
+    "kind_required": "Choose whether you work solo or run a garage first",
+    "kind_locked": "You can't change how you work while your documents are under review or approved. Contact support",
+    "type_not_needed": "This document isn't needed for how you work",
+    "already_pending": "This document is already waiting for review",
+    "upload_url_failed": "Could not prepare the document upload",
+    "not_found": "Document was not found",
+    "already_uploaded": "This document was already uploaded",
+    "file_missing": "The file didn't arrive. Upload it again",
+    "file_invalid": "The file is empty, larger than 10 MB, or not the expected type. Upload it again",
+    "expired": "This upload link expired. Upload the document again",
+    "not_removable": "A document sent for review can't be removed",
+    "incomplete_one": "{{count}} document is still missing",
+    "incomplete_other": "{{count}} documents are still missing",
+    "nothing_to_send": "Upload a new document before sending",
+    "mechanic_not_found": "Mechanic was not found",
+    "not_pending": "These documents are no longer waiting for review",
+    "decisions_incomplete": "Decide each pending document of this mechanic, once",
+    "reason_required": "Give the reason for each rejected document",
+    "valid_until_required": "Give the end date of each CIN and patente you approve",
+    "already_expired": "This document has already expired"
   }
 }

@@ -14,6 +14,7 @@ import lookupsRouter from "./api/lookups/routes";
 import phoneRouter from "./api/phone/routes";
 import sessionsRouter from "./api/sessions/routes";
 import identityRouter from "./api/identity/routes";
+import mechanicDocumentsRouter from "./api/mechanic_verification/routes";
 
 const router = express.Router();
 
@@ -32,5 +33,6 @@ router.use("/api/equipment", equipmentRouter);
 router.use("/api/i18n", i18nRouter);
 router.use("/api/lookups", lookupsRouter);
 router.use("/api/identity", identityRouter);
+router.use("/api/mechanic-documents", mechanicDocumentsRouter);
 
 export default router;

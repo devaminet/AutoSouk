@@ -4,6 +4,7 @@ import { db } from "../../db";
 import { mechanicReviewTable } from "../../db/schema/mechanic_review";
 import { mechanicTable } from "../../db/schema/mechanic";
 import { createReviewSchema, updateReviewSchema } from "./request_schema";
+import { isBookableMechanic } from "../mechanic_verification/db";
 
 type CreateReviewData = z.infer<typeof createReviewSchema>;
 type UpdateReviewData = z.infer<typeof updateReviewSchema>;
@@ -133,6 +134,7 @@ export const findMechanicRankingsByCity = async (
   const condition = and(
     eq(mechanicTable.cityId, cityId),
     eq(mechanicTable.isActive, true),
+    isBookableMechanic(mechanicTable.userId),
   );
 
   const rankings = await db

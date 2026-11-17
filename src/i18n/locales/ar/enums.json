@@ -254,5 +254,30 @@
     "look_down": "انظر إلى الأسفل",
     "smile": "ابتسم",
     "blink": "ارمش مرتين"
+  },
+  "mechanic_kind": {
+    "solo": "ميكانيكي مستقل",
+    "garage": "مرأب"
+  },
+  "mechanic_document_type": {
+    "cin_front": "البطاقة الوطنية · الوجه",
+    "cin_back": "البطاقة الوطنية · الظهر",
+    "rc": "السجل التجاري",
+    "patente": "الباتانتا",
+    "ice": "شهادة ICE",
+    "premises": "عقد الكراء أو رسم الملكية"
+  },
+  "mechanic_document_status": {
+    "uploaded": "مرفوعة",
+    "pending": "قيد المراجعة",
+    "approved": "مقبولة",
+    "rejected": "مرفوضة"
+  },
+  "mechanic_verification_status": {
+    "not_submitted": "لم تُرسل",
+    "pending": "قيد المراجعة",
+    "approved": "ميكانيكي موثّق",
+    "rejected": "تحتاج إلى تصحيح",
+    "expired": "منتهية الصلاحية"
   }
 }

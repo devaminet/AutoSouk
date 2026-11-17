@@ -36,6 +36,7 @@ import {
   listingMechanicsQuerySchema,
   updateMechanicSchema,
 } from "./request_schema";
+import { isMechanicUserBookable } from "../mechanic_verification/db";
 
 type CreateMechanicData = z.infer<typeof createMechanicSchema>;
 type UpdateMechanicData = z.infer<typeof updateMechanicSchema>;
@@ -232,7 +233,11 @@ export const getMechanicById = async (
 ) => {
   const mechanic = await findMechanicById(mechanicId);
   const isOwner = mechanic?.userId === requesterUserId;
-  if (!mechanic || (!mechanic.isActive && !isOwner)) {
+  // Others see a mechanic only while buyers can book them.
+  if (
+    !mechanic ||
+    (!isOwner && (!mechanic.isActive || !(await isMechanicUserBookable(mechanic.userId))))
+  ) {
     throw new NotFoundError("mechanic.profile_not_found");
   }
 
