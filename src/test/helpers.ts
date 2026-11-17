@@ -10,6 +10,8 @@ import { db } from "../db";
 import { carTable } from "../db/schema/car";
 import { cityTable } from "../db/schema/city";
 import { carMediaTable } from "../db/schema/car_media";
+import { mechanicVerificationsTable } from "../db/schema/mechanic_verification";
+import { usersTable } from "../db/schema/user";
 
 type TestUserRole = z.infer<typeof registrationRoleSchema>;
 
@@ -99,12 +101,30 @@ export const verifyEmail = async (token?: string) => {
   };
 };
 
+// Marks a mechanic's documents approved, so buyers can book them. Tests that
+// aren't about the documents start from there.
+export const approveMechanicDocuments = async (email: string) => {
+  const [user] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, email));
+  await db
+    .insert(mechanicVerificationsTable)
+    .values({ userId: user.id, kind: "garage", approvedAt: new Date() })
+    .onConflictDoUpdate({
+      target: mechanicVerificationsTable.userId,
+      set: { approvedAt: new Date(), validUntil: null },
+    });
+};
+
 export const signupUserWithVerification = async (options?: {
   userType?: TestUserRole;
   email?: string;
+  // Mechanics start with approved documents unless this is false.
+  mechanicDocumentsApproved?: boolean;
 }) => {
-  const { email = testUserCredentials.email, userType = "buyer" } =
-    options || {};
+  const {
+    email = testUserCredentials.email,
+    userType = "buyer",
+    mechanicDocumentsApproved = true,
+  } = options || {};
   const formData = {
     firstName: "John",
     lastName: "Doe",
@@ -120,6 +140,9 @@ export const signupUserWithVerification = async (options?: {
   const token = url.parse(verificationUrl, true).query.token as string;
   const { status } = await verifyEmail(token);
   expect(status).toBe("success");
+  if (userType === "mechanic" && mechanicDocumentsApproved) {
+    await approveMechanicDocuments(email);
+  }
 
   return {
     formData,

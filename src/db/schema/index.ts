@@ -22,6 +22,7 @@ import * as identityVerifications from "./identity_verification";
 import * as auditLog from "./audit_log";
 import * as userDevices from "./user_device";
 import * as twoFactorChallenges from "./two_factor_challenge";
+import * as mechanicVerifications from "./mechanic_verification";
 
 export const schema = {
   ...cars,
@@ -38,6 +39,7 @@ export const schema = {
   ...auditLog,
   ...userDevices,
   ...twoFactorChallenges,
+  ...mechanicVerifications,
   ...refreshTokens,
   ...emailVerificationTokens,
   ...forgetPasswordToken,

@@ -254,5 +254,30 @@
     "look_down": "Look down",
     "smile": "Smile",
     "blink": "Blink twice"
+  },
+  "mechanic_kind": {
+    "solo": "Solo mechanic",
+    "garage": "Garage"
+  },
+  "mechanic_document_type": {
+    "cin_front": "CIN · front",
+    "cin_back": "CIN · back",
+    "rc": "Registre de commerce (RC)",
+    "patente": "Patente",
+    "ice": "ICE certificate",
+    "premises": "Lease or title deed"
+  },
+  "mechanic_document_status": {
+    "uploaded": "Uploaded",
+    "pending": "In review",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+  "mechanic_verification_status": {
+    "not_submitted": "Not sent",
+    "pending": "In review",
+    "approved": "Verified mechanic",
+    "rejected": "Needs a fix",
+    "expired": "Expired"
   }
 }

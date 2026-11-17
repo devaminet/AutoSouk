@@ -12,6 +12,7 @@ import {
   mechanicsBucketName,
   usersBucketName,
   identityBucketName,
+  mechanicDocumentsBucketName,
 } from "./utils/constants";
 
 const SERVER_PORT = process.env.SERVER_PORT;
@@ -25,6 +26,7 @@ const main = async () => {
   await createBucket(inspectionReportsBucketName);
   await createBucket(usersBucketName);
   await createBucket(identityBucketName);
+  await createBucket(mechanicDocumentsBucketName);
   await ensureDefaultProfileImage();
 
   app.listen(SERVER_PORT, () => {

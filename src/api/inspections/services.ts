@@ -37,6 +37,7 @@ import {
   reportDraftSchema,
   updateInspectionStatusSchema,
 } from "./request_schema";
+import { isMechanicUserBookable } from "../mechanic_verification/db";
 
 type CreateInspectionData = z.infer<typeof createInspectionSchema>;
 type UpdateInspectionStatusData = z.infer<typeof updateInspectionStatusSchema>;
@@ -55,7 +56,8 @@ export const requestInspection = async (
   }
 
   const mechanic = await findMechanicById(data.mechanicId);
-  if (!mechanic || !mechanic.isActive) {
+  // A mechanic whose documents aren't approved, or have expired, can't be booked.
+  if (!mechanic || !mechanic.isActive || !(await isMechanicUserBookable(mechanic.userId))) {
     throw new NotFoundError("mechanic.not_found");
   }
 

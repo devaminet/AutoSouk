@@ -254,5 +254,30 @@
     "look_down": "Regardez en bas",
     "smile": "Souriez",
     "blink": "Clignez deux fois des yeux"
+  },
+  "mechanic_kind": {
+    "solo": "Mécanicien indépendant",
+    "garage": "Garage"
+  },
+  "mechanic_document_type": {
+    "cin_front": "CIN · recto",
+    "cin_back": "CIN · verso",
+    "rc": "Registre de commerce (RC)",
+    "patente": "Patente",
+    "ice": "Attestation ICE",
+    "premises": "Bail ou titre de propriété"
+  },
+  "mechanic_document_status": {
+    "uploaded": "Envoyé",
+    "pending": "En vérification",
+    "approved": "Approuvé",
+    "rejected": "Refusé"
+  },
+  "mechanic_verification_status": {
+    "not_submitted": "Non envoyés",
+    "pending": "En vérification",
+    "approved": "Mécanicien vérifié",
+    "rejected": "À corriger",
+    "expired": "Expirés"
   }
 }

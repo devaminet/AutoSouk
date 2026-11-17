@@ -5,6 +5,7 @@ import { mechanicGarageImageTable } from "../../db/schema/mechanic_garage_image"
 import { mechanicTable } from "../../db/schema/mechanic";
 import { cityTable } from "../../db/schema/city";
 import { createMechanicSchema, updateMechanicSchema } from "./request_schema";
+import { isBookableMechanic } from "../mechanic_verification/db";
 
 type CreateMechanicData = z.infer<typeof createMechanicSchema>;
 type UpdateMechanicData = z.infer<typeof updateMechanicSchema>;
@@ -48,12 +49,17 @@ export const findActiveMechanicsByCity = async (
   cityId: number,
   { page, limit }: { page: number; limit: number },
 ) => {
-  const conditions = and(
-    eq(mechanicTable.cityId, cityId),
-    eq(mechanicTable.isActive, true),
-  );
+  // Relational queries alias the table, so the condition is built from the
+  // columns each query hands over.
+  const conditionsOn = (columns: Pick<typeof mechanicTable, "cityId" | "isActive" | "userId">) =>
+    and(
+      eq(columns.cityId, cityId),
+      eq(columns.isActive, true),
+      isBookableMechanic(columns.userId),
+    );
+  const conditions = conditionsOn(mechanicTable);
   const mechanics = await db.query.mechanicTable.findMany({
-    where: conditions,
+    where: (columns) => conditionsOn(columns),
     with: {
       city: true,
       garageImages: true,

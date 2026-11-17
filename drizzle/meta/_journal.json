@@ -260,6 +260,13 @@
       "when": 1794763428050,
       "tag": "0037_session_lifecycle",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1794839352813,
+      "tag": "0038_mechanic_documents",
+      "breakpoints": true
     }
   ]
 }

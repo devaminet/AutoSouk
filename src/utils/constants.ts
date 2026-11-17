@@ -33,6 +33,21 @@ export const identityChallenges = [
   "blink",
 ] as const;
 export const identityVideoTypes = ["video/webm", "video/mp4"] as const;
+export const mechanicDocumentsBucketName = "mechanic-documents";
+export const maxMechanicDocumentSizeBytes = 10 * 1024 * 1024;
+export const mechanicDocumentUploadExpirationSeconds = 10 * 60;
+export const mechanicDocumentLinkExpirationSeconds = 5 * 60;
+export const mechanicDocumentContentTypes = ["image/jpeg", "image/png", "application/pdf"] as const;
+export const mechanicKinds = ["solo", "garage"] as const;
+export const mechanicDocumentTypes = ["cin_front", "cin_back", "rc", "patente", "ice", "premises"] as const;
+// The documents each kind of mechanic sends.
+export const requiredMechanicDocuments = {
+  solo: ["cin_front", "cin_back"],
+  garage: ["cin_front", "cin_back", "rc", "patente", "ice", "premises"],
+} as const satisfies Record<(typeof mechanicKinds)[number], readonly (typeof mechanicDocumentTypes)[number][]>;
+// Documents that expire: the admin must give their end date to approve them.
+// A lease ends but a title deed doesn't, so premises has an optional date.
+export const expiringMechanicDocuments: readonly (typeof mechanicDocumentTypes)[number][] = ["cin_front", "cin_back", "patente"];
 export const phoneCodeLength = 6;
 export const phoneCodeExpirationMinutes = 10;
 export const phoneCodeResendSeconds = 60;
