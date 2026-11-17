@@ -15,6 +15,8 @@ export const findCarWithCityById = async (carId: number) => {
     where: eq(carTable.id, carId),
     with: {
       city: true,
+      make: { columns: { name: true } },
+      model: { columns: { name: true } },
       listing: { columns: { status: true } },
     },
   });
@@ -135,6 +137,9 @@ export const findInspectionsByMechanicId = async (mechanicId: number) => {
 
 export const insertInspection = async (data: {
   carId: number;
+  carMake: string | null;
+  carModel: string | null;
+  carYear: number | null;
   buyerId: number;
   mechanicId: number;
   priceAtRequest: number;
@@ -261,4 +266,24 @@ export const saveReportDraft = async (
     });
 
   return inspection ?? null;
+};
+
+// Before cars are deleted: their inspections still waiting or under way are
+// cancelled. Finished ones stay, so buyers keep their reports.
+export const cancelActiveInspectionsOfCars = async (
+  tx: Pick<typeof db, "update">,
+  carIds: number[],
+) => {
+  if (carIds.length === 0) {
+    return;
+  }
+  await tx
+    .update(inspectionTable)
+    .set({ status: "cancelled", updatedAt: new Date().toISOString() })
+    .where(
+      and(
+        inArray(inspectionTable.carId, carIds),
+        inArray(inspectionTable.status, [...activeStatuses]),
+      ),
+    );
 };

@@ -267,6 +267,20 @@
       "when": 1794839352813,
       "tag": "0038_mechanic_documents",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1794898756256,
+      "tag": "0039_user_suspension",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1794902781271,
+      "tag": "0040_keep_inspections_of_deleted_cars",
+      "breakpoints": true
     }
   ]
 }

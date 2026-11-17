@@ -1079,7 +1079,7 @@ listingRouter.patch(
  *   delete:
  *     tags: [Listings]
  *     summary: Delete a listing, in any status, with or without a car
- *     description: Deletes the listing and, when it has one, its car and the car's media, then removes the stored files, including files not uploaded yet. A storage failure is only logged, so the listing stays deleted and the response is still 200.
+ *     description: Deletes the listing and, when it has one, its car and the car's media. The car's inspections stay with their buyers, reports included; those not finished are cancelled. Stored files are removed, including files not uploaded yet. A storage failure is only logged, so the listing stays deleted and the response is still 200.
  *     security:
  *       - bearerAuth: []
  *     parameters:

@@ -408,15 +408,26 @@ type ListingStatus = (typeof listingStatusEnum.enumValues)[number];
 
 type ListingViewer = { id: number; role: string } | undefined;
 
-// Only approved listings are public. Other statuses answer 404, as if the
-// listing did not exist, except for its seller and admins.
+// Only approved listings of sellers who aren't suspended are public. Others
+// answer 404, as if the listing did not exist, except for its seller and
+// admins.
 const canViewListing = (
-  listing: { status: string | null; userId: number | null },
+  listing: {
+    status: string | null;
+    userId: number | null;
+    user: { suspendedAt: Date | null } | null;
+  },
   viewer: ListingViewer,
 ) =>
-  listing.status === "approved" ||
+  (listing.status === "approved" && !listing.user?.suspendedAt) ||
   viewer?.role === "admin" ||
   viewer?.id === listing.userId;
+
+// The suspension only decides who sees the listing; it isn't shown.
+const withoutSuspension = <T extends { suspendedAt: Date | null }>({
+  suspendedAt: _suspendedAt,
+  ...user
+}: T) => user;
 
 export const getListingDetails = async (
   listingId: number,
@@ -444,7 +455,7 @@ export const getListingDetails = async (
     car: listing.car
       ? { ...listing.car, equipment: toCarEquipment(listing.car.equipment) }
       : null,
-    user: listing.user ? await withProfileImageUrl(listing.user) : null,
+    user: listing.user ? await withProfileImageUrl(withoutSuspension(listing.user)) : null,
   };
 };
 

@@ -173,18 +173,20 @@ export const isLiveSession = async (id: number) => {
   return Boolean(session);
 };
 
-// Whether the user's session still lives and its device isn't signed out, in
-// one query, as every authenticated request asks. Sessions from before devices
-// were remembered have none.
+// Whether the user's session still lives, its device isn't signed out and the
+// account isn't suspended, in one query, as every authenticated request asks.
+// Sessions from before devices were remembered have none.
 export const isLiveUserSession = async (id: number, userId: number) => {
   const [session] = await db
     .select({ id: refreshTokensTable.id })
     .from(refreshTokensTable)
+    .innerJoin(usersTable, eq(usersTable.id, refreshTokensTable.userId))
     .leftJoin(userDevicesTable, eq(userDevicesTable.id, refreshTokensTable.deviceId))
     .where(
       and(
         eq(refreshTokensTable.id, id),
         eq(refreshTokensTable.userId, userId),
+        isNull(usersTable.suspendedAt),
         isLive(),
         or(isNull(refreshTokensTable.deviceId), isNull(userDevicesTable.revokedAt)),
       ),
@@ -252,4 +254,13 @@ export const setTwoFactorEnabled = async (userId: number, enabled: boolean) => {
     .update(usersTable)
     .set({ twoFactorEnabled: enabled })
     .where(eq(usersTable.id, userId));
+};
+
+// Ends every session of the user, on every device. The rows stay, so a request
+// still carrying one of their tokens is refused quietly.
+export const endUserSessions = async (userId: number) => {
+  await db
+    .update(refreshTokensTable)
+    .set({ endedAt: new Date() })
+    .where(and(eq(refreshTokensTable.userId, userId), isNull(refreshTokensTable.endedAt)));
 };

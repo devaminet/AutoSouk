@@ -42,9 +42,15 @@ export const inspectionTable = pgTable(
   "inspections",
   {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    carId: integer("car_id")
-      .notNull()
-      .references(() => carTable.id, { onDelete: "cascade" }),
+    // Null once the car is deleted: the buyer keeps the inspection and its
+    // report, named by the car columns below.
+    carId: integer("car_id").references(() => carTable.id, {
+      onDelete: "set null",
+    }),
+    // The car as it was when the buyer asked.
+    carMake: varchar("car_make"),
+    carModel: varchar("car_model"),
+    carYear: integer("car_year"),
     buyerId: integer("buyer_id")
       .notNull()
       .references(() => usersTable.id, { onDelete: "cascade" }),

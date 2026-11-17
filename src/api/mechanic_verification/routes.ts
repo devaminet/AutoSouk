@@ -3,7 +3,7 @@ import type { ZodSchema } from "zod";
 import { RequestValidationError } from "../../errors/request_validation_error";
 import { isAdmin } from "../../middlewares/is_admin";
 import isAuthenticated from "../../middlewares/is_authenticated";
-import { isIdentityVerified } from "../../middlewares/is_identity_verified";
+import { hasSentFaceCheck } from "../../middlewares/is_identity_verified";
 import { isMechanic } from "../../middlewares/is_mechanic";
 import {
   chooseKindSchema,
@@ -123,13 +123,13 @@ mechanicDocumentsRouter.get("/me", isAuthenticated, isMechanic, async (req, res)
  *       401:
  *         description: Not authenticated
  *       403:
- *         description: Not a mechanic, or identity.required
+ *         description: Not a mechanic, or identity.face_check_required (phone not verified, or no face video sent)
  */
 mechanicDocumentsRouter.put(
   "/me/kind",
   isAuthenticated,
   isMechanic,
-  isIdentityVerified,
+  hasSentFaceCheck,
   async (req, res) => {
     const { kind } = parse(chooseKindSchema, req.body);
     res.status(200).json(await chooseKind(req.currentUser!.id, kind));
@@ -183,13 +183,13 @@ mechanicDocumentsRouter.put(
  *       401:
  *         description: Not authenticated
  *       403:
- *         description: Not a mechanic, or identity.required
+ *         description: Not a mechanic, or identity.face_check_required (phone not verified, or no face video sent)
  */
 mechanicDocumentsRouter.post(
   "/me/documents",
   isAuthenticated,
   isMechanic,
-  isIdentityVerified,
+  hasSentFaceCheck,
   async (req, res) => {
     const { type, contentType } = parse(startUploadSchema, req.body);
     res.status(201).json(await startDocumentUpload(req.currentUser!.id, type, contentType));
@@ -223,7 +223,7 @@ mechanicDocumentsRouter.post(
  *       401:
  *         description: Not authenticated
  *       403:
- *         description: Not a mechanic, or identity.required
+ *         description: Not a mechanic, or identity.face_check_required (phone not verified, or no face video sent)
  *       404:
  *         description: mechanic_documents.not_found
  */
@@ -231,7 +231,7 @@ mechanicDocumentsRouter.post(
   "/me/documents/:id/confirm",
   isAuthenticated,
   isMechanic,
-  isIdentityVerified,
+  hasSentFaceCheck,
   async (req, res) => {
     const { id } = parse(idParamSchema, req.params);
     res.status(200).json(await confirmDocumentUpload(req.currentUser!.id, id));
@@ -259,7 +259,7 @@ mechanicDocumentsRouter.post(
  *       401:
  *         description: Not authenticated
  *       403:
- *         description: Not a mechanic, or identity.required
+ *         description: Not a mechanic, or identity.face_check_required (phone not verified, or no face video sent)
  *       404:
  *         description: mechanic_documents.not_found
  */
@@ -267,7 +267,7 @@ mechanicDocumentsRouter.delete(
   "/me/documents/:id",
   isAuthenticated,
   isMechanic,
-  isIdentityVerified,
+  hasSentFaceCheck,
   async (req, res) => {
     const { id } = parse(idParamSchema, req.params);
     await removeDraftDocument(req.currentUser!.id, id);
@@ -297,13 +297,13 @@ mechanicDocumentsRouter.delete(
  *       401:
  *         description: Not authenticated
  *       403:
- *         description: Not a mechanic, or identity.required
+ *         description: Not a mechanic, or identity.face_check_required (phone not verified, or no face video sent)
  */
 mechanicDocumentsRouter.post(
   "/me/submit",
   isAuthenticated,
   isMechanic,
-  isIdentityVerified,
+  hasSentFaceCheck,
   async (req, res) => {
     res.status(200).json(await submitDocuments(req.currentUser!.id));
   },

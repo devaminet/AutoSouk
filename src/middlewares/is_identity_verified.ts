@@ -36,3 +36,38 @@ export const isIdentityVerified = async (
     return next(error);
   }
 };
+
+// Lets a mechanic send documents as soon as the face video is sent, so an
+// admin reviews both together: phone verified, and the face check waiting or
+// approved. Admins are exempt.
+export const hasSentFaceCheck = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  if (!req.currentUser) {
+    return next(new NotAuthorizedError());
+  }
+  if (req.currentUser.role === "admin") {
+    return next();
+  }
+
+  try {
+    const [user] = await db
+      .select({
+        phoneVerifiedAt: usersTable.phoneVerifiedAt,
+        identityStatus: usersTable.identityStatus,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.id, req.currentUser.id));
+    if (
+      !user?.phoneVerifiedAt ||
+      (user.identityStatus !== "pending" && user.identityStatus !== "approved")
+    ) {
+      return next(new NotAllowedError("identity.face_check_required"));
+    }
+    return next();
+  } catch (error) {
+    return next(error);
+  }
+};

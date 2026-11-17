@@ -53,3 +53,16 @@ it("lets unverified users read", async () => {
   const { accessToken } = await signinUser();
   await request(app).get("/api/listings").auth(accessToken, { type: "bearer" }).expect(200);
 });
+
+it("lets a mechanic send documents once the face video is sent", async () => {
+  await signupUserWithVerification({ userType: "mechanic", mechanicDocumentsApproved: false });
+  const { accessToken } = await signinUser();
+  const chooseKind = () =>
+    request(app).put("/api/mechanic-documents/me/kind").send({ kind: "solo" }).auth(accessToken, { type: "bearer" });
+
+  const blocked = await chooseKind().expect(403);
+  expect(blocked.body.errors[0].code).toBe("identity.face_check_required");
+
+  await setChecks({ phoneVerifiedAt: new Date(), identityStatus: "pending" });
+  await chooseKind().expect(200);
+});

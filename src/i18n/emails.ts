@@ -9,7 +9,11 @@ export type EmailSubjectKey =
   | "identity_rejected.subject"
   | "new_sign_in.subject"
   | "mechanic_documents_approved.subject"
-  | "mechanic_documents_rejected.subject";
+  | "mechanic_documents_rejected.subject"
+  | "account_suspended.subject"
+  | "account_reactivated.subject"
+  | "verification_approved.subject"
+  | "verification_rejected.subject";
 
 /**
  * What every email template gets: `t` for its text (keys of the emails

@@ -6,6 +6,7 @@ import {
   getPendingListingsQuerySchema,
   updateListingSchema,
 } from "./request_schema";
+import type { AnyColumn } from "drizzle-orm";
 import {
   type SQL,
   and,
@@ -19,6 +20,7 @@ import {
   sql,
 } from "drizzle-orm";
 import { listingStatusEnum, listingTable } from "../../db/schema/listing";
+import { cancelActiveInspectionsOfCars } from "../inspections/db";
 import { carTable } from "../../db/schema/car";
 import { db } from "../../db";
 import { carMediaTable } from "../../db/schema/car_media";
@@ -113,6 +115,14 @@ const listingsOrderBy = {
   newest: [desc(listingTable.createdAt), desc(listingTable.id)],
 } satisfies Record<z.infer<typeof getListingsQuerySchema>["sort"], SQL[]>;
 
+// Buyers don't see the listings of a suspended seller. The inner columns are
+// written out, as relational queries would otherwise rename them.
+export const sellerNotSuspended = (userId: AnyColumn) =>
+  sql<boolean>`not exists (
+    select 1 from "users" "su"
+    where "su"."id" = ${userId} and "su"."suspended_at" is not null
+  )`;
+
 export const findListings = async (
   options: z.infer<typeof getListingsQuerySchema>,
 ) => {
@@ -130,7 +140,10 @@ export const findListings = async (
     sort,
   } = options;
 
-  const conditions = [eq(listingTable.status, "approved")];
+  const conditions = [
+    eq(listingTable.status, "approved"),
+    sellerNotSuspended(listingTable.userId),
+  ];
 
   if (makeId) conditions.push(eq(carTable.makeId, makeId));
   if (modelId) conditions.push(eq(carTable.modelId, modelId));
@@ -354,6 +367,7 @@ export const getListingDetailsById = async (id: number) => {
           cityId: true,
           imageName: true,
           isVerified: true,
+          suspendedAt: true,
         },
         with: {
           city: {
@@ -507,6 +521,7 @@ export const deleteListingDetails = async (
         .where(eq(carMediaTable.carId, car.id))
         .returning({ link: carMediaTable.link });
       filenames = media.map(({ link }) => link);
+      await cancelActiveInspectionsOfCars(tx, [car.id]);
       await tx.delete(carTable).where(eq(carTable.id, car.id));
     }
 

@@ -98,7 +98,8 @@
     "two_factor_expired": "Ce code de connexion a expiré ou a déjà servi. Reconnectez-vous",
     "two_factor_required": "La connexion en deux étapes ne peut pas être désactivée pour les mécaniciens et les administrateurs",
     "device_is_current": "C'est l'appareil que vous utilisez. Déconnectez-vous plutôt",
-    "device_not_found": "Appareil introuvable"
+    "device_not_found": "Appareil introuvable",
+    "account_suspended": "Votre compte est suspendu. Contactez le support AutoSouk pour en savoir plus."
   },
   "listing": {
     "not_found": "Annonce introuvable",
@@ -179,7 +180,8 @@
     "not_pending": "Cette vérification d'identité n'attend plus de décision",
     "reason_required": "Indiquez la raison du refus",
     "required": "Vérifiez votre numéro de téléphone et votre identité pour faire cela",
-    "upload_url_failed": "Impossible de préparer l'envoi de la vidéo"
+    "upload_url_failed": "Impossible de préparer l'envoi de la vidéo",
+    "face_check_required": "Vérifiez d'abord votre numéro de téléphone et envoyez votre vidéo du visage"
   },
   "mechanic_documents": {
     "kind_required": "Indiquez d'abord si vous travaillez seul ou avec un garage",
@@ -203,5 +205,16 @@
     "reason_required": "Indiquez la raison de chaque document refusé",
     "valid_until_required": "Indiquez la date de fin de chaque CIN et patente approuvée",
     "already_expired": "Ce document a déjà expiré"
+  },
+  "admin": {
+    "user_not_found": "Utilisateur introuvable",
+    "cannot_act_on_self": "Vous ne pouvez pas suspendre ni supprimer votre propre compte",
+    "cannot_act_on_admin": "Vous ne pouvez pas suspendre ni supprimer un autre administrateur",
+    "already_suspended": "Ce compte est déjà suspendu",
+    "not_suspended": "Ce compte n'est pas suspendu",
+    "user_has_inspections": "Ce mécanicien a des inspections sur lesquelles des acheteurs comptent. Suspendez plutôt le compte.",
+    "nothing_to_review": "Rien de cet utilisateur n'attend de vérification",
+    "face_check_decision_required": "Décidez aussi pour la vidéo du visage",
+    "review_changed": "Quelque chose a changé pendant votre vérification. Rechargez la page"
   }
 }

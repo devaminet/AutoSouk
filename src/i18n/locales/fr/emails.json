@@ -62,5 +62,32 @@
     "subject": "Un document est à corriger",
     "body": "Un administrateur AutoSouk n'a pas pu approuver ces documents. Envoyez-les à nouveau pour que les acheteurs puissent vous réserver.",
     "button": "Remplacer les documents"
+  },
+  "account_suspended": {
+    "subject": "Votre compte AutoSouk est suspendu",
+    "body": "Un administrateur AutoSouk a suspendu votre compte le {{date}}. Vous ne pouvez plus vous connecter, et les acheteurs ne voient plus vos annonces ni votre atelier.",
+    "reason_label": "Motif :",
+    "next": "Si vous pensez qu'il s'agit d'une erreur, répondez à cet e-mail en nous expliquant pourquoi."
+  },
+  "account_reactivated": {
+    "subject": "Votre compte AutoSouk est de nouveau actif",
+    "body": "Un administrateur AutoSouk a levé la suspension de votre compte le {{date}}. Les acheteurs voient de nouveau vos annonces et votre atelier.",
+    "next": "Vous pouvez vous connecter comme avant.",
+    "button": "Se connecter"
+  },
+  "verification_review": {
+    "face_check": "Vidéo du visage",
+    "approved": "approuvé",
+    "rejected": "à renvoyer"
+  },
+  "verification_approved": {
+    "subject": "Vous êtes vérifié sur AutoSouk",
+    "body": "Un administrateur AutoSouk a vérifié ce que vous avez envoyé. Tout est approuvé.",
+    "button": "Ouvrir AutoSouk"
+  },
+  "verification_rejected": {
+    "subject": "Un élément est à corriger sur AutoSouk",
+    "body": "Un administrateur AutoSouk a vérifié ce que vous avez envoyé. Renvoyez ce qui n'est pas approuvé ; les motifs sont ci-dessous.",
+    "button": "Corriger maintenant"
   }
 }

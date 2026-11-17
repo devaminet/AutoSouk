@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { app } from "../../../app";
 import { db } from "../../../db";
 import { auditLogTable } from "../../../db/schema/audit_log";
+import { usersTable } from "../../../db/schema/user";
 import {
   mechanicDocumentsTable,
   mechanicVerificationsTable,
@@ -335,6 +336,9 @@ describe("booking a mechanic", () => {
     await as(buyer).post("/api/inspections", { carId, mechanicId }).expect(404);
 
     await db.insert(mechanicVerificationsTable).values({ userId: mechanic.user.id, kind: "solo", approvedAt: new Date() });
+    // Approved documents aren't enough while the face check isn't approved.
+    await as(buyer).get(`/api/mechanics/${mechanicId}`).expect(404);
+    await db.update(usersTable).set({ identityStatus: "approved" }).where(eq(usersTable.id, mechanic.user.id));
 
     await as(buyer).get(`/api/mechanics/${mechanicId}`).expect(200);
     const listedAfter = await request(app).get(`/api/listings/${listingId}/mechanics`).expect(200);

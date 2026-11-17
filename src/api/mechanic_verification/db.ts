@@ -10,6 +10,7 @@ import {
 } from "../../db/schema/mechanic_verification";
 import { usersTable } from "../../db/schema/user";
 import { mechanicDocumentTypes, mechanicKinds } from "../../utils/constants";
+import type { Transaction } from "../identity/db";
 
 export type MechanicKind = (typeof mechanicKinds)[number];
 export type MechanicDocumentType = (typeof mechanicDocumentTypes)[number];
@@ -19,15 +20,19 @@ export type MechanicDocument = typeof mechanicDocumentsTable.$inferSelect;
 export const today = () => new Date().toISOString().slice(0, 10);
 
 // Whether buyers can book the mechanic with this user id: every required
-// document approved, and none of them expired. Used inside other queries.
-// The inner columns are written out, as relational queries would otherwise
-// rename them after the outer table's alias.
+// document approved, none of them expired, the face check approved, and the
+// account not suspended.
+// Used inside other queries. The inner columns are written out, as relational
+// queries would otherwise rename them after the outer table's alias.
 export const isBookableMechanic = (userId: AnyColumn) =>
   sql<boolean>`exists (
     select 1 from "mechanic_verifications" "mv"
+    join "users" "mu" on "mu"."id" = "mv"."user_id"
     where "mv"."user_id" = ${userId}
       and "mv"."approved_at" is not null
       and ("mv"."valid_until" is null or "mv"."valid_until" >= current_date)
+      and "mu"."suspended_at" is null
+      and "mu"."identity_status" = 'approved'
   )`;
 
 export const isMechanicUserBookable = async (userId: number) => {
@@ -206,13 +211,17 @@ const approvalOf = (
 // entries and the mechanic's new standing, in one transaction. An approved
 // document replaces the older approved one of its type. Returns the files to
 // delete, or null when a document was no longer pending.
-export const saveDecisions = async (data: {
-  userId: number;
-  adminId: number;
-  decisions: DocumentDecision[];
-  required: (kind: MechanicKind) => readonly MechanicDocumentType[];
-}) =>
-  db.transaction(async (tx) => {
+export const saveDecisions = async (
+  data: {
+    userId: number;
+    adminId: number;
+    decisions: DocumentDecision[];
+    required: (kind: MechanicKind) => readonly MechanicDocumentType[];
+  },
+  // The caller's transaction, to save these with other decisions.
+  outer?: Transaction,
+) => {
+  const run = async (tx: Transaction) => {
     const reviewedAt = new Date();
     const filesToDelete: { id: number; fileName: string }[] = [];
     for (const decision of data.decisions) {
@@ -289,7 +298,9 @@ export const saveDecisions = async (data: {
       .where(eq(mechanicVerificationsTable.userId, data.userId))
       .returning();
     return { filesToDelete, verification: updated ?? null };
-  });
+  };
+  return outer ? run(outer) : db.transaction(run);
+};
 
 // The pending documents decided by nobody yet, for the admin's check that a
 // decision covers each of them.

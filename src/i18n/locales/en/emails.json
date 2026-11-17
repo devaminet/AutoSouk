@@ -61,5 +61,32 @@
     "subject": "A document needs a fix",
     "body": "An AutoSouk admin couldn't approve these documents. Upload them again so buyers can book you.",
     "button": "Replace the documents"
+  },
+  "account_suspended": {
+    "subject": "Your AutoSouk account is suspended",
+    "body": "An AutoSouk admin suspended your account on {{date}}. You can't sign in, and buyers no longer see your listings or your workshop.",
+    "reason_label": "Reason:",
+    "next": "If you think this is a mistake, reply to this email and tell us why."
+  },
+  "account_reactivated": {
+    "subject": "Your AutoSouk account is active again",
+    "body": "An AutoSouk admin lifted the suspension of your account on {{date}}. Buyers see your listings and your workshop again.",
+    "next": "You can sign in as before.",
+    "button": "Sign in"
+  },
+  "verification_review": {
+    "face_check": "Face video",
+    "approved": "approved",
+    "rejected": "send it again"
+  },
+  "verification_approved": {
+    "subject": "You're verified on AutoSouk",
+    "body": "An AutoSouk admin checked what you sent. Everything is approved.",
+    "button": "Open AutoSouk"
+  },
+  "verification_rejected": {
+    "subject": "Something needs a fix on AutoSouk",
+    "body": "An AutoSouk admin checked what you sent. Send again what isn't approved; the reasons are below.",
+    "button": "Fix it now"
   }
 }

@@ -92,7 +92,8 @@
     "two_factor_expired": "This sign-in code expired or was used up. Log in again",
     "two_factor_required": "Two-step sign-in can't be turned off for mechanics and admins",
     "device_is_current": "This is the device you're using. Log out instead",
-    "device_not_found": "Device was not found"
+    "device_not_found": "Device was not found",
+    "account_suspended": "Your account is suspended. Contact AutoSouk support to find out more."
   },
   "listing": {
     "not_found": "Listing was not found",
@@ -171,7 +172,8 @@
     "not_pending": "This identity check is no longer waiting for review",
     "reason_required": "Give the reason for the rejection",
     "required": "Verify your phone number and your identity to do this",
-    "upload_url_failed": "Could not prepare the video upload"
+    "upload_url_failed": "Could not prepare the video upload",
+    "face_check_required": "Verify your phone number and send your face video first"
   },
   "mechanic_documents": {
     "kind_required": "Choose whether you work solo or run a garage first",
@@ -194,5 +196,16 @@
     "reason_required": "Give the reason for each rejected document",
     "valid_until_required": "Give the end date of each CIN and patente you approve",
     "already_expired": "This document has already expired"
+  },
+  "admin": {
+    "user_not_found": "User not found",
+    "cannot_act_on_self": "You can't suspend or delete your own account",
+    "cannot_act_on_admin": "You can't suspend or delete another admin",
+    "already_suspended": "This account is already suspended",
+    "not_suspended": "This account isn't suspended",
+    "user_has_inspections": "This mechanic has inspections that buyers rely on. Suspend the account instead.",
+    "nothing_to_review": "Nothing from this user is waiting for review",
+    "face_check_decision_required": "Decide on the face video too",
+    "review_changed": "Something changed while you were reviewing. Reload the page"
   }
 }
